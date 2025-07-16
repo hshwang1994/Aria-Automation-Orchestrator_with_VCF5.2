@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="fileShareCreate" result-type="Properties" api-version="6.0.0" id="ebdc4281-f671-4077-b4af-96ec0c242123" version="0.0.0" category-name="com.gvp.bp.vsanfs">
+  <param n="volumeName" t="string"><![CDATA[]]></param>
+  <param n="size" t="number"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var vcConf = System.getModule("com.bvp").ConfManager().load("GVP/VSANFS");
+var conf = System.getModule("com.bvp").ConfManager().load("GVP/Endpoint/10.11.10.59")
+var rest = System.getModule("com.bvp").RestManager("https://" + conf.hostname, {
+    "Authorization": "Basic " + System.getModule("com.bvp").Converter().base64.encode(conf.username + ":" + conf.password)
+    });
+
+var fsCreate = rest.post("/vsan/fileshare",{
+  "hostname": vcConf.hostname,
+  "cluster_name": vcConf.cluster[0],
+  "nfsInfo": {
+    "name": volumeName,
+    "size": size
+  }
+});
+
+var data = rest.get("/vsan/fileshare/" + fsCreate.uuid + "?hostname=" + vcConf.hostname + "&cluster_name=" + vcConf.cluster[0])
+var result = {
+    "uuid": data.uuid,
+    "pusedo": data.runtime.pusedo,
+    "accessType": data.config.permission[0].permissions,
+    "squash": data.config.permission[0].allowRoot == true? "root_squash": "no_root_squash",
+    "clients": data.config.permission[0].ips,
+    "usage": data.runtime.usedCapacity,
+    "endpoint": vcConf.hostname,
+    "endpointCluster": vcConf.cluster[0]
+};
+return result]]></script>
+</dunes-script-module>

@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="vpcProvision" result-type="string" api-version="6.0.0" id="cc7567c8-a77b-4abb-a65d-d8b1c55236b2" version="0.0.1" allowed-operations="vfe" category-name="com.bvp.bp.vpc">
+  <param n="endpointLink" t="string"><![CDATA[]]></param>
+  <param n="managedRouterLink" t="string"><![CDATA[]]></param>
+  <param n="managedTier1Path" t="string"><![CDATA[]]></param>
+  <param n="transitSegmentPath" t="string"><![CDATA[]]></param>
+  <param n="transitAddressLink" t="string"><![CDATA[]]></param>
+  <param n="transitPrefix" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!endpointLink) { throw "endpointLink cannot be null"; }
+if (!managedRouterLink) { throw "managedRouterLink cannot be null"; }
+if (!managedTier1Path) { throw "managedTier1Path cannot be null"; }
+if (!transitSegmentPath) { throw "transitSegmentPath cannot be null"; }
+if (!transitAddressLink) { throw "transitAddressLink cannot be null"; }
+if (!transitPrefix) { throw "transitPrefix cannot be null"; }
+
+var conv = System.getModule("com.bvp").Converter();
+var aa = System.getModule("com.bvp").AaManager(true);
+var transitAddress = aa.getUerp(transitAddressLink);
+var managedRouterId = managedRouterLink.split("/routers/")[1];
+var managedRouter = aa.getUerp(managedRouterLink);
+var nsx = System.getModule("com.bvp").NsxManager(aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0]);
+var natRulePath = "/policy/api/v1" + managedTier1Path + "/nat/USER/nat-rules";
+for each(var natRule in nsx.get(natRulePath).results) {
+    var isDefault = false;
+    for each(var tag in natRule.tags) {
+        if (tag.scope == "vpcSegId" && tag.tag == managedRouter.name) {
+            natRule.source_network = undefined;
+            natRule.sequence_number = 1000;
+            nsx.put(natRulePath + "/" + natRule.id, natRule);
+            isDefault = true;
+            break;
+        }
+    }
+    if (isDefault) { break; }
+}
+for each(var localeService in nsx.get("/policy/api/v1" + managedTier1Path + "/locale-services").results) {
+    var localeServiceId = localeService.id;
+    nsx.put("/policy/api/v1" + managedTier1Path + "/locale-services/" + localeServiceId + "/interfaces/" + managedRouterId, {
+        subnets: [{
+            ip_addresses: [transitAddress.ipAddress],
+            prefix_len: parseInt(transitPrefix)
+        }],
+        segment_path: transitSegmentPath
+    });
+    break;
+}
+return "";]]></script>
+</dunes-script-module>

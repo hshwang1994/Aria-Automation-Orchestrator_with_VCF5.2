@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getPlacementZonesByProjectId" result-type="Array/Properties" api-version="6.0.0" id="6b7ec289-34d4-4ab8-a367-1757e57f804f" version="0.1.1" allowed-operations="vfe" category-name="com.bvp.bp.vpc">
+  <description><![CDATA[BP:Virtual Private Cloud
+BP:Virtual Machine]]></description>
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!projectId) { throw "projectId cannot be null"; }
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var result = [];
+for each(var zone in aa.get("/iaas/api/projects/" + projectId).zones) {
+    var placementZoneLink = "/provisioning/resources/placement-zones/" + zone.zoneId;
+    var placementZone = aa.getUerp(placementZoneLink);
+    result.push({
+        label: placementZone.desc ? placementZone.desc : placementZone.name,
+        value: placementZoneLink,
+    });
+}
+return result.sort(function (a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});]]></script>
+</dunes-script-module>

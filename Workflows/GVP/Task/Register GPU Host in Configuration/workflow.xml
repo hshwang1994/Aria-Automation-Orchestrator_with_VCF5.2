@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:workflow xmlns:ns2="http://vmware.com/vco/workflow" root-name="item1" object-name="workflow:name=generic" id="609c9c0d-c89a-46c0-b2a4-9e6c66a04d32" editor-version="2.0" version="0.0.0" api-version="6.0.0" restartMode="1" resumeFromFailedMode="0">
+    <display-name>Register GPU Host in Configuration</display-name>
+    <position y="50.0" x="100.0"/>
+    <input/>
+    <output/>
+    <workflow-item name="item0" type="end" end-mode="0" comparator="0">
+        <in-binding/>
+        <out-binding/>
+        <position y="50.0" x="340.0"/>
+    </workflow-item>
+    <workflow-item name="item1" out-name="item0" type="task" comparator="0">
+        <display-name>Scriptable task</display-name>
+        <script encoded="false">var aa = System.getModule("com.bvp").AaManager(true);
+var endpoints = [];
+var cloudAccounts = aa.get("/iaas/api/cloud-accounts?$filter=cloudAccountType eq 'vsphere'").content;
+for (var i in cloudAccounts){
+    endpoints.push(cloudAccounts[i].cloudAccountProperties.hostName.split(".")[0]);
+}
+
+var hosts = VcPlugin.getAllHostSystems(null);
+var gpuHosts = []
+for each(var host in hosts){
+    var gpuManager = host.configManager.graphicsManager;
+    if(gpuManager.sharedGraphicsActive == true){
+        gpuHosts.push(host);
+    }
+}
+
+for each(var endpoint in endpoints) {
+    var element = Server.getConfigurationElementCategoryWithPath("/BVP/Endpoint/" + endpoint).configurationElements[0];
+    var value = [];
+    for each(var gpuHost in gpuHosts){
+        var vcsa = gpuHost.sdkId.split(".")[0];
+        if(vcsa == endpoint){
+            value.push(gpuHost.name);
+        }
+    }
+    element.setAttributeWithKey("gpuHosts", value, System.getObjectType(value));  
+}
+</script>
+        <in-binding/>
+        <out-binding/>
+        <description>Simple task with custom script capability.</description>
+        <position y="50.0" x="180.0"/>
+    </workflow-item>
+</ns2:workflow>

@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item6" object-name="workflow:name=generic" id="a004c70c-2198-4631-b993-6f1aa3f5ca86" version="0.0.0" api-version="6.0.0" allowed-operations="vfe" editor-version="2.0" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[Test Window to CustomSpec (ClovirONE)]]></display-name>
+  <position y="50.0" x="100.0"/>
+  <input>
+    <param name="vm" type="VC:VirtualMachine"/>
+  </input>
+  <attrib name="test" type="VC:GuestInfoCustomizationStatus" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <workflow-item name="item0" type="end" end-mode="0">
+    <in-binding/>
+    <position y="50.0" x="780.0"/>
+  </workflow-item>
+  <workflow-item name="item6" out-name="item0" throw-bind-name="errorCode" type="task">
+    <display-name><![CDATA[Create a trigger]]></display-name>
+    <script encoded="false"><![CDATA[//result = taks.fromString();
+
+//System.log("Current status: " + result );
+info = new VcGuestInfo();
+method = info.isGuestOperationsReady();
+output = vm.guest;
+
+//output = info.isGuestOperationsReady();
+test = VcGuestInfoCustomizationStatus();
+System.log(output);
+
+
+
+
+]]></script>
+    <in-binding>
+      <bind name="vm" type="VC:VirtualMachine" export-name="vm"/>
+    </in-binding>
+    <out-binding>
+      <bind name="test" type="VC:GuestInfoCustomizationStatus" export-name="test"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="70.0" x="320.0"/>
+  </workflow-item>
+  <presentation/>
+</workflow>

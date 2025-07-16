@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getClusterWorkerNodeCountByProviderIdAndClusterPlaneName" result-type="string" api-version="6.0.0" id="a931eb88-db0c-455c-a04f-68171b864ae7" version="0.0.0" category-name="com.gvp.bp.tkgs">
+  <param n="providerId" t="string"><![CDATA[]]></param>
+  <param n="clusterplan" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!providerId || !clusterplan) {
+    return "";
+}
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var resp = aa.get("/cmx/api/resources/cluster-plans");
+var plans = resp.content || [];
+var controlPlaneCount, controlPlaneClass, workerCount, workerClass;
+
+for (var i = 0; i < plans.length; i++) {
+    var plan = plans[i];
+    if (plan.cloudAccountSelfLinkId === providerId && plan.name === clusterplan) {
+        var topo = plan.definition.spec.topology;
+        controlPlaneCount = topo.controlPlane.count;
+        controlPlaneClass = topo.controlPlane["class"];
+        workerCount = topo.workers.count;
+        workerClass = topo.workers["class"];
+        break;
+    }
+}
+
+return workerCount.toString();]]></script>
+</dunes-script-module>

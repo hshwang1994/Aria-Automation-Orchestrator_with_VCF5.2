@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:workflow xmlns:ns2="http://vmware.com/vco/workflow" root-name="item1" object-name="workflow:name=generic" id="766d8c20-54af-4662-8a79-11abf900a1bf" editor-version="2.0" version="0.0.0" api-version="6.0.0" restartMode="1" resumeFromFailedMode="0">
+    <display-name>Batch Get GPU Info</display-name>
+    <position y="50.0" x="100.0"/>
+    <input>
+        <param name="time" type="string"/>
+        <param name="_metadata_main_catalog" type="string"/>
+        <param name="_metadata_catalog" type="string"/>
+    </input>
+    <output>
+        <param name="output" type="Array/Properties"/>
+    </output>
+    <workflow-item name="item0" type="end" end-mode="0" comparator="0">
+        <in-binding/>
+        <out-binding/>
+        <position y="50.0" x="460.0"/>
+    </workflow-item>
+    <workflow-item name="item1" out-name="item0" type="task" comparator="0">
+        <display-name>Scriptable task</display-name>
+        <script encoded="false">var vcenters = [];
+var vcsaSdks = VcPlugin.allSdkConnections;
+var currentTime = System.getCurrentTime();
+var dayBeforeTime = currentTime - (24 * 60 * 60 * 1000);
+var startTime = new Date(dayBeforeTime);
+var endTime = new Date(currentTime);
+
+for(var i in vcsaSdks){
+    var format = {};
+    var vim = vcsaSdks[i];
+    var perf = vim.PerformanceManager;
+    format.vcenter = {};
+    format.vcenter.name = vim.id;
+    format.vcenter.timestamp = String(endTime);
+    format.vcenter.clusters = [];
+    
+    var clusters = vim.getAllClusterComputeResources();
+    for(var c in clusters){
+        var query = new Array;
+        query[0] = new VcPerfQuerySpec;
+        query[0].entity = clusters[c];
+        query[0].startTime = startTime;
+        query[0].endTime = endTime;
+        query[0].metricId =  perf.queryAvailablePerfMetric(clusters[c]).filter(function(item) {return (item.counterId == 284 || item.counterId == 280); }); 
+        var metricSeries = query[0].metricId.length &gt; 0?perf.queryPerf(query)[0].value:null;
+
+        if( metricSeries &amp;&amp; metricSeries.some(function(item){return item &amp;&amp; item.value !== null;})){
+            var totalGpuMem = metricSeries.filter(function(item){return item.id.counterId == 284})[0].value;
+            var usedGpuMem = metricSeries.filter(function(item){return item.id.counterId == 280})[0].value;
+            var clusterFormat = {};
+            clusterFormat.name = clusters[c].name;
+            clusterFormat.id = clusters[c].id;
+            clusterFormat.sdk_id = clusters[c].sdkId;
+            clusterFormat.total_gpu_memory_gb = totalGpuMem[0];
+            clusterFormat.used_gpu_memory_gb = usedGpuMem[0];
+            clusterFormat.total_gpus = 0;
+            clusterFormat.total_hosts = clusters[c].host.length;
+            clusterFormat.hosts_with_gpu = 0;
+            clusterFormat.total_vms_with_gpu = 0;
+            clusterFormat.hosts = [];
+
+            var hostList = clusters[c].host;
+            for (var h in hostList){
+                var gpuManager = hostList[h].configManager.graphicsManager;
+                if(gpuManager.retrieveVgpuProfileInfo() != null) {
+                    var gpuDevices = gpuManager.graphicsInfo;
+                    var hostFormat = {};
+                    hostFormat.name = hostList[h].name;
+                    hostFormat.id = hostList[h].id;
+                    hostFormat.sdk_id = hostList[h].sdkId;
+                    hostFormat.total_gpus = gpuDevices.length;
+                    hostFormat.gpu_profile_types = gpuManager.sharedPassthruGpuTypes || [];
+                    hostFormat.total_gpu_memory_gb = 0;
+                    hostFormat.allocated_gpu_memory_gb = 0;
+                    hostFormat.total_vms = hostList[h].vm.length;
+                    hostFormat.vms_with_gpu = 0;
+                    hostFormat.gpu_devices = [];
+                    
+                    for(var g in gpuDevices){
+                        var gpuFormat = {};
+                        var vms = gpuDevices[g].vm;
+                        gpuFormat.name = gpuDevices[g].deviceName;
+                        gpuFormat.pci_id = gpuDevices[g].pciId;
+                        gpuFormat.memory_size_gb = Math.round((gpuDevices[g].memorySizeInKB / 1024) / 1024);
+                        gpuFormat.virtual_machines = [];
+
+
+                        for(var v in vms ){
+                            var vmFormat = {};
+                            var devices = vms[v].config.hardware.device;
+                            var vgpuProfile = "Unknown";
+                            for (var d in devices) {
+                                if (devices[d] instanceof VcVirtualPCIPassthrough) {
+                                    vgpuProfile = devices[d].backing.vgpu;
+                                    break;
+                                }
+                            }
+                            
+                            vmFormat.name = vms[v].name;
+                            vmFormat.power_state = vms[v].runtime.powerState.value;
+                            vmFormat.gpu_allocation = {};
+                            vmFormat.gpu_allocation.vgpu_profile = vgpuProfile;
+                            var match = vgpuProfile.match(/-(\d+)/);
+                            vmFormat.gpu_allocation.allocated_memory_gb = match ? parseInt(match[1], 10) : null;
+                            
+                            gpuFormat.virtual_machines.push(vmFormat);
+                        }
+
+                        hostFormat.total_gpu_memory += gpuFormat.memory_size_gb;
+                        hostFormat.vms_with_gpu += gpuFormat.virtual_machines.length;
+                        clusterFormat.total_vms_with_gpu += gpuFormat.virtual_machines.length;
+                        hostFormat.gpu_devices.push(gpuFormat);
+                    }
+
+                    clusterFormat.total_gpus += gpuDevices.length;
+                    clusterFormat.hosts.push(hostFormat);
+                }
+                
+            }
+            clusterFormat.hosts_with_gpu = clusterFormat.hosts.length;
+            format.vcenter.clusters.push(clusterFormat);
+        }
+    };
+    if(format.vcenter.clusters.length &gt; 0){vcenters.push(format);}
+}
+
+output = vcenters;
+</script>
+        <in-binding/>
+        <out-binding>
+            <bind name="output" type="Array/Properties" export-name="output"/>
+        </out-binding>
+        <description>Simple task with custom script capability.</description>
+        <position y="70.0" x="220.0"/>
+    </workflow-item>
+</ns2:workflow>

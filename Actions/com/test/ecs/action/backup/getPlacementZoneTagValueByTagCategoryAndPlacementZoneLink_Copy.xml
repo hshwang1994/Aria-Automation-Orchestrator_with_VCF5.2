@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getPlacementZoneTagValueByTagCategoryAndPlacementZoneLink_Copy" result-type="string" api-version="6.0.0" id="a859c643-b2d5-42e5-ad78-c2539dadfba0" version="0.0.0" allowed-operations="vfe" category-name="com.test.ecs.action.backup">
+  <param n="placementZoneLink" t="string"><![CDATA[]]></param>
+  <param n="category" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var checker = category + "\n";
+var aa = System.getModule("com.ecs").AaManager(true);
+var zone = aa.getUerp(placementZoneLink);
+var result = [];
+for each(var tagObj in zone.expandedTags) {
+    if (tagObj.tag.indexOf(checker) > -1) {
+        return tagObj.tag.split("\n")[1];
+    }
+}
+throw 'could not find tag category';]]></script>
+</dunes-script-module>

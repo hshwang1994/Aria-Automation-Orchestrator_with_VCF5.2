@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getAvailableBlockDiskIdsByProjectId" result-type="Array/Properties" api-version="6.0.0" id="88f6f91f-4473-4b2c-8da0-3310dcffe48d" version="0.0.1" category-name="com.gvp.bp.vm">
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if(!projectId){ throw "projectId cannot be null"; }
+var aa = System.getModule("com.bvp").AaManager(true);
+
+var disks = aa.get("/iaas/api/block-devices?$filter=status eq 'AVAILABLE' and projectId eq '"+projectId+"'").content;
+var result = [];
+for each ( var disk in disks){
+    var properties = disk.customProperties;
+    result.push({
+        label: properties.displayName ? properties.displayName : disk.name,
+        value: disk.id,
+    });
+}
+
+return result.sort(function (a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});]]></script>
+</dunes-script-module>

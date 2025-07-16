@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<config-element id="7f684b6f-682b-4c2b-b6a4-5412a6f5e45c" version="0.0.0" allowed-operations="vfe">
+  <display-name><![CDATA[RepoInfo Copy]]></display-name>
+  <description><![CDATA[Repository Server base Url]]></description>
+  <atts>
+    <att name="repoServer" type="string" read-only="false">
+      <value encoded="n"><![CDATA[http://10.100.13.198/repo]]></value>
+    </att>
+    <att name="aptServer" type="string" read-only="false">
+      <value encoded="n"><![CDATA[http://10.100.13.198/ubuntu]]></value>
+    </att>
+  </atts>
+</config-element>

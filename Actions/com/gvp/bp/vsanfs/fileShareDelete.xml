@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="fileShareDelete" result-type="Properties" api-version="6.0.0" id="5f04427e-659b-434a-bf27-e3490c09224e" version="0.0.0" category-name="com.gvp.bp.vsanfs">
+  <param n="uuid" t="string"><![CDATA[]]></param>
+  <param n="endpoint" t="string"/>
+  <param n="endpointCluster" t="string"/>
+  <script encoded="false"><![CDATA[var vcConf = System.getModule("com.bvp").ConfManager().load("GVP/VSANFS");
+var conf = System.getModule("com.bvp").ConfManager().load("GVP/Endpoint/10.11.10.59")
+var rest = System.getModule("com.bvp").RestManager("https://" + conf.hostname, {
+    "Authorization": "Basic " + System.getModule("com.bvp").Converter().base64.encode(conf.username + ":" + conf.password)
+    });
+
+var result = rest.delete("/vsan/fileshare/" + uuid + "?hostname=" + endpoint + "&cluster_name=" + endpointCluster);
+
+return result]]></script>
+</dunes-script-module>

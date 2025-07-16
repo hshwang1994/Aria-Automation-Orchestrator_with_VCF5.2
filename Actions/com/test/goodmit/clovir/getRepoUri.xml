@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getRepoUri" result-type="Array/string" api-version="6.0.0" id="3d33879a-66b6-49cd-baf5-fdefd11e56a9" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <script encoded="false"><![CDATA[var category = Server.getConfigurationElementCategoryWithPath("/web-root");
+var confList = category.configurationElements;
+for each( a in confList){
+    if ( a.name =="RepoInfo"){
+        var conf = a;
+    }
+}
+var action = System.getModule("com.vmware.library.configurations").getObjectFromConfigurationElementWithKey;
+var result = [];
+result.push(action("aptServer",conf));
+
+return result;]]></script>
+</dunes-script-module>

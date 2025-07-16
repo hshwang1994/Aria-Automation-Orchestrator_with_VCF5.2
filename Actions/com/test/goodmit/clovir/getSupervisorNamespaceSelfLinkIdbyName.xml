@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getSupervisorNamespaceSelfLinkIdbyName" result-type="string" api-version="6.0.0" id="e0b541a5-cc58-480c-bbcc-e6cd35b7a325" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <param n="namespacesName" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (namespacesName == null || namespacesName == undefined) {
+    return null;
+}
+
+var aa = System.getModule("com.ecs").AaManager(true);
+var namespaces = aa.get("/cmx/api/resources/supervisor-namespaces").content;
+var namespaceSelfLinkId = null;
+
+for each (var ns in namespaces) {
+    if (ns.name === namespacesName && ns.status === "READY" && ns.origin === "VRA" && ns.registered === true) {
+        namespaceSelfLinkId = ns.selfLinkId;
+    }
+}
+
+System.log(namespaceSelfLinkId);
+return namespaceSelfLinkId;]]></script>
+</dunes-script-module>

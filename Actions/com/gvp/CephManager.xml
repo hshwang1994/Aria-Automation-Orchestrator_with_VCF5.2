@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="CephManager" result-type="Properties" api-version="6.0.0" id="60fdf7f7-a819-46bd-b66b-87b620e56a43" version="0.0.1" category-name="com.gvp">
+  <param n="endpoint" t="string"><![CDATA[]]></param>
+  <param n="version" t="string"/>
+  <script encoded="false"><![CDATA[return {
+    _config: function () {
+        var conf = System.getModule("com.bvp").ConfManager().load("GVP/Endpoint/" + endpoint);
+        var api = System.getModule("com.bvp").RestApi();
+        var res = JSON.parse(api.post(conf.hostname + "/api/auth", '{"username" : "'+conf.username+'", "password" : "'+ conf.password +'"}', {"Content-Type": "application/json", "Accept": "application/vnd.ceph.api.v1.0+json"}));
+        if (version == "1.0"){ var mediaTypeVersion = "vnd.ceph.api.v1.0+json"}
+        if (version == "2.0"){ var mediaTypeVersion = "vnd.ceph.api.v2.0+json"}
+        if (version == "0.1"){ var mediaTypeVersion = "vnd.ceph.api.v0.1+json"}
+        return {
+            baseUrl: conf.hostname,
+            headers: {
+                "Authorization": "Bearer " + res.token,
+                "Content-Type": "application/json",
+                "Accept": "application/" + mediaTypeVersion
+            }
+        }
+    } (),
+    _restapi: System.getModule("com.bvp").RestApi(),
+    get: function (url) {
+        var result = this._restapi.get(this._config.baseUrl + url, this._config.headers);
+        try { return JSON.parse(result); } catch(e) { return null; }
+    },
+    post: function (url, data) {
+        var result = this._restapi.post(this._config.baseUrl + url, JSON.stringify(data), this._config.headers);
+        try { return JSON.parse(result); } catch(e) { return null; }
+    },
+    put: function (url, data) {
+        var result = this._restapi.put(this._config.baseUrl + url, JSON.stringify(data), this._config.headers);
+        try { return JSON.parse(result); } catch(e) { return null; }
+    },
+    patch: function (url, data) {
+        var result = this._restapi.patch(this._config.baseUrl + url, JSON.stringify(data), this._config.headers);
+        try { return JSON.parse(result); } catch(e) { return null; }
+    },
+    delete: function (url) {
+        var result = this._restapi.delete(this._config.baseUrl + url, this._config.headers);
+        try { return JSON.parse(result); } catch(e) { return null; }
+    }
+}]]></script>
+</dunes-script-module>

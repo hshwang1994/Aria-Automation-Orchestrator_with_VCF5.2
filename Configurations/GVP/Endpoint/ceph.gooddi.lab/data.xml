@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<config-element id="c9ed0e84-eaa6-4f59-b96d-104f95c87e26" version="0.0.0">
+  <display-name><![CDATA[data]]></display-name>
+  <atts>
+    <att name="hostname" type="string" read-only="false">
+      <value encoded="n"><![CDATA[https://10.200.1.11:8443]]></value>
+    </att>
+    <att name="username" type="string" read-only="false">
+      <value encoded="n"><![CDATA[cloviradmin]]></value>
+    </att>
+    <att name="password" type="SecureString" read-only="false">
+      <value encoded="n"><![CDATA[__NULL__]]></value>
+    </att>
+  </atts>
+</config-element>

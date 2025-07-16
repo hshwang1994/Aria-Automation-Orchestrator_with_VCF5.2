@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="execPyUrl_Kube" result-type="string" api-version="6.0.0" id="e4dd94fd-712c-4477-af1e-0e2baaab21f3" version="0.0.0" category-name="com.gvp" memory-limit="128000000">
+  <runtime><![CDATA[python:3.10]]></runtime>
+  <param n="method" t="string"><![CDATA[]]></param>
+  <param n="url" t="string"><![CDATA[]]></param>
+  <param n="data" t="string"><![CDATA[]]></param>
+  <param n="headers" t="Properties"><![CDATA[]]></param>
+  <param n="cert" t="string"><![CDATA[]]></param>
+  <param n="key" t="string"><![CDATA[]]></param>
+  <param n="cacert" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[import ssl
+import time
+import json
+import http.client
+import tempfile
+
+def handler(context, inputs):
+    url = inputs['url']
+    proto, path = url.split("://")
+    proto = proto.lower()
+    host = path.split("/")[0]
+    path = path.replace(host, "", 1)
+    method = inputs['method'].upper()
+    headers = inputs['headers']
+    cert = inputs['cert']
+    key = inputs['key']
+    cacert = inputs['cacert']
+
+    # SSL 컨텍스트 생성
+    ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+    
+    # 임시 파일을 사용하되, with 블록 내에서 연결도 처리
+    with tempfile.NamedTemporaryFile(delete=False) as client_cert_file, \
+         tempfile.NamedTemporaryFile(delete=False) as client_key_file:
+        
+        # 인증서와 키를 임시 파일에 쓰기
+        client_cert_file.write(cert.encode())
+        client_cert_file.flush()
+        
+        client_key_file.write(key.encode())
+        client_key_file.flush()
+        
+        # 파일 경로를 저장
+        cert_path = client_cert_file.name
+        key_path = client_key_file.name
+    
+    # CA 인증서는 파일이 아닌 직접 내용을 사용
+    ssl_context.load_verify_locations(cadata=cacert)
+    
+    # 인증서와 키 로드
+    ssl_context.load_cert_chain(certfile=cert_path, keyfile=key_path)
+
+    try:
+        if proto == "http": 
+            conn = http.client.HTTPConnection(host)
+        elif proto == "https": 
+            conn = http.client.HTTPSConnection(host, context=ssl_context)
+        else: 
+            raise Exception('Error [execPyCurl] : un-supported protocol')
+
+        if method in ['POST', 'PUT', 'PATCH']:
+            body = inputs['data']
+            if not body: body = ''
+            conn.request(method, path, body=body, headers=headers)
+        else: 
+            conn.request(method, path, headers=headers)
+            
+        res = conn.getresponse()
+        print('pyURL {}: {} >> {}'.format(method, url, res.status))
+        
+        if res.status >= 400:
+            if res.status == 429:
+                time.sleep(1)
+                res = handler(context, inputs)
+            else: 
+                raise Exception('Error [execPyCurl] : {}'.format(res.read().decode("utf-8")))
+                
+        response_data = res.read().decode("utf-8")
+        return response_data
+    
+    finally:
+        # 임시 파일 정리
+        import os
+        if os.path.exists(cert_path):
+            os.unlink(cert_path)
+        if os.path.exists(key_path):
+            os.unlink(key_path)]]></script>
+</dunes-script-module>

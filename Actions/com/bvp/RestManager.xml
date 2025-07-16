@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="RestManager" result-type="Properties" api-version="6.0.0" id="32992a97-c492-41d9-ba93-b0dd8df8f97c" version="0.0.1" allowed-operations="vfe" category-name="com.bvp">
+  <param n="baseUrl" t="string"><![CDATA[]]></param>
+  <param n="headers" t="Properties"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[return {
+    _config: function () {
+        if (!baseUrl) { throw "Error [RestManager] : must be set host parameter"; }
+        if (!headers) { headers = new Properties(); }
+        headers["Content-Type"] = "application/json";
+        headers["Accept"] = "application/json";
+        return {
+            baseUrl: baseUrl,
+            headers: headers
+        }
+    } (),
+    _restapi: System.getModule("com.bvp").RestApi(),
+    get: function (url) { return JSON.parse(this._restapi.get(this._config.baseUrl + url, this._config.headers)); },
+    post: function (url, data) { return JSON.parse(this._restapi.post(this._config.baseUrl + url, JSON.stringify(data), this._config.headers)); },
+    put: function (url, data) { return JSON.parse(this._restapi.put(this._config.baseUrl + url, JSON.stringify(data), this._config.headers)); },
+    patch: function (url, data) { return JSON.parse(this._restapi.patch(this._config.baseUrl + url, JSON.stringify(data), this._config.headers)); },
+    delete: function (url) { return JSON.parse(this._restapi.delete(this._config.baseUrl + url, this._config.headers)); }
+}]]></script>
+</dunes-script-module>

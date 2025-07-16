@@ -1,0 +1,178 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item14" object-name="workflow:name=generic" id="d162476d-7ef2-4a93-a782-82ab072450a0" version="0.0.0" api-version="6.0.0" allowed-operations="vfe" editor-version="2.0" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[Default Segment Provisioin(ClovirOne)]]></display-name>
+  <position y="50.0" x="100.0"/>
+  <input>
+    <param name="inputProperties" type="Properties"/>
+  </input>
+  <attrib name="sleepTime" type="number" read-only="false">
+    <value encoded="n"><![CDATA[1.0]]></value>
+  </attrib>
+  <attrib name="count" type="number" read-only="false">
+    <value encoded="n"><![CDATA[0.0]]></value>
+  </attrib>
+  <attrib name="postResult" type="Array/Properties" read-only="false">
+    <value encoded="n"><![CDATA[[]]]></value>
+  </attrib>
+  <attrib name="deploymentStatus" type="boolean" read-only="false">
+    <value encoded="n"><![CDATA[false]]></value>
+  </attrib>
+  <workflow-item name="item0" type="end" end-mode="0">
+    <in-binding/>
+    <position y="50.0" x="620.0"/>
+  </workflow-item>
+  <workflow-item name="item9" out-name="item0" type="task">
+    <display-name><![CDATA[Create Segment]]></display-name>
+    <script encoded="false"><![CDATA[// API 모듈 가져오기
+var aa = System.getModule("com.ecs").AaManager(true);
+// VPC 카탈로그 아이템 ID 가져오기
+var catalogItems = aa.get("/catalog/api/items").content
+var catalogItemId = null;
+for each(var c in catalogItems){
+    if(c.name == "Segment(ClovirONE)"){
+        catalogItemId = c.id;
+    }
+}
+
+
+var result = [];
+var projectId = inputProperties.requestInputs.project;
+var requestMessage = inputProperties.requestInputs.requestMessage; 
+var metadata_catalog = "Segment";
+var metadata_category = "Network";
+var metadata_available = "vpc member";
+var metadata_resource_type = "Cloud.NSX.Network";
+var catalogVersion = aa.get("/catalog/api/items/" + catalogItemId + "/versions").content[0].id; // catalog의 최신 버전 가져오기
+var createByDefault = true;
+var vpcProfile = aa.get("/deployment/api/deployments/" + inputProperties.deploymentId + "/resources").content.filter(function(item){return item.name == "vpc";})[0].properties.vpcProfile;
+var cidr = inputProperties.requestInputs.defaultCidr;
+var vpcId = System.getModule("com.ecs.action").getProfileIdByProfileLink(vpcProfile);
+var vpcName = System.getModule("com.ecs.action").getProfileNameByProfileLink(vpcProfile);
+var deploymentName = "SEG: " + vpcName + "-" + cidr; // deployment 이름 생성
+var displayName = "Default-Segment-" + vpcName;
+var codeName = System.getModule("com.ecs.action").getRandomString(type="lowerDigit",length="8");
+var requestSegmentCatalog = aa.post("/catalog/api/items/"+ catalogItemId +"/request",{
+    "projectId": projectId,
+    "version": catalogVersion,
+    "deploymentName" : deploymentName,
+    "inputs": {
+        "codeName" : codeName,
+        "_project_id" : projectId,
+        "displayName": displayName,
+        "vpc" : vpcProfile,
+        "_vpc_id" : vpcId,
+        "_vpc_name" : vpcName,
+        "requestMessage": requestMessage,
+        "_metadata_catalog" : metadata_catalog,
+        "_metadata_category" : metadata_category,
+        "_metadata_available" : metadata_available,
+        "cidr" : cidr,
+        "_metadata_resource_type" : metadata_resource_type,
+        "createByDefault" : createByDefault
+    }
+});
+result.push(requestSegmentCatalog[0]);
+
+var projectName = inputProperties.projectName;
+var pageSize = aa.get("/deployment/api/resources?resourceTypes=Custom.Project").totalElements;
+var resources = aa.get("/deployment/api/resources?resourceTypes=Custom.Project&size=" + pageSize).content;
+var pjtResource = null;
+for each(var resource in resources){
+    if(resource.properties.name == projectName){
+        pjtResource = resource;
+    }
+}
+
+
+var actions = aa.get("/deployment/api/resources/" + pjtResource.id +"/actions");
+var appendActionId = null;
+for each(var action in actions){
+    if(action.name == "appendDeploymentIds"){
+        appendActionId = action.id;
+    }
+}
+var update = aa.post("/deployment/api/resources/"+ pjtResource.id +"/requests",{
+    "actionId": appendActionId,
+    "inputs": {
+        "deploymentIds": result[0].deploymentId
+    }
+})
+
+postResult = result;]]></script>
+    <in-binding>
+      <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+    </in-binding>
+    <out-binding>
+      <bind name="postResult" type="Array/Properties" export-name="postResult"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.0" x="380.0"/>
+  </workflow-item>
+  <workflow-item name="item12" out-name="item9" type="condition" alt-out-name="item15" comparator="0">
+    <display-name><![CDATA[Decision]]></display-name>
+    <script encoded="false"><![CDATA[// Generated by the system, cannot be edited
+return (deploymentStatus === true);]]></script>
+    <in-binding>
+      <bind name="deploymentStatus" type="boolean" export-name="deploymentStatus"/>
+    </in-binding>
+    <out-binding/>
+    <condition name="deploymentStatus" type="boolean" comparator="0" label="null"/>
+    <description><![CDATA[Custom decision based on a custom script.]]></description>
+    <position y="50.0" x="260.0"/>
+  </workflow-item>
+  <workflow-item name="item13" prototype-id="sleep" out-name="item14" content-mode="x" type="task">
+    <display-name><![CDATA[Sleep]]></display-name>
+    <script encoded="false"><![CDATA[//Auto-generated script
+if ( sleepTime !== null )  {
+	System.sleep(sleepTime * 1000);
+}else  {
+	throw "'sleepTime' is NULL"; 
+}]]></script>
+    <in-binding>
+      <bind name="sleepTime" type="number" export-name="sleepTime">
+        <description><![CDATA[Time to sleep in seconds]]></description>
+      </bind>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Sleep a given number of seconds.]]></description>
+    <position y="170.0" x="160.0"/>
+  </workflow-item>
+  <workflow-item name="item14" out-name="item12" type="task">
+    <display-name><![CDATA[Scriptable task]]></display-name>
+    <script encoded="false"><![CDATA[//CREATE_SUCCESSFUL
+var aa = System.getModule("com.ecs").AaManager(true);
+var st = aa.get("/deployment/api/deployments/"+inputProperties.deploymentId).status;
+if (st == "CREATE_SUCCESSFUL" || st == "UPDATE_SUCCESSFUL"){
+    deploymentStatus = true;
+} else if(count >= 10){
+    throw System.warn("Deployment Complete Check Timeout");
+}]]></script>
+    <in-binding>
+      <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+      <bind name="count" type="number" export-name="count"/>
+    </in-binding>
+    <out-binding>
+      <bind name="deploymentStatus" type="boolean" export-name="deploymentStatus"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.0" x="160.0"/>
+  </workflow-item>
+  <workflow-item name="item15" prototype-id="increase-counter" out-name="item13" content-mode="x" type="task">
+    <display-name><![CDATA[Increase counter]]></display-name>
+    <script encoded="false"><![CDATA[//Auto-generated script
+counter = counter + 1;]]></script>
+    <in-binding>
+      <bind name="counter" type="number" export-name="count">
+        <description><![CDATA[Item to increase]]></description>
+      </bind>
+    </in-binding>
+    <out-binding>
+      <bind name="counter" type="number" export-name="count">
+        <description><![CDATA[Increased item]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[Increment a counter by one.]]></description>
+    <position y="170.0" x="260.0"/>
+  </workflow-item>
+  <presentation/>
+</workflow>

@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getprofileByProjectId" result-type="string" api-version="6.0.0" id="4cd8d7f8-30ef-453e-bf11-d63863bbf019" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!projectId) { return []; }
+var aa = System.getModule("com.ecs").AaManager(true);
+var project = aa.get("/iaas/api/projects/" + projectId);
+var profile = project.customProperties ? project.customProperties.profile : null;
+return profile;]]></script>
+</dunes-script-module>

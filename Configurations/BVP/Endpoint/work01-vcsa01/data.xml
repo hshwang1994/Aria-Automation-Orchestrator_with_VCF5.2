@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<config-element id="8c90e6f9-39a7-4dfe-8deb-060119596338" version="0.0.0">
+  <display-name><![CDATA[data]]></display-name>
+  <atts>
+    <att name="hostname" type="string" read-only="false">
+      <value encoded="n"><![CDATA[work01-vcsa01.gooddi.lab]]></value>
+    </att>
+    <att name="username" type="string" read-only="false">
+      <value encoded="n"><![CDATA[cloviradmin@vsphere.local]]></value>
+    </att>
+    <att name="password" type="SecureString" read-only="false">
+      <value encoded="n"><![CDATA[__NULL__]]></value>
+    </att>
+    <att name="_path" type="string" read-only="false">
+      <value encoded="n"><![CDATA[BVP/Endpoint/work01-vcsa01]]></value>
+    </att>
+  </atts>
+</config-element>

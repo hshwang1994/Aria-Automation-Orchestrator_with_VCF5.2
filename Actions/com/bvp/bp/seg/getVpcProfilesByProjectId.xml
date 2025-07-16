@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getVpcProfilesByProjectId" result-type="Array/Properties" api-version="6.0.0" id="6dc6e86c-6538-476c-8123-c9e1548148ee" version="0.1.1" allowed-operations="vfe" category-name="com.bvp.bp.seg">
+  <description><![CDATA[BP:Segment
+BP:Access IP]]></description>
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <param n="exceptProfileLink" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!projectId) { throw "projectId cannot be null"; }
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var profiles = aa.getUerp("/provisioning/mgmt/network-profile?$filter=customProperties.vpcProjectId eq '" + projectId + "'");
+var result = [];
+for each(var profileLink in profiles.documentLinks) {
+    if (exceptProfileLink) {
+        if (exceptProfileLink != profileLink) {
+            var profile = profiles.documents[profileLink];
+            result.push({
+                label: profile.desc ? profile.desc : profile.name,
+                value: profileLink
+            });
+        }
+    } else {
+        var profile = profiles.documents[profileLink];
+        result.push({
+            label: profile.desc ? profile.desc : profile.name,
+            value: profileLink
+        });
+    }
+}
+return result.sort(function (a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});]]></script>
+</dunes-script-module>

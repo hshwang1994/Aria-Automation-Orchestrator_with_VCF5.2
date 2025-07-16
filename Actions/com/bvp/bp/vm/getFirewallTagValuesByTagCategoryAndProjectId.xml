@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getFirewallTagValuesByTagCategoryAndProjectId" result-type="Array/Properties" api-version="6.0.0" id="84964e07-996d-477e-aebd-d5a068bfa4bc" version="0.1.1" allowed-operations="vfe" category-name="com.bvp.bp.vm">
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <param n="category" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!category){ throw "category cannot be null"; }
+if (!projectId){ return null; throw "projectId cannot be null"; }
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var result = [];
+// for each(var sg in aa.get("/iaas/api/security-groups?$filter=(tags.item.key eq 'projectId' and tags.item.value eq '" + projectId + "')").content) {
+for each(var sg in aa.get("/iaas/api/security-groups?$filter=projectId eq '" + projectId + "'").content) {
+    if (sg.provisioningStatus == "READY") {
+        for each(var tag in sg.tags) {
+            if (tag.key == category) {
+                result.push({
+                    label: sg.customProperties.displayName ? sg.customProperties.displayName : sg.name,
+                    value: tag.value
+                });
+                break;
+            }
+        }
+    }
+}
+result = result.sort(function (a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});
+result.unshift({label: '-', value: '-'});
+return result;]]></script>
+</dunes-script-module>

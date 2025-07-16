@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getProjectNameByProjectId_Copy" result-type="string" api-version="6.0.0" id="b47f8998-521d-40c5-9acb-1872a678ff80" version="0.1.0" allowed-operations="vfe" category-name="com.test.ecs.action.backup">
+  <description><![CDATA[BP:Virtual Private Cloud
+BP:Virtual Machine]]></description>
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!projectId) { return ""; }
+var aa = System.getModule("com.ecs").AaManager(true);
+return aa.get("/iaas/api/projects/" + projectId).name;]]></script>
+</dunes-script-module>

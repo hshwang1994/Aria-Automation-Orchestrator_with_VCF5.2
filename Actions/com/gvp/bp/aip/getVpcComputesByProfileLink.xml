@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getVpcComputesByProfileLink" result-type="Array/Properties" api-version="6.0.0" id="5722a81b-e73f-414e-844f-fd481d323156" version="0.1.1" category-name="com.gvp.bp.aip">
+  <param n="profileLink" t="string"><![CDATA[]]></param>
+  <param n="type" t="string"/>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.bvp").AaManager(true);
+
+if (!type || !profileLink) {
+    throw "입력값(type 또는 profileLink)이 지정되지 않았습니다.";
+}
+
+var apiPath;
+if (type === "VM") {
+    apiPath = "/resources/compute?expand&$filter=customProperties.vpc eq '" + profileLink + "'";
+} else if (type === "LB") {
+    apiPath = "/resources/load-balancers?expand&$filter=customProperties.vpc eq '" + profileLink + "'";
+} else {
+    throw "지원하지 않는 type 값입니다: " + type;
+}
+
+var response = aa.getUerp(apiPath);
+
+var result = [];
+for each (var link in response.documentLinks) {
+    var doc = response.documents[link];
+    result.push({
+        label: doc.customProperties.displayName ? doc.customProperties.displayName : doc.name,
+        value: link
+    });
+}
+
+result.sort(function(a, b) {
+    var A = a.label.toUpperCase(), B = b.label.toUpperCase();
+    if (A < B) return -1;
+    if (A > B) return  1;
+    return 0;
+});
+return result;
+]]></script>
+</dunes-script-module>

@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<config-element id="572140ff-2e65-4148-8593-a26895d103d1" version="0.0.0">
+  <display-name><![CDATA[data]]></display-name>
+  <atts>
+    <att name="hostname" type="string" read-only="false">
+      <value encoded="n"><![CDATA[tanzu-vcsa01.gooddi.lab]]></value>
+    </att>
+    <att name="username" type="string" read-only="false">
+      <value encoded="n"><![CDATA[administrator@vsphere.local]]></value>
+    </att>
+    <att name="password" type="SecureString" read-only="false">
+      <value encoded="n"><![CDATA[__NULL__]]></value>
+    </att>
+  </atts>
+</config-element>

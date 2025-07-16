@@ -1,0 +1,57 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item1" object-name="workflow:name=generic" id="43f93bc1-b412-4b9a-8a23-819d5941a870" version="0.0.2" api-version="6.0.0" allowed-operations="vfe" editor-version="2.0" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[Network Removal]]></display-name>
+  <position y="50.0" x="100.0"/>
+  <input>
+    <param name="inputProperties" type="Properties"/>
+  </input>
+  <workflow-item name="item0" type="end" end-mode="0">
+    <in-binding/>
+    <position y="50.0" x="340.0"/>
+  </workflow-item>
+  <workflow-item name="item1" out-name="item0" type="task">
+    <display-name><![CDATA[Scriptable task]]></display-name>
+    <script encoded="false"><![CDATA[var subnetId = inputProperties.subnetIds[0];
+if (subnetId && subnetId != "N/A") {
+    var customProperties = inputProperties.customProperties;
+    var networkType = inputProperties.networkTypes[0];
+    if (customProperties.vpc && networkType != "EXISTING") {
+        var aa = System.getModule("com.bvp").AaManager(true);
+        var projectId = inputProperties.projectId;
+        var subnetLink = "/resources/sub-networks/" + subnetId;
+        if (aa.getUerp("/provisioning/resources/compute-networks?$filter=((networkType eq 'EXISTING') and (subnetLink eq '" + subnetLink + "'))").documentLinks.length > 0) {
+            throw "segment has relational deployment";
+        }
+        for each(var peering in aa.get("/deployment/api/resources?resourceTypes=Custom.Peering&projects=" + projectId).content) {
+            var properties = peering.properties;
+            if (properties.sourceSubnet == subnetLink || properties.targetSubnet == subnetLink) { throw "segment has peering"; }
+        }
+        var endpointId = inputProperties.endpointId;
+        var endpointLink = "/resources/endpoints/" + endpointId;
+        var subnet = aa.getUerp(subnetLink);
+        var subnetName = subnet.name;
+        var endpoint = aa.getUerp(endpointLink);
+        var segmentPath = customProperties.path;
+        var nsx = System.getModule("com.bvp").NsxManager(endpoint.endpointProperties.hostName.split(".")[0]);
+        var segment = nsx.get("/policy/api/v1" + segmentPath);
+        segment.dhcp_config_path = undefined;
+        segment.subnets[0].dhcp_config = undefined;
+        nsx.put("/policy/api/v1" + segmentPath, segment);
+        nsx.delete("/policy/api/v1/infra/dhcp-server-configs/" + subnetName);
+        var vpcSegIdTag = aa.getUerp("/resources/tags?expand&$filter=((key eq 'vpcSegId') and (value eq '" + subnet.name + "'))");
+        if (vpcSegIdTag.documentLinks.length > 0) {
+            vpcSegIdTag = vpcSegIdTag.documents[vpcSegIdTag.documentLinks[0]];
+            aa.deleteUerp(vpcSegIdTag.documentSelfLink + '?ignoreUsage=true');
+        }
+    }
+}
+]]></script>
+    <in-binding>
+      <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.0" x="180.0"/>
+  </workflow-item>
+  <presentation/>
+</workflow>

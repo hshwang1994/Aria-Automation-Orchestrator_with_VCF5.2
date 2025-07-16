@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getSupervisorNamespace" result-type="Array/string" api-version="6.0.0" id="c91ff23e-63bf-4f3c-88ab-9e8c541dbe96" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.ecs").AaManager(true);
+
+var result = [];
+var namespaces = aa.get("/cmx/api/resources/supervisor-namespaces").content;
+
+for each (var ns in namespaces) {
+    if (ns.status === "READY" && ns.origin === "VRA" && ns.registered === true) {
+        result.push(ns.name);
+    }
+}
+
+return result.sort(function(a, b) {
+    return a.toUpperCase() < b.toUpperCase() ? -1 : 1;
+});
+]]></script>
+</dunes-script-module>

@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getVmMountDiskByResourceId" result-type="Array/CompositeType(mount:string,size:number):diskProperties" api-version="6.0.0" id="202eba4d-01c6-4aea-825a-ecc13f0fb5e5" version="0.0.0" category-name="com.gvp">
+  <param n="resourceId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.bvp").AaManager(true);
+if (resourceId == "" || resourceId == null || resourceId == undefined){ 
+    return null;
+    };
+var machine = aa.get("/iaas/api/machines/"+resourceId);
+if(machine.customProperties.mountDisk==null || machine.customProperties.mountDisk == ""){
+    return null;
+}
+var mountDisks = JSON.parse(machine.customProperties.mountDisk);
+var result = [];
+for each( var mountDisk in mountDisks){
+    mountDisk.size = mountDisk.size;
+    result.push(mountDisk); 
+}
+return result;]]></script>
+</dunes-script-module>

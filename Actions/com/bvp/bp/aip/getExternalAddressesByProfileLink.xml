@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getExternalAddressesByProfileLink" result-type="Array/string" api-version="6.0.0" id="bccd1cc1-45fa-4215-83a1-a575856fca77" version="0.1.1" allowed-operations="vfe" category-name="com.bvp.bp.aip">
+  <description><![CDATA[BP:Access IP]]></description>
+  <param n="profileLink" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!profileLink) { throw "profileLink cannot be null"; }
+
+var conv = System.getModule("com.bvp").Converter();
+var aa = System.getModule("com.bvp").AaManager(true);
+var profile = aa.getUerp(profileLink);
+var subnetLink = profile.isolationExternalSubnetLink;
+var result = [];
+if (subnetLink) {
+    result.push('*');
+    var subnetRanges = aa.getUerp("/resources/subnet-ranges?expand&$filter=subnetLink eq '" + subnetLink + "'");
+    for each(var subnetRangeLink in subnetRanges.documentLinks) {
+        var subnetRange = subnetRanges.documents[subnetRangeLink];
+        var startIpNumeric = conv.ip.getNumeric(subnetRange.startIPAddress);
+        var endIpNumeric = conv.ip.getNumeric(subnetRange.endIPAddress);
+        var usedIpAddresses = aa.getUerp("/resources/ip-addresses?expand&$filter=(subnetRangeLink eq '" + subnetRangeLink + "') and (ipAddressStatus ne 'AVAILABLE')");
+        var used = [];
+        for each(var usedIpAddressLink in usedIpAddresses.documentLinks) {
+            used.push(conv.ip.getNumeric(usedIpAddresses.documents[usedIpAddressLink].ipAddress));
+        }
+        for (var ip = startIpNumeric; ip <= endIpNumeric; ip++) {
+            if (used.indexOf(ip) < 0) {
+                var ipStr = conv.ip.getString(ip);
+                result.push(ipStr);
+            }
+        }
+    }   
+}
+return result;]]></script>
+</dunes-script-module>

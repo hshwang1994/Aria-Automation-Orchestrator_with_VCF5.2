@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:workflow xmlns:ns2="http://vmware.com/vco/workflow" root-name="item1" object-name="workflow:name=generic" id="47d073d9-8afa-498d-933e-72a99b09f89d" editor-version="2.0" version="0.0.0" api-version="6.0.0" restartMode="1" resumeFromFailedMode="0">
+    <display-name>VPCFW.RuleUpdate</display-name>
+    <position y="50.0" x="100.0"/>
+    <input>
+        <param name="_metadata_main_catalog" type="string"/>
+        <param name="_metadata_catalog" type="string"/>
+        <param name="resourceId" type="string"/>
+        <param name="rules" type="Array/CompositeType(id:string,source:Array/string,destination:Array/string,tcpServices:Array/string,udpServices:Array/string,action:string,sequenceNumber:number):vpcFwRules"/>
+        <param name="requestMessage" type="string"/>
+    </input>
+    <output/>
+    <workflow-item name="item0" type="end" end-mode="0" comparator="0">
+        <in-binding/>
+        <out-binding/>
+        <position y="50.0" x="320.0"/>
+    </workflow-item>
+    <workflow-item name="item1" out-name="item0" type="task" comparator="0">
+        <display-name>Scriptable task</display-name>
+        <script encoded="false">var aa = System.getModule("com.bvp").AaManager(true);
+
+var requestIds = [];
+var result = aa.post("/deployment/api/resources/" + resourceId + "/requests",{
+    "actionId": "Custom.VPCFW.custom.ruleupdate",
+    "inputs": {
+        "vpcfwId": resourceId,
+        "vpcfwRules": rules
+    }
+})
+requestIds.push(result.id);
+
+var allSuccessful = false;
+var count = 0;
+while (!allSuccessful) {
+    allSuccessful = true; // 매 루프마다 초기화
+    var statuses = [];
+
+    for (var i = 0; i &lt; requestIds.length; i++) {
+        var requestId = requestIds[i];
+        var result = aa.get("/deployment/api/requests/" + requestId);
+        statuses.push(result.status);
+
+        if (result.status !== "SUCCESSFUL") {
+            allSuccessful = false;
+        }
+    }
+
+    count++;
+    if (count &gt; 10) {
+        throw "Waiting Time out"
+    }
+    // Optional: 너무 빠른 루프 방지
+    System.sleep(5000); // 5초 대기 (아래에 sleep 함수 있음)
+    
+}</script>
+        <in-binding>
+            <bind name="resourceId" type="string" export-name="resourceId"/>
+            <bind name="rules" type="Array/CompositeType(id:string,source:Array/string,destination:Array/string,tcpServices:Array/string,udpServices:Array/string,action:string,sequenceNumber:number):vpcFwRules" export-name="rules"/>
+        </in-binding>
+        <out-binding/>
+        <description>Simple task with custom script capability.</description>
+        <position y="60.0" x="160.0"/>
+    </workflow-item>
+</ns2:workflow>

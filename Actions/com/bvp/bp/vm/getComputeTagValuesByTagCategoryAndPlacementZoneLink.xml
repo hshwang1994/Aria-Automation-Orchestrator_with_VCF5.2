@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getComputeTagValuesByTagCategoryAndPlacementZoneLink" result-type="Array/Properties" api-version="6.0.0" id="4524731a-c90f-4850-becb-bc66a47d1b24" version="0.1.1" allowed-operations="vfe" category-name="com.bvp.bp.vm">
+  <description><![CDATA[BP:Virtual Machine]]></description>
+  <param n="placementZoneLink" t="string"><![CDATA[]]></param>
+  <param n="category" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!category) { throw "category cannot be null"; }
+if (!placementZoneLink) { throw "placementZoneLink cannot be null"; }
+
+var checker = category + "\n";
+var aa = System.getModule("com.bvp").AaManager(true);
+var zone = aa.getUerp(placementZoneLink);
+var result = [];
+for each(var tagObj in zone.expandedTags) {
+    if (tagObj.tag.indexOf(checker) > -1) {
+        result.push({
+            label: zone.desc ? zone.desc : zone.name,
+            value: tagObj.tag.split("\n")[1],
+        });
+        break;
+    }
+}
+var computeResult = [];
+for each(var computeLink in zone.assignedComputeLinks) {
+    var compute = aa.getUerp(computeLink);
+    for each(var tagObj in compute.expandedTags) {
+        if (tagObj.tag.indexOf(checker) > -1) {
+            computeResult.push({
+                label: compute.name,
+                value: tagObj.tag.split("\n")[1],
+            });
+            break;
+        }
+    }
+}
+computeResult = computeResult.sort(function (a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});
+for each(var compute in computeResult) {
+    result.push(compute);
+}
+return result;]]></script>
+</dunes-script-module>

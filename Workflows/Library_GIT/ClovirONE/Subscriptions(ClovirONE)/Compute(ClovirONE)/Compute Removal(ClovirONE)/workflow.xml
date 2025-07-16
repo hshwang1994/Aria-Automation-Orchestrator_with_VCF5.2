@@ -1,0 +1,94 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item3" object-name="workflow:name=generic" id="8daede43-9695-4420-b65e-b5615c628dbb" version="0.0.1" api-version="6.0.0" allowed-operations="vfe" editor-version="2.0" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[ Compute Removal(ClovirONE)]]></display-name>
+  <position y="50.0" x="100.0"/>
+  <input>
+    <param name="inputProperties" type="Properties"/>
+  </input>
+  <attrib name="message" type="string" read-only="false">
+    <value encoded="n"><![CDATA[VM의 전원이 켜져있습니다]]></value>
+  </attrib>
+  <workflow-item name="item0" type="end" end-mode="0">
+    <in-binding/>
+    <position y="50.0" x="600.0"/>
+  </workflow-item>
+  <workflow-item name="item3" out-name="item5" type="custom-condition" alt-out-name="item4">
+    <display-name><![CDATA[VM전원 상태 확인]]></display-name>
+    <script encoded="false"><![CDATA[var computeId = inputProperties.resourceIds[0];
+var aa = System.getModule("com.ecs").AaManager(true);
+var computeLink = "/resources/compute/" + computeId;
+var compute = aa.getUerp(computeLink);
+var computeName = compute.name;
+var vmName = computeName;
+
+// vSphere의 모든 VM 목록 가져오기
+var allVms = VcPlugin.getAllVirtualMachines(); 
+
+// 모든 VM 중에서 이름이 vmName과 같은 VM 찾기
+var vm = null;
+for (var i = 0; i < allVms.length; i++) {
+    if (allVms[i].name === vmName) {
+        vm = allVms[i]; // 일치하는 VM을 찾음
+        break;
+    }
+}
+
+// 이름이 일치하는 VM이 없으면 에러
+if (!vm) {
+    throw "지정된 이름의 VM을 찾을 수 없습니다: " + vmName;
+}
+
+// 찾은 VM의 전원 상태 확인 (value 속성으로 비교)
+if (vm.runtime.powerState.value === "poweredOff") {
+    return true;  // 전원이 꺼져 있으면 true 반환
+} else {
+    return false; // 전원이 켜져 있으면 false 반환
+}]]></script>
+    <in-binding>
+      <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Custom decision based on a custom script.]]></description>
+    <position y="50.0" x="180.0"/>
+  </workflow-item>
+  <workflow-item name="item4" throw-bind-name="message" type="end" end-mode="1">
+    <in-binding/>
+    <position y="110.0" x="220.0"/>
+  </workflow-item>
+  <workflow-item name="item5" out-name="item0" type="task">
+    <display-name><![CDATA[Scriptable task]]></display-name>
+    <script encoded="false"><![CDATA[var computeId = inputProperties.resourceIds[0];
+if (computeId && computeId != "N/A") {
+    var aa = System.getModule("com.ecs").AaManager(true);
+    var projectId = inputProperties.projectId;
+    var computeLink = "/resources/compute/" + computeId;
+    var compute = aa.getUerp(computeLink);
+    for each(var aip in aa.get("/deployment/api/resources?resourceTypes=Custom.AIP&projects=" + projectId).content) {
+        if (aip.properties.compute == computeLink) { throw "compute interface has access ip"; }
+    }
+    if (compute.customProperties.vpc) {
+        var nsx = null;
+        for each(var intfLink in compute.networkInterfaceLinks) {
+            var interfaceId = intfLink.split("/network-interfaces/")[1];
+            var interface = aa.getUerp(intfLink);
+            if (interface.subnetLink) {
+                var subnet = aa.getUerp(interface.subnetLink);
+                if (!nsx) { nsx = System.getModule("com.ecs").NsxManager(aa.getUerp(subnet.endpointLink).endpointProperties.hostName.split(".")[0]);}
+                nsx.delete("/policy/api/v1" + subnet.customProperties.__path + "/dhcp-static-binding-configs/" + interfaceId);
+            }
+        }
+        if (nsx) {
+            var vpc = aa.getUerp(compute.customProperties.vpc);
+            try { nsx.delete("/policy/api/v1" + vpc.customProperties.vpcManagedTier1Path + "/nat/USER/nat-rules/" + compute.id) } catch (e) { }
+        }
+    }
+}]]></script>
+    <in-binding>
+      <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.0" x="340.0"/>
+  </workflow-item>
+  <presentation/>
+</workflow>

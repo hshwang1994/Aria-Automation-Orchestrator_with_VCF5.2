@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:workflow xmlns:ns2="http://vmware.com/vco/workflow" root-name="item6" object-name="workflow:name=generic" id="ed11f13d-e6f6-43c1-bc3a-b0d8cc933801" editor-version="2.0" version="0.0.2" api-version="6.0.0" allowed-operations="vfe" restartMode="1" resumeFromFailedMode="0">
+    <display-name>Compute Post Provision</display-name>
+    <position y="50.0" x="100.0"/>
+    <input>
+        <param name="inputProperties" type="Properties"/>
+    </input>
+    <output/>
+    <attrib name="app" type="Array/CompositeType(package:string,parameters:string):packages">
+        <value encoded="n">[]</value>
+    </attrib>
+    <attrib name="machineId" type="string">
+        <value encoded="n"></value>
+    </attrib>
+    <workflow-item name="item0" type="end" end-mode="0" comparator="0">
+        <in-binding/>
+        <out-binding/>
+        <position y="90.0" x="780.0"/>
+    </workflow-item>
+    <workflow-item name="item1" out-name="item3" type="task" comparator="0">
+        <display-name>Scriptable task</display-name>
+        <script encoded="false">var computeId = inputProperties.resourceIds[0];
+if (computeId &amp;&amp; computeId != "N/A") {
+    var aa = System.getModule("com.bvp").AaManager(true);
+    var endpointId = inputProperties.endpointId;
+    var endpointLink = "/resources/endpoints/" + endpointId;
+    var endpointName = aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0];
+    var customProperties = inputProperties.customProperties;
+    var rootPassword = customProperties.rootPassword ? customProperties.rootPassword : null;
+    var rootPasswordNew = customProperties.rootPasswordNew ? customProperties.rootPasswordNew : null;
+    var adminUsername = customProperties.adminUsername ? customProperties.adminUsername : null;
+    var adminPassword = customProperties.adminPassword ? customProperties.adminPassword : null;
+    var computeLink = "/resources/compute/" + computeId;
+    var compute = aa.getUerp(computeLink);
+    var computeName = compute.name;
+    var addressType = compute.customProperties.vpc ? (compute.customProperties.addressType ? compute.customProperties.addressType : "permanent") : "permanent";
+    var nsx = null;
+    if (compute.customProperties.vpc) {
+        var vpc = aa.getUerp(compute.customProperties.vpc);
+        for each(var intfLink in compute.networkInterfaceLinks) {
+            var interfaceId = intfLink.split("/network-interfaces/")[1];
+            var interface = aa.getUerp(intfLink);
+            var macAddress = interface.customProperties.mac_address;
+            var subnet = aa.getUerp(interface.subnetLink);
+            if (!nsx) { nsx = System.getModule("com.bvp").NsxManager(aa.getUerp(subnet.endpointLink).endpointProperties.hostName.split(".")[0]);}
+            nsx.put("/policy/api/v1" + subnet.customProperties.__path + "/dhcp-static-binding-configs/" + interfaceId, {
+                resource_type: "DhcpV4StaticBindingConfig",
+                display_name: computeName + "-" + macAddress,
+                host_name: computeName,
+                ip_address: interface.address,
+                mac_address: macAddress,
+                gateway_address: interface.customProperties.gateways,
+                options: {}
+            });
+        }
+        if (nsx) {
+            // clovirone add
+            var translatedPort = (parseInt(compute.customProperties.__moref.split(":vm-")[1]) % 55000) + 10000;
+            nsx.put("/policy/api/v1" + vpc.customProperties.vpcManagedTier1Path + "/nat/USER/nat-rules/" + compute.id, {
+                action: "DNAT",
+                enabled: true,
+                display_name: compute.name,
+                destination_network: vpc.customProperties.vpcTransitAddress,
+                translated_network: compute.address,
+                service: "/infra/services/SSH",
+                translated_ports: (parseInt(compute.customProperties.__moref.split(":vm-")[1]) % 55000) + 10000,
+                firewall_match: "MATCH_INTERNAL_ADDRESS",
+                policy_based_vpn_mode: "BYPASS",
+                sequence_number: 0,
+                id: compute.id
+            });
+            var id = aa.get("/iaas/api/machines?$filter=name eq '" + computeName + "'").content[0].id;
+            aa.patch("/iaas/api/machines/" + inputProperties.resourceIds[0], {
+                "customProperties": {
+                    "translatedPort": translatedPort
+                }
+            });
+        }
+    }
+    if (rootPassword) {
+        var scripts = "/usr/bin/cloud-init clean -s -l -c all\n";
+        if (addressType == "permanent") {
+            scripts += 'echo "network: {config: disabled}" &gt; /etc/cloud/cloud.cfg.d/99_network_disabled.cfg\n';
+        } else {
+           // scripts += "rm -rf /etc/sysconfig/network-scripts/ifcfg-*\n"; // redhat, fedora, centos, locky
+           // scripts += "rm -rf /etc/network/interfaces\n"; // devian(ubuntu) older
+           // scripts += "rm -rf /etc/netplan/*\n"; // devian(ubuntu) newer
+        }
+        scripts += "/usr/bin/cloud-init init --local\n";
+        scripts += "/usr/bin/cloud-init init\n";
+        scripts += "/usr/bin/cloud-init modules --mode=config\n";
+        scripts += "/usr/bin/cloud-init modules --mode=final\n";
+        var vcConf = System.getModule("com.bvp").ConfManager().load("BVP/Endpoint/" + endpointName);
+        var execScripts = System.getModule("com.bvp").execScripts;
+        execScripts(vcConf.hostname, vcConf.username, vcConf.password, computeName, "root", rootPassword, scripts);
+        if (adminUsername &amp;&amp; adminPassword &amp;&amp; rootPasswordNew) {
+            execScripts(vcConf.hostname, vcConf.username, vcConf.password, computeName, adminUsername, adminPassword, "sudo -u root bash -c '(echo \"" + rootPasswordNew + "\"; echo \"" + rootPasswordNew + "\") | passwd'");
+        }
+        if (addressType != "permanent") {
+            while (true) {
+                System.sleep(1000);
+                System.log("try reboot");
+                try {
+                    aa.post("/iaas/api/machines/" + computeId + "/operations/reboot", {});
+                    break;
+                } catch (e) {
+                    System.log("reboot error : " + e);
+                }
+            }
+        }
+        // telegraf 설정
+        if(customProperties.isLinux){
+            var opsName = aa.get("/iaas/api/integrations?apiVersion=2025-04-23&amp;$filter=integrationType eq 'vrops'").content[0].name;
+            var opsConf = System.getModule("com.bvp").ConfManager().load("GVP/Endpoint/" + opsName);
+            var guestConf = System.getModule("com.bvp").ConfManager().load("GVP/GuestAccount");
+            var vrops = System.getModule("com.gvp").OpsManager(opsName);
+            var rest = System.getModule("com.bvp").RestManager(opsConf.hostname);
+            var token = rest.post("/api/auth/token/acquire",{
+            "username" : opsConf.username,
+            "authSource" : "LOCAL",
+            "password" : opsConf.password
+            }).token;
+            var groups = vrops.get("/api/collectorgroups").collectorGroups;
+            var collectors = vrops.get("/api/collectors").collector;
+            for each(var group in groups){
+                if(group.name == endpointName){
+                    var collectorId = group.collectorId[0];
+
+                }
+            }
+            for each(var collector in collectors){
+                if(collector.id == collectorId){
+                    var collectorIp = collector.hostName;
+                }
+            }
+            var echo = 'echo "arc_fqdn: ' + inputProperties.resourceNames[0] + '" &gt; /opt/vmware/ucp/salt-minion/etc/salt/grains'
+            var telScript = "sudo wget https://" + collectorIp + "/downloads/salt/telegraf-utils.sh --no-check-certificate -O /tmp/telegraf-utils.sh \n";
+            telScript += "sudo mkdir -p /opt/vmware/ucp/salt-minion/etc/salt &amp;&amp; sudo bash -c '" + echo + "' \n" 
+            telScript += "sudo chmod +x /tmp/telegraf-utils.sh  \n";
+            telScript += "sudo /bin/bash /tmp/telegraf-utils.sh opensource -c " + collectorIp + " -t " + token + " -d /etc/telegraf/telegraf.d -e /usr/bin/telegraf -v " + opsName + "  \n";
+            telScript += "sleep 1s \n";
+            telScript += "sudo systemctl restart telegraf \n";
+            telScript += "sudo rm /tmp/telegraf-utils.sh";
+            execScripts(vcConf.hostname, vcConf.username, vcConf.password, computeName, adminUsername, adminPassword, telScript);
+        }
+    }
+}
+
+if(customProperties.packages == "[]" || customProperties.packages == null || customProperties.packages == undefined) {
+
+} else{
+    var paks = JSON.parse(customProperties.packages);
+    for(var i in paks){
+        paks[i].parameters = JSON.stringify(paks[i].parameters);
+    }
+    app = paks;
+}
+
+machineId = inputProperties.resourceIds[0]</script>
+        <in-binding>
+            <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+        </in-binding>
+        <out-binding>
+            <bind name="app" type="Array/CompositeType(package:string,parameters:string):packages" export-name="app"/>
+            <bind name="machineId" type="string" export-name="machineId"/>
+        </out-binding>
+        <description>Simple task with custom script capability.</description>
+        <position y="50.0" x="320.0"/>
+    </workflow-item>
+    <workflow-item name="item2" type="end" end-mode="0" comparator="0">
+        <in-binding/>
+        <out-binding/>
+        <position y="0.0" x="600.0"/>
+    </workflow-item>
+    <workflow-item name="item3" out-name="item4" alt-out-name="item2" type="custom-condition" comparator="0">
+        <display-name>Decision</display-name>
+        <script encoded="false">var customProperties = inputProperties.customProperties;
+if (customProperties.packages == "[]" || customProperties.packages == null || customProperties.packages == undefined){
+    return false;
+} else {
+    return true;
+}</script>
+        <in-binding>
+            <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+        </in-binding>
+        <out-binding/>
+        <description>Custom decision based on a custom script.</description>
+        <position y="90.0" x="480.0"/>
+    </workflow-item>
+    <workflow-item name="item4" out-name="item0" type="link" linked-workflow-id="3f8918fd-6bb6-4dc9-a803-8ba2fd9d89d4" comparator="0">
+        <display-name>VM SW 추가</display-name>
+        <script encoded="false"></script>
+        <in-binding>
+            <bind name="_metadata_main_catalog" type="string" export-name=""/>
+            <bind name="_metadata_catalog" type="string" export-name=""/>
+            <bind name="resourceId" type="string" export-name="machineId"/>
+            <bind name="applications" type="Array/CompositeType(package:string,parameters:string):packages" export-name="app"/>
+        </in-binding>
+        <out-binding/>
+        <description> </description>
+        <position y="100.0" x="620.0"/>
+    </workflow-item>
+    <workflow-item name="item5" type="end" end-mode="0" comparator="0">
+        <in-binding/>
+        <out-binding/>
+        <position y="170.0" x="680.0"/>
+    </workflow-item>
+    <workflow-item name="item6" out-name="item1" alt-out-name="item7" type="custom-condition" comparator="0">
+        <display-name>Linux or Window</display-name>
+        <script encoded="false">if(inputProperties.customProperties.isLinux == "true"){
+    return true;
+} else {
+    return false;
+}</script>
+        <in-binding>
+            <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+        </in-binding>
+        <out-binding/>
+        <description>Custom decision based on a custom script.</description>
+        <position y="70.0" x="160.0"/>
+    </workflow-item>
+    <workflow-item name="item7" out-name="item5" type="task" comparator="0">
+        <display-name>Scriptable task</display-name>
+        <script encoded="false">var computeId = inputProperties.resourceIds[0];
+if (computeId &amp;&amp; computeId != "N/A") {
+    var aa = System.getModule("com.bvp").AaManager(true);
+    var endpointId = inputProperties.endpointId;
+    var endpointLink = "/resources/endpoints/" + endpointId;
+    var endpointName = aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0];
+    var customProperties = inputProperties.customProperties;
+    var rootPassword = customProperties.rootPassword ? customProperties.rootPassword : null;
+    var rootPasswordNew = customProperties.rootPasswordNew ? customProperties.rootPasswordNew : null;
+    var adminUsername = customProperties.adminUsername ? customProperties.adminUsername : null;
+    var adminPassword = customProperties.adminPassword ? customProperties.adminPassword : null;
+    var computeLink = "/resources/compute/" + computeId;
+    var compute = aa.getUerp(computeLink);
+    var computeName = compute.name;
+    var addressType = compute.customProperties.vpc ? (compute.customProperties.addressType ? compute.customProperties.addressType : "permanent") : "permanent";
+    var nsx = null;
+    if (compute.customProperties.vpc) {
+        var vpc = aa.getUerp(compute.customProperties.vpc);
+        for each(var intfLink in compute.networkInterfaceLinks) {
+            var interfaceId = intfLink.split("/network-interfaces/")[1];
+            var interface = aa.getUerp(intfLink);
+            var macAddress = interface.customProperties.mac_address;
+            var subnet = aa.getUerp(interface.subnetLink);
+            if (!nsx) { nsx = System.getModule("com.bvp").NsxManager(aa.getUerp(subnet.endpointLink).endpointProperties.hostName.split(".")[0]);}
+            nsx.put("/policy/api/v1" + subnet.customProperties.__path + "/dhcp-static-binding-configs/" + interfaceId, {
+                resource_type: "DhcpV4StaticBindingConfig",
+                display_name: computeName + "-" + macAddress,
+                host_name: computeName,
+                ip_address: interface.address,
+                mac_address: macAddress,
+                gateway_address: interface.customProperties.gateways,
+                options: {}
+            });
+        }
+        if (nsx) {
+            // clovirone add
+            var translatedPort = (parseInt(compute.customProperties.__moref.split(":vm-")[1]) % 55000) + 10000;
+            nsx.put("/policy/api/v1" + vpc.customProperties.vpcManagedTier1Path + "/nat/USER/nat-rules/" + compute.id, {
+                action: "DNAT",
+                enabled: true,
+                display_name: compute.name,
+                destination_network: vpc.customProperties.vpcTransitAddress,
+                translated_network: compute.address,
+                service: "/infra/services/RDP",
+                translated_ports: (parseInt(compute.customProperties.__moref.split(":vm-")[1]) % 55000) + 10000,
+                firewall_match: "MATCH_INTERNAL_ADDRESS",
+                policy_based_vpn_mode: "BYPASS",
+                sequence_number: 0,
+                id: compute.id
+            });
+            var id = aa.get("/iaas/api/machines?$filter=name eq '" + computeName + "'").content[0].id;
+            aa.patch("/iaas/api/machines/" + inputProperties.resourceIds[0], {
+                "customProperties": {
+                    "translatedPort": translatedPort
+                }
+            });
+        }
+    }
+}</script>
+        <in-binding>
+            <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+        </in-binding>
+        <out-binding/>
+        <description>Simple task with custom script capability.</description>
+        <position y="150.0" x="300.0"/>
+    </workflow-item>
+</ns2:workflow>

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getProfileNameByProfileLink_Copy" result-type="string" api-version="6.0.0" id="d7e7cbde-55c5-44b5-84e1-0e1cdaca8319" version="0.1.0" allowed-operations="vfe" category-name="com.test.ecs.action.backup">
+  <description><![CDATA[BP:Segment]]></description>
+  <param n="profileLink" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[return System.getModule("com.ecs").AaManager(true).getUerp(profileLink).name;
+]]></script>
+</dunes-script-module>

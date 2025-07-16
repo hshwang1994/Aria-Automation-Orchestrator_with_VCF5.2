@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="peeringRemoval_Copy" result-type="string" api-version="6.0.0" id="50d4baf9-245b-4d6f-af44-41b283ec7a7d" version="0.0.0" allowed-operations="vfe" category-name="com.test.ecs.event.backup">
+  <param n="peeringId" t="string"><![CDATA[]]></param>
+  <param n="subnetLink1" t="string"><![CDATA[]]></param>
+  <param n="subnetLink2" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var nsxManager = System.getModule("com.ecs").NsxManager;
+var aa = System.getModule("com.ecs").AaManager(true);
+var subnet1 = aa.getUerp(subnetLink1);
+var endpointLink1 = subnet1.endpointLink;
+var tier1Path1 = subnet1.customProperties.vpcManagedTier1Path;
+var subnet2 = aa.getUerp(subnetLink2);
+var endpointLink2 = subnet2.endpointLink;
+var tier1Path2 = subnet2.customProperties.vpcManagedTier1Path;
+var nsx = nsxManager(aa.getUerp(endpointLink1).endpointProperties.hostName.split(".")[0]);
+nsx.delete("/policy/api/v1" + tier1Path1 + "/static-routes/" + peeringId);
+if (endpointLink1 != endpointLink2) { nsx = nsxManager(aa.getUerp(endpointLink2).endpointProperties.hostName.split(".")[0]); }
+nsx.delete("/policy/api/v1" + tier1Path2 + "/static-routes/" + peeringId);
+return "";]]></script>
+</dunes-script-module>

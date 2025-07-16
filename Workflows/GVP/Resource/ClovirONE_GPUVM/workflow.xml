@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:workflow xmlns:ns2="http://vmware.com/vco/workflow" root-name="item1" object-name="workflow:name=generic" id="b23d9220-2a32-435f-997a-6b20ed681e24" editor-version="2.0" version="0.0.0" api-version="6.0.0" restartMode="1" resumeFromFailedMode="0">
+    <display-name>ClovirONE_GPUVM</display-name>
+    <position y="50.0" x="100.0"/>
+    <input>
+        <param name="inputProperties" type="Properties"/>
+    </input>
+    <output/>
+    <attrib name="machine" type="VC:VirtualMachine">
+        <value encoded="n"/>
+    </attrib>
+    <attrib name="host" type="VC:HostSystem">
+        <value encoded="n"/>
+    </attrib>
+    <workflow-item name="item0" type="end" end-mode="0" comparator="0">
+        <in-binding/>
+        <out-binding/>
+        <position y="50.0" x="880.0"/>
+    </workflow-item>
+    <workflow-item name="item1" out-name="item6" type="task" comparator="0">
+        <display-name>Scriptable task</display-name>
+        <script encoded="false">var aa = System.getModule("com.bvp").AaManager(true);
+
+var vmName = inputProperties.resourceNames[0];
+var gpuRequest = inputProperties.customProperties.gpu;
+var gpuModel = inputProperties.customProperties.gpuModel;
+var gpuSize = inputProperties.customProperties.gpuSize;
+var gpuProfile = gpuModel + gpuSize;
+var vm = VcPlugin.getAllVirtualMachines(null, "xpath:name='"  + vmName + "'")[0];
+var clusterName = vm.runtime.host.parent.name;
+var hostList = VcPlugin.getAllHostSystems(null, "xpath:parent[name='" + clusterName + "']");
+var gpuHostList = [];
+for each(var host in hostList){
+    var gpuManager = host.configManager.graphicsManager;
+    if(gpuManager.sharedGraphicsActive == true){
+        var gpuProfiles = gpuManager.retrieveVgpuProfileInfo();
+        if(gpuProfiles.some(function(item){return item.profileName == gpuProfile;})) {
+            gpuHostList.push(host)
+        }
+    }
+}
+if(gpuHostList.length == 0){
+    throw "Could not found accepted vGPU Host"
+}
+var cpuMinHost = gpuHostList[0]
+for (var i in gpuHostList){
+    if (gpuHostList[i].summary.quickStats.overallCpuUsage &lt; cpuMinHost.summary.quickStats.overallCpuUsage) {
+        cpuMinHost = gpuHostList[i];
+    }
+}
+
+host = cpuMinHost;
+machine = vm;
+</script>
+        <in-binding>
+            <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+        </in-binding>
+        <out-binding>
+            <bind name="host" type="VC:HostSystem" export-name="host"/>
+            <bind name="machine" type="VC:VirtualMachine" export-name="machine"/>
+        </out-binding>
+        <description>Simple task with custom script capability.</description>
+        <position y="60.0" x="180.0"/>
+    </workflow-item>
+    <workflow-item name="item3" out-name="item0" type="task" comparator="0">
+        <display-name>Scriptable task</display-name>
+        <script encoded="false">var vm = machine;
+var devices = vm.config.hardware.device;
+
+for (var key in devices) {
+    var device = devices[key];
+    if (device instanceof VcVirtualPCIController){
+        var controllerKey = device.key;
+    }
+}
+
+var deviceChange = new Array();
+deviceChange[0] = new VcVirtualDeviceConfigSpec();
+deviceChange[0].device = new VcVirtualPCIPassthrough();
+deviceChange[0].device.controllerKey = controllerKey; 
+deviceChange[0].device.backing = new VcVirtualPCIPassthroughVmiopBackingInfo();
+deviceChange[0].device.backing.vgpu = gpuProfile;
+deviceChange[0].device.unitNumber = null;
+deviceChange[0].device.key = null;
+deviceChange[0].device.deviceInfo = new VcDescription();
+deviceChange[0].device.deviceInfo.summary = "NVIDIA GRID vGPU";
+deviceChange[0].device.deviceInfo.label = "PCI device 1";
+deviceChange[0].operation = VcVirtualDeviceConfigSpecOperation.add;
+
+var spec = new VcVirtualMachineConfigSpec();
+spec.deviceChange = deviceChange;
+var task = vm.reconfigVM_Task(spec);
+
+
+
+
+
+
+
+/*
+var devices = vm.config.hardware.device;  
+var gpu_size = inputProperties.customProperties.gpu_size
+var _gpu_model =   inputProperties.customProperties.gpu_model
+
+System.log("gpu_model: " + _gpu_model);
+if (_gpu_model == "v100-pcie-32gb") {
+    _gpu_model = "v100d";
+}
+System.log("gpu_model: " + _gpu_model);
+
+var _gpu_model_max =  1*inputProperties.customProperties.gpu_model_max
+var changeList = [];   
+var firstVGPU = null; 
+for (var i in devices) {  
+     
+  var vmspec = new VcVirtualMachineConfigSpec();
+      var confSpec = new VcVirtualDeviceConfigSpec();  // Builds config spec object for VirtualMachine
+    if(/VcVirtualPCIPassthrough/.test(devices[i] )){ // devices[i] is VcVirtualPCIPassthrough 이면
+        System.log(devices[i].backing.vgpu )  ;
+        if(firstVGPU == null){
+            firstVGPU = devices[i] ;
+        }
+        else{
+            var confSpec = new VcVirtualDeviceConfigSpec(); 
+            confSpec.operation = VcVirtualDeviceConfigSpecOperation.remove; 
+            confSpec.device = devices[i];
+            changeList.push(confSpec);
+        }
+        
+
+    }
+
+}  
+var size = gpu_size;
+if(size&gt;_gpu_model_max){
+    var cnt = gpu_size / _gpu_model_max;
+    var confSpec = new VcVirtualDeviceConfigSpec(); 
+    confSpec.operation = VcVirtualDeviceConfigSpecOperation.edit;  
+    firstVGPU.backing.vgpu = "grid_" + _gpu_model + "-" + _gpu_model_max + "q";
+    confSpec.device = firstVGPU;
+    changeList.push(confSpec);
+    for(var i=1; i &lt; cnt ; i++){
+        var confSpec2 = new VcVirtualDeviceConfigSpec(); 
+        confSpec2.operation = VcVirtualDeviceConfigSpecOperation.add;  
+        var gpu = new VcVirtualPCIPassthrough();
+        var backing = new VcVirtualPCIPassthroughVmiopBackingInfo();
+        var slot = new VcVirtualDevicePciBusSlotInfo();
+        backing.vgpu = "grid_" + _gpu_model + "-" + _gpu_model_max + "q";
+        gpu.key = firstVGPU.key + i;
+        gpu.unitNumber = firstVGPU.unitNumber + i;
+        slot.pciSlotNumber = firstVGPU.slotInfo.pciSlotNumber + i;
+        
+       
+        gpu.backing= backing;
+        gpu.slotInfo = slot;
+        confSpec2.device = gpu;
+        changeList.push(confSpec2);
+    }
+}
+else{
+    var confSpec = new VcVirtualDeviceConfigSpec(); 
+    confSpec.operation = VcVirtualDeviceConfigSpecOperation.edit;  
+    firstVGPU.backing.vgpu = "grid_" + _gpu_model + "-" + size + "q";
+    confSpec.device = firstVGPU;
+    changeList.push(confSpec);
+}
+ 
+var spec = new VcVirtualMachineConfigSpec();
+spec.deviceChange = changeList;  
+vm.reconfigVM_Task(spec)
+*/</script>
+        <in-binding>
+            <bind name="machine" type="VC:VirtualMachine" export-name="machine"/>
+            <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+        </in-binding>
+        <out-binding/>
+        <description>Simple task with custom script capability.</description>
+        <position y="60.0" x="680.0"/>
+    </workflow-item>
+    <workflow-item name="item6" out-name="item8" alt-out-name="item7" type="custom-condition" comparator="0">
+        <display-name>VM PowerState Check</display-name>
+        <script encoded="false">return vm.runtime.powerState.value == VcVirtualMachinePowerState.poweredOn.value;</script>
+        <in-binding>
+            <bind name="vm" type="VC:VirtualMachine" export-name="machine"/>
+        </in-binding>
+        <out-binding/>
+        <description>Custom decision based on a custom script.</description>
+        <position y="50.0" x="320.0"/>
+    </workflow-item>
+    <workflow-item name="item7" out-name="item8" type="link" linked-workflow-id="BD80808080808080808080808080808075C280800122528313869552e41805bb1" comparator="0">
+        <display-name>Shut down guest OS and wait</display-name>
+        <script encoded="false"></script>
+        <in-binding>
+            <bind name="vm" type="VC:VirtualMachine" export-name="machine">
+                <description>Virtual machine to shut down</description>
+            </bind>
+        </in-binding>
+        <out-binding/>
+        <description> </description>
+        <position y="140.0" x="320.0"/>
+    </workflow-item>
+    <workflow-item name="item8" out-name="item3" type="link" linked-workflow-id="84808080808080808080808080808080E8808080012372877675871d32e0b30c1" comparator="0">
+        <display-name>Quick migration of virtual machine</display-name>
+        <script encoded="false"></script>
+        <in-binding>
+            <bind name="vm" type="VC:VirtualMachine" export-name="machine">
+                <description>Virtual machine to migrate</description>
+            </bind>
+            <bind name="destinationHost" type="VC:HostSystem" export-name="host">
+                <description>Destination host</description>
+            </bind>
+        </in-binding>
+        <out-binding/>
+        <description> </description>
+        <position y="60.0" x="500.0"/>
+    </workflow-item>
+</ns2:workflow>

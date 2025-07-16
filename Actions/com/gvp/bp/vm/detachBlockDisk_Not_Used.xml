@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="detachBlockDisk_Not_Used" result-type="string" api-version="6.0.0" id="6aa7c168-a2d8-4023-b1de-84d9ad982e3d" version="0.0.1" category-name="com.gvp.bp.vm">
+  <param n="vmName" t="string"><![CDATA[]]></param>
+  <param n="diskId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!vmName) { throw "vmName cannot be null"; }
+if (!diskId) { throw "diskId cannot be null"; }
+
+
+var vraHosts = Server.findAllForType("VRA:Host"); 
+for each(var host in vraHosts) {
+    if(host.name == "Admin"){
+        var vraHost = host;
+    }
+}
+
+
+var machine = VraEntitiesFinder.getMachines(vraHost,"name eq '"+vmName+"'")[0]; // VRA:Machine
+var blockDevice = VraEntitiesFinder.getBlockDevice(vraHost, diskId); // VRA:BlockDevice
+var unitNumber = null; // string Deprecated
+var scsiController = null; // string Deprecated
+var diskAttachmentProperties = null; // Properties
+var requestTracker = null; // VRA:RequestTracker
+
+var host = blockDevice.host;
+var machineService = host.createInfrastructureClient().createMachineService()
+if(blockDevice.blockDeviceStatus == "ATTACHED"){
+    requestTracker = machineService.detachMachineDisk(machine.id, blockDevice.id);
+    System.log("Disk detach request for disk " + blockDevice.name + " has been successfully placed with request tracker id " + requestTracker.id)
+}
+else {
+    throw "Disk should be in attached state"
+}]]></script>
+</dunes-script-module>

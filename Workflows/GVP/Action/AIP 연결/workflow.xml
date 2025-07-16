@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:workflow xmlns:ns2="http://vmware.com/vco/workflow" root-name="item1" object-name="workflow:name=generic" id="e12db03a-65af-4de9-89ce-e4b29a32c3cc" editor-version="2.0" version="0.0.0" api-version="6.0.0" allowed-operations="vfe" restartMode="1" resumeFromFailedMode="0">
+    <display-name>AIP 연결</display-name>
+    <position y="50.0" x="80.0"/>
+    <input>
+        <param name="_metadata_catalog" type="string"/>
+        <param name="_metadata_main_catalog" type="string"/>
+        <param name="computeLink" type="string"/>
+        <param name="interfaceLink" type="string"/>
+        <param name="resourceId" type="string"/>
+        <param name="requestMessage" type="string"/>
+        <param name="type" type="string"/>
+    </input>
+    <output/>
+    <workflow-item name="item0" type="end" end-mode="0" comparator="0">
+        <in-binding/>
+        <out-binding/>
+        <position y="50.0" x="340.0"/>
+    </workflow-item>
+    <workflow-item name="item1" out-name="item0" type="task" comparator="0">
+        <display-name>Scriptable task</display-name>
+        <script encoded="false">var aa = System.getModule("com.bvp").AaManager(true);
+
+var actions = aa.get("/deployment/api/resources/"+ resourceId + "/actions");
+var actionId = null;
+for each(var action in actions){
+    if(action.name == "attach"){
+        actionId = action.id;
+    }
+}
+aa.post("/deployment/api/resources/" + resourceId + "/requests", {
+    "actionId": actionId,
+    "inputs": {
+        "computeLink": computeLink,
+        "interfaceLink": interfaceLink
+    }
+})</script>
+        <in-binding>
+            <bind name="resourceId" type="string" export-name="resourceId"/>
+            <bind name="interfaceLink" type="string" export-name="interfaceLink"/>
+            <bind name="computeLink" type="string" export-name="computeLink"/>
+        </in-binding>
+        <out-binding/>
+        <description>Simple task with custom script capability.</description>
+        <position y="70.0" x="160.0"/>
+    </workflow-item>
+</ns2:workflow>

@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getAttachedBlockDiskIdsByVmName" result-type="Array/Properties" api-version="6.0.0" id="ba3cf18c-84cc-4520-a749-286e9650e4bb" version="0.0.1" category-name="com.gvp.bp.vm">
+  <param n="vmName" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if(!vmName){ throw "projectId cannot be null"; }
+var aa = System.getModule("com.bvp").AaManager(true);
+var vraHosts = Server.findAllForType("VRA:Host"); 
+for each(var host in vraHosts) {
+    if(host.name == "Admin"){
+        var vraHost = host;
+    }
+}
+var machine = VraEntitiesFinder.getMachines(vraHost,"name eq '"+vmName+"'")[0];
+var disks = aa.get("/iaas/api/machines/"+machine.id+"/disks").content;
+
+
+var result = [];
+for each ( var disk in disks){
+    var properties = disk.customProperties;
+    if(disk.persistent == true){
+        result.push({
+            label: properties.displayName ? properties.displayName : disk.name,
+            value: disk.id,
+        });
+    }
+}
+
+return result.sort(function (a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});]]></script>
+</dunes-script-module>

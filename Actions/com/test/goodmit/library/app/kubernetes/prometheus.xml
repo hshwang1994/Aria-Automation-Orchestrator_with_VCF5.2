@@ -1,0 +1,397 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="prometheus" result-type="string" api-version="6.0.0" id="b9a25e9e-ddc6-43de-93e3-c9d6d0f62b37" version="0.0.5" allowed-operations="vfe" category-name="com.test.goodmit.library.app.kubernetes">
+  <param n="namespaceName" t="string"><![CDATA[]]></param>
+  <param n="version" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[// namespace는 Poropertise에서 불러옵니다
+
+function generateYaml(namespaceName, version) {
+    var yamlContent = 
+    "apiVersion: v1\n" +
+    "kind: Namespace\n" +
+    "metadata:\n" +
+    "  name: " + namespaceName + "\n" +
+    "  labels:\n" +
+    "    pod-security.kubernetes.io/enforce: baseline\n" +
+    "---\n" +
+    "apiVersion: v1\n" +
+    "kind: ServiceAccount\n" +
+    "metadata:\n" +
+    "  name: prometheus-sa\n" +
+    "  namespace: " + namespaceName + "\n" +
+    "---\n" +
+    "apiVersion: rbac.authorization.k8s.io/v1\n" +
+    "kind: ClusterRole\n" +
+    "metadata:\n" +
+    "  name: prometheus\n" +
+    "rules:\n" +
+    "- apiGroups: [\"\"]\n" +
+    "  resources:\n" +
+    "  - nodes\n" +
+    "  - nodes/proxy\n" +
+    "  - services\n" +
+    "  - endpoints\n" +
+    "  - pods\n" +
+    "  verbs: [\"get\", \"list\", \"watch\"]\n" +
+    "- apiGroups:\n" +
+    "  - networking.k8s.io\n" +
+    "  resources:\n" +
+    "  - ingresses\n" +
+    "  verbs: [\"get\", \"list\", \"watch\"]\n" +
+    "- nonResourceURLs: [\"/metrics\"]\n" +
+    "  verbs: [\"get\"]\n" +
+    "---\n" +
+    "apiVersion: rbac.authorization.k8s.io/v1\n" +
+    "kind: ClusterRoleBinding\n" +
+    "metadata:\n" +
+    "  name: prometheus\n" +
+    "roleRef:\n" +
+    "  apiGroup: rbac.authorization.k8s.io\n" +
+    "  kind: ClusterRole\n" +
+    "  name: prometheus\n" +
+    "subjects:\n" +
+    "- kind: ServiceAccount\n" +
+    "  name: prometheus-sa\n" +
+    "  namespace: " + namespaceName + "\n";
+    "---\n" +
+    "apiVersion: v1\n" +
+    "kind: ConfigMap\n" +
+    "metadata:\n" +
+    "  name: prometheus-server-conf\n" +
+    "  labels:\n" +
+    "    name: prometheus-server-conf\n" +
+    "  namespace: " + namespaceName + "\n" +
+    "data:\n" +
+    "  prometheus.rules: |-\n" +
+    "    groups:\n" +
+    "    - name: container memory alert\n" +
+    "      rules:\n" +
+    "      - alert: 컨테이너 메모리 사용률이 매우 높음( > 55%)\n" +
+    "        expr: sum(container_memory_working_set_bytes{pod!=\"\", name=\"\"}) / sum(kube_node_status_allocatable_memory_bytes) * 100 > 55\n" +
+    "        for: 1m\n" +
+    "        labels:\n" +
+    "          severity: fatal\n" +
+    "        annotations:\n" +
+    "          summary: \"컨테이너의 높은 메모리 사용률\"\n" +
+    "          identifier: \"\"\n" +
+    "          description: \"현재 메모리 사용량: {{ $value }}%\"\n" +
+    "\n" +
+    "    - name: container CPU alert\n" +
+    "      rules:\n" +
+    "      - alert: 컨테이너 CPU 사용률이 매우 높음( > 10%)\n" +
+    "        expr: sum(rate(container_cpu_usage_seconds_total{pod!=\"\"}[1m])) / sum(machine_cpu_cores) * 100 > 10\n" +
+    "        for: 1m\n" +
+    "        labels:\n" +
+    "          severity: fatal\n" +
+    "        annotations:\n" +
+    "          summary: \"컨테이너의 높은 CPU 사용률\"\n" +
+    "          description: \"현재 CPU 사용량: {{ $value }}%\"\n";
+    "\n" +
+    "    - name: kube-state-metrics\n" +
+    "      rules:\n" +
+    "      - alert: KubeStateMetricsListErrors\n" +
+    "        annotations:\n" +
+    "          description: \"kube-state-metrics에서 리스트(list) 작업 중 오류가 발생하고 있습니다. 이로 인해 Kubernetes 객체의 메트릭을 정확하게 노출하지 못할 수 있습니다.\"\n" +
+    "          summary: \"kube-state-metrics의 리스트 작업 오류 발생\"\n" +
+    "        expr: |\n" +
+    "          (sum(rate(kube_state_metrics_list_total{job=\"kube-state-metrics\", result=\"error\"}[5m])) by (cluster)\n" +
+    "            /\n" +
+    "          sum(rate(kube_state_metrics_list_total{job=\"kube-state-metrics\"}[5m])) by (cluster))\n" +
+    "          > 0.01\n" +
+    "        for: 15m\n" +
+    "        labels:\n" +
+    "          severity: critical\n" +
+    "\n" +
+    "      - alert: KubeStateMetricsWatchErrors\n" +
+    "        annotations:\n" +
+    "          description: \"kube-state-metrics에서 watch 작업 중 오류가 발생하고 있습니다. 이로 인해 Kubernetes 객체의 메트릭을 정확하게 노출하지 못할 수 있습니다.\"\n" +
+    "          summary: \"kube-state-metrics의 watch 작업 오류 발생\"\n" +
+    "        expr: |\n" +
+    "          (sum(rate(kube_state_metrics_watch_total{job=\"kube-state-metrics\", result=\"error\"}[5m])) by (cluster)\n" +
+    "            /\n" +
+    "          sum(rate(kube_state_metrics_watch_total{job=\"kube-state-metrics\"}[5m])) by (cluster))\n" +
+    "          > 0.01\n" +
+    "        for: 15m\n" +
+    "        labels:\n" +
+    "          severity: critical\n";
+    "\n" +
+    "      - alert: KubeStateMetricsShardingMismatch\n" +
+    "        annotations:\n" +
+    "          description: \"kube-state-metrics의 pod들이 서로 다른 `--total-shards` 설정으로 실행되고 있습니다. 일부 Kubernetes 객체가 중복 노출되거나 아예 노출되지 않을 수 있습니다.\"\n" +
+    "          summary: \"kube-state-metrics의 샤딩 구성 오류\"\n" +
+    "        expr: |\n" +
+    "          stdvar(kube_state_metrics_total_shards{job=\"kube-state-metrics\"}) by (cluster) != 0\n" +
+    "        for: 15m\n" +
+    "        labels:\n" +
+    "          severity: critical\n" +
+    "\n" +
+    "      - alert: KubeStateMetricsShardsMissing\n" +
+    "        annotations:\n" +
+    "          description: \"kube-state-metrics의 일부 샤드가 누락되었습니다. 일부 Kubernetes 객체가 노출되지 않을 수 있습니다.\"\n" +
+    "          summary: \"kube-state-metrics 샤드 누락됨\"\n" +
+    "        expr: |\n" +
+    "          2^max(kube_state_metrics_total_shards{job=\"kube-state-metrics\"}) by (cluster) - 1\n" +
+    "            -\n" +
+    "          sum(2 ^ max by (cluster, shard_ordinal) (kube_state_metrics_shard_ordinal{job=\"kube-state-metrics\"})) by (cluster)\n" +
+    "          != 0\n" +
+    "        for: 15m\n" +
+    "        labels:\n" +
+    "          severity: critical\n";
+    "\n" +
+    "  prometheus.yml: |-\n" +
+    "    global:\n" +
+    "      scrape_interval: 5s\n" +
+    "      evaluation_interval: 5s\n" +
+    "    rule_files:\n" +
+    "      - /etc/prometheus/prometheus.rules\n" +
+    "    alerting:\n" +
+    "      alertmanagers:\n" +
+    "      - scheme: http\n" +
+    "        static_configs:\n" +
+    "        - targets:\n" +
+    "          - \"alertmanager.monitoring.svc:9093\"\n" +
+    "\n" +
+    "    scrape_configs:\n" +
+    "      - job_name: 'kubernetes-apiservers'\n" +
+    "\n" +
+    "        kubernetes_sd_configs:\n" +
+    "        - role: endpoints\n" +
+    "        scheme: https\n" +
+    "\n" +
+    "        tls_config:\n" +
+    "          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt\n" +
+    "        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token\n" +
+    "\n" +
+    "        relabel_configs:\n" +
+    "        - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]\n" +
+    "          action: keep\n" +
+    "          regex: default;kubernetes;https\n";
+    "\n" +
+    "      - job_name: 'kubernetes-nodes'\n" +
+    "\n" +
+    "        scheme: https\n" +
+    "\n" +
+    "        tls_config:\n" +
+    "          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt\n" +
+    "        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token\n" +
+    "\n" +
+    "        kubernetes_sd_configs:\n" +
+    "        - role: node\n" +
+    "\n" +
+    "        relabel_configs:\n" +
+    "        - action: labelmap\n" +
+    "          regex: __meta_kubernetes_node_label_(.+)\n" +
+    "        - target_label: __address__\n" +
+    "          replacement: kubernetes.default.svc:443\n" +
+    "        - source_labels: [__meta_kubernetes_node_name]\n" +
+    "          regex: (.+)\n" +
+    "          target_label: __metrics_path__\n" +
+    "          replacement: /api/v1/nodes/${1}/proxy/metrics\n" +
+    "\n" +
+    "      - job_name: 'kubernetes-pods'\n" +
+    "\n" +
+    "        kubernetes_sd_configs:\n" +
+    "        - role: pod\n" +
+    "\n" +
+    "        scheme: https\n" +
+    "\n" +
+    "        tls_config:\n" +
+    "          insecure_skip_verify: true\n" +
+    "\n" +
+    "        authorization:\n" +
+    "          credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token\n" +
+    "\n" +
+    "        relabel_configs:\n" +
+    "        - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]\n" +
+    "          action: keep\n" +
+    "          regex: true\n" +
+    "        - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]\n" +
+    "          action: replace\n" +
+    "          target_label: __metrics_path__\n" +
+    "          regex: (.+)\n" +
+    "        - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]\n" +
+    "          action: replace\n" +
+    "          regex: ([^:]+)(?::\\d+)?;(\\d+)\n" +
+    "          replacement: $1:$2\n" +
+    "          target_label: __address__\n" +
+    "        - action: labelmap\n" +
+    "          regex: __meta_kubernetes_pod_label_(.+)\n" +
+    "        - source_labels: [__meta_kubernetes_namespace]\n" +
+    "          action: replace\n" +
+    "          target_label: kubernetes_namespace\n" +
+    "        - source_labels: [__meta_kubernetes_pod_name]\n" +
+    "          action: replace\n" +
+    "          target_label: kubernetes_pod_name\n";
+    "\n" +
+    "      - job_name: 'kube-state-metrics'\n" +
+    "        static_configs:\n" +
+    "          - targets: ['kube-state-metrics.kube-system.svc.cluster.local:8080']\n" +
+    "\n" +
+    "      - job_name: 'kubernetes-cadvisor'\n" +
+    "\n" +
+    "        scheme: https\n" +
+    "\n" +
+    "        tls_config:\n" +
+    "          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt\n" +
+    "        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token\n" +
+    "\n" +
+    "        kubernetes_sd_configs:\n" +
+    "        - role: node\n" +
+    "\n" +
+    "        relabel_configs:\n" +
+    "        - action: labelmap\n" +
+    "          regex: __meta_kubernetes_node_label_(.+)\n" +
+    "        - target_label: __address__\n" +
+    "          replacement: kubernetes.default.svc:443\n" +
+    "        - source_labels: [__meta_kubernetes_node_name]\n" +
+    "          regex: (.+)\n" +
+    "          target_label: __metrics_path__\n" +
+    "          replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor\n" +
+    "\n" +
+    "      - job_name: 'kubernetes-service-endpoints'\n" +
+    "\n" +
+    "        kubernetes_sd_configs:\n" +
+    "        - role: endpoints\n" +
+    "\n" +
+    "        relabel_configs:\n" +
+    "        - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]\n" +
+    "          action: keep\n" +
+    "          regex: true\n" +
+    "        - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scheme]\n" +
+    "          action: replace\n" +
+    "          target_label: __scheme__\n" +
+    "          regex: (https?)\n" +
+    "        - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_path]\n" +
+    "          action: replace\n" +
+    "          target_label: __metrics_path__\n" +
+    "          regex: (.+)\n" +
+    "        - source_labels: [__address__, __meta_kubernetes_service_annotation_prometheus_io_port]\n" +
+    "          action: replace\n" +
+    "          target_label: __address__\n" +
+    "          regex: ([^:]+)(?::\\d+)?;(\\d+)\n" +
+    "          replacement: $1:$2\n" +
+    "        - action: labelmap\n" +
+    "          regex: __meta_kubernetes_service_label_(.+)\n" +
+    "        - source_labels: [__meta_kubernetes_namespace]\n" +
+    "          action: replace\n" +
+    "          target_label: kubernetes_namespace\n" +
+    "        - source_labels: [__meta_kubernetes_service_name]\n" +
+    "          action: replace\n" +
+    "          target_label: kubernetes_name\n";
+    "---\n" +
+    "apiVersion: v1\n" +
+    "kind: PersistentVolumeClaim\n" +
+    "metadata:\n" +
+    "  name: prometheus-pvc\n" +
+    "  namespace: " + namespaceName + "\n" +
+    "spec:\n" +
+    "  accessModes:\n" +
+    "    - ReadWriteMany\n" +
+    "  resources:\n" +
+    "    requests:\n" +
+    "      storage: 200Gi\n" +
+    "  storageClassName: vsan-default-storage-policy\n" +
+    "---\n" +
+    "apiVersion: apps/v1\n" +
+    "kind: Deployment\n" +
+    "metadata:\n" +
+    "  name: prometheus-deployment\n" +
+    "  namespace: " + namespaceName + "\n" +
+    "spec:\n" +
+    "  replicas: 1\n" +
+    "  selector:\n" +
+    "    matchLabels:\n" +
+    "      app: prometheus-server\n" +
+    "  template:\n" +
+    "    metadata:\n" +
+    "      labels:\n" +
+    "        app: prometheus-server\n" +
+    "    spec:\n" +
+    "      serviceAccountName: prometheus-sa\n" +
+    "      containers:\n" +
+    "        - name: prometheus\n" +
+    "          image: harbor.oper.cloud.vcf.lab/tanzu-package/prometheus:v" + version + "\n" +
+    "          args:\n" +
+    "            - \"--config.file=/etc/prometheus/prometheus.yml\"\n" +
+    "            - \"--storage.tsdb.path=/prometheus/\"\n" +
+    "            - \"--web.enable-lifecycle\"\n" +
+    "          ports:\n" +
+    "            - containerPort: 9090\n" +
+    "          volumeMounts:\n" +
+    "            - name: prometheus-config-volume\n" +
+    "              mountPath: /etc/prometheus/\n" +
+    "            - name: prometheus-storage-volume\n" +
+    "              mountPath: /prometheus/\n" +
+    "      volumes:\n" +
+    "        - name: prometheus-config-volume\n" +
+    "          configMap:\n" +
+    "            defaultMode: 420\n" +
+    "            name: prometheus-server-conf\n" +
+    "        - name: prometheus-storage-volume\n" +
+    "          persistentVolumeClaim:\n" +
+    "            claimName: prometheus-pvc\n";
+    "---\n" +
+    "apiVersion: apps/v1\n" +
+    "kind: DaemonSet\n" +
+    "metadata:\n" +
+    "  name: node-exporter\n" +
+    "  namespace: " + namespaceName + "\n" +
+    "  labels:\n" +
+    "    k8s-app: node-exporter\n" +
+    "spec:\n" +
+    "  selector:\n" +
+    "    matchLabels:\n" +
+    "      k8s-app: node-exporter\n" +
+    "  template:\n" +
+    "    metadata:\n" +
+    "      labels:\n" +
+    "        k8s-app: node-exporter\n" +
+    "    spec:\n" +
+    "      hostNetwork: true\n" + 
+    "      containers:\n" +
+    "      - name: node-exporter\n" +
+    "        image: prom/node-exporter:v1.9.0\n" +
+    "        ports:\n" +
+    "        - containerPort: 9100\n" +
+    "          protocol: TCP\n" +
+    "          name: http\n" +
+    "        securityContext:\n" +
+    "          runAsUser: 65534\n" +
+    "          allowPrivilegeEscalation: false\n" +
+    "---\n" +
+    "apiVersion: v1\n" +
+    "kind: Service\n" +
+    "metadata:\n" +
+    "  labels:\n" +
+    "    k8s-app: node-exporter\n" +
+    "  name: node-exporter\n" +
+    "  namespace: " + namespaceName + "\n" +
+    "spec:\n" +
+    "  ports:\n" +
+    "  - name: http\n" +
+    "    port: 9100\n" +
+    "    protocol: TCP\n" +
+    "  type: ClusterIP\n" +
+    "  selector:\n" +
+    "    k8s-app: node-exporter\n" +
+    "---\n" +
+    "apiVersion: v1\n" +
+    "kind: Service\n" +
+    "metadata:\n" +
+    "  name: prometheus-service\n" +
+    "  namespace: " + namespaceName + "\n" +
+    "  annotations:\n" +
+    "      prometheus.io/scrape: 'true'\n" +
+    "      prometheus.io/port:   '9090'\n" +
+    "spec:\n" +
+    "  selector:\n" +
+    "    app: prometheus-server\n" +
+    "  type: LoadBalancer\n" +
+    "  ports:\n" +
+    "    - port: 9090\n";
+
+    
+    return yamlContent;
+}
+
+return generateYaml(namespaceName, version)]]></script>
+</dunes-script-module>

@@ -1,0 +1,74 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="peeringProvision" result-type="string" api-version="6.0.0" id="64010847-d011-4eee-8433-ffdb1909a244" version="0.0.1" allowed-operations="vfe" category-name="com.bvp.bp.peer">
+  <param n="peeringId" t="string"><![CDATA[]]></param>
+  <param n="subnetLink1" t="string"><![CDATA[]]></param>
+  <param n="subnetLink2" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if(!peeringId) { throw "peeringId cannot be null"; }
+if(!subnetLink1) { throw "subnetLink1 cannot be null"; }
+if(!subnetLink2) { throw "subnetLink2 cannot be null"; }
+
+var nsxManager = System.getModule("com.bvp").NsxManager;
+var aa = System.getModule("com.bvp").AaManager(true);
+
+var subnet1 = aa.getUerp(subnetLink1);
+var endpointLink1 = subnet1.endpointLink;
+var subnetCidr1 = subnet1.subnetCIDR;
+var tier1Path1 = subnet1.customProperties.vpcManagedTier1Path;
+var tier1Path1RouterId = subnet1.customProperties.vpcManagedRouterLink.split("/routers/")[1];
+var transitAddress1 = aa.getUerp(subnet1.customProperties.vpcTransitIpAddressLink).ipAddress;
+
+var subnet2 = aa.getUerp(subnetLink2);
+var endpointLink2 = subnet2.endpointLink;
+var subnetCidr2 = subnet2.subnetCIDR;
+var tier1Path2 = subnet2.customProperties.vpcManagedTier1Path;
+var tier1Path2RouterId = subnet2.customProperties.vpcManagedRouterLink.split("/routers/")[1];
+var transitAddress2 = aa.getUerp(subnet2.customProperties.vpcTransitIpAddressLink).ipAddress;
+
+var nsx = nsxManager(aa.getUerp(endpointLink1).endpointProperties.hostName.split(".")[0]);
+nsx.put("/policy/api/v1" + tier1Path1 + "/static-routes/" + peeringId, {
+    network: subnetCidr2,
+    next_hops: [{
+        ip_address: transitAddress2,
+        admin_distance: 1
+    }]
+});
+for each(var localeService in nsx.get("/policy/api/v1" + tier1Path1 + "/locale-services").results) {
+    nsx.put("/policy/api/v1" + tier1Path1 + "/nat/USER/nat-rules/" + peeringId, {
+        display_name: peeringId,
+        action: "NO_SNAT",
+        source_network: subnetCidr1,
+        destination_network: subnetCidr2,
+        scope: [tier1Path1 + "/locale-services/" + localeService.id + "/interfaces/" + tier1Path1RouterId],
+        sequence_number: 100,
+        enabled: true,
+        logging: false,
+        firewall_match: "MATCH_INTERNAL_ADDRESS"
+    });
+    break;
+}
+
+if (endpointLink1 != endpointLink2) { nsx = nsxManager(aa.getUerp(endpointLink2).endpointProperties.hostName.split(".")[0]); }
+nsx.put("/policy/api/v1" + tier1Path2 + "/static-routes/" + peeringId, {
+    network: subnetCidr1,
+    next_hops: [{
+        ip_address: transitAddress1,
+        admin_distance: 1
+    }]
+});
+for each(var localeService in nsx.get("/policy/api/v1" + tier1Path2 + "/locale-services").results) {
+    nsx.put("/policy/api/v1" + tier1Path2 + "/nat/USER/nat-rules/" + peeringId, {
+        display_name: peeringId,
+        action: "NO_SNAT",
+        source_network: subnetCidr2,
+        destination_network: subnetCidr1,
+        scope: [tier1Path2 + "/locale-services/" + localeService.id + "/interfaces/" + tier1Path2RouterId],
+        sequence_number: 100,
+        enabled: true,
+        logging: false,
+        firewall_match: "MATCH_INTERNAL_ADDRESS"
+    });
+    break;
+}
+
+return "";]]></script>
+</dunes-script-module>

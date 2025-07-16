@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getCloudZones" result-type="Array/Properties" api-version="6.0.0" id="7ff251b9-a1a1-411a-a0fb-0e7211434f0f" version="0.1.1" allowed-operations="vfe" category-name="com.bvp.bp.prj">
+  <description><![CDATA[BP:Project]]></description>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.bvp").AaManager(true);
+var result = [];
+for each(var zone in aa.get("/iaas/api/zones/").content) {
+    result.push({
+        label: zone.description ? zone.description : zone.name,
+        value: zone.id,
+    });
+}
+return result.sort(function (a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});
+]]></script>
+</dunes-script-module>

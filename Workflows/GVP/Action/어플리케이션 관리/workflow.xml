@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:workflow xmlns:ns2="http://vmware.com/vco/workflow" root-name="item2" object-name="workflow:name=generic" id="8d32039c-7670-4f8f-9302-cb4dbed6b8f6" editor-version="2.0" version="0.0.0" api-version="6.0.0" allowed-operations="vef" restartMode="1" resumeFromFailedMode="0">
+    <display-name>어플리케이션 관리</display-name>
+    <position y="50.0" x="100.0"/>
+    <input>
+        <param name="uploadedFile" type="Array/MimeAttachment"/>
+        <param name="osType" type="string"/>
+        <param name="appName" type="string"/>
+        <param name="version" type="string"/>
+        <param name="appInfo" type="Array/CompositeType(fileName:string,fileContent:string):resourceElementFile"/>
+        <param name="_metadata_main_catalog" type="string"/>
+        <param name="_metadata_catalog" type="string"/>
+    </input>
+    <output/>
+    <workflow-item name="item0" type="end" end-mode="0" comparator="0">
+        <in-binding/>
+        <out-binding/>
+        <position y="50.0" x="500.0"/>
+    </workflow-item>
+    <workflow-item name="item2" out-name="item0" type="task" comparator="0">
+        <display-name>Scriptable task</display-name>
+        <script encoded="false">//var resourceElementCategory = Server.getResourceElementCategoryWithPath(dirPath);
+if(osType == "LINUX"){
+    var dirPath = "goodmit/app/linux/";    
+} else {
+    var dirPath = "goodmit/app/window/";
+};
+for each(var file in uploadedFile){
+    var re = Server.createResourceElement(category=dirPath+appName,name=file.name);
+    re.setContentFromMimeAttachment(file);
+};
+
+</script>
+        <in-binding>
+            <bind name="uploadedFile" type="Array/MimeAttachment" export-name="uploadedFile"/>
+            <bind name="osType" type="string" export-name="osType"/>
+            <bind name="appName" type="string" export-name="appName"/>
+        </in-binding>
+        <out-binding/>
+        <description>Simple task with custom script capability.</description>
+        <position y="60.0" x="240.0"/>
+    </workflow-item>
+</ns2:workflow>

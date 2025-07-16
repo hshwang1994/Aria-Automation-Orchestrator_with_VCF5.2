@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="changeArrayToCommaString_Copy" result-type="string" api-version="6.0.0" id="ade1d717-ba8b-4f96-9917-e56396499d3c" version="0.0.0" allowed-operations="vfe" category-name="com.test.ecs.action.backup">
+  <param n="arrayString" t="Array/string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[return arrayString.join(",");]]></script>
+</dunes-script-module>

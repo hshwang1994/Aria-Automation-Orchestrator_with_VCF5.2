@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getVpcManagedNetworkLinkBySegmentLink" result-type="string" api-version="6.0.0" id="c41eeaa0-403c-43f5-9a75-ddcfd829858b" version="0.1.1" category-name="com.gvp.bp.nlb">
+  <param n="segment" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[
+if (!segment) {
+    throw "profileLink cannot be null";
+}
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var profile;
+try {
+    profile = aa.getUerp(segment);
+} catch (e) {
+    throw "Failed to retrieve NetworkProfile at [" + segment + "]: " + e;
+}
+
+if (profile.customProperties && profile.customProperties.vpcManagedNetworkLink) {
+    return profile.customProperties.vpcManagedNetworkLink;
+}
+
+return null;
+]]></script>
+</dunes-script-module>

@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="vmDirectoryMoveinvCenter" result-type="string" api-version="6.0.0" id="b90f403e-0354-4014-ba80-6b3ad654d24f" version="0.0.0" category-name="com.gvp" memory-limit="512000000">
+  <description><![CDATA[PowerCLI를 이용해서 VM의 디렉토리를 이동]]></description>
+  <runtime><![CDATA[powercli:13-powershell-7.4]]></runtime>
+  <param n="vcHostname" t="string"><![CDATA[]]></param>
+  <param n="vcUsername" t="string"><![CDATA[]]></param>
+  <param n="vcPassword" t="SecureString"><![CDATA[]]></param>
+  <param n="vmName" t="string"><![CDATA[]]></param>
+  <param n="folderName" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[function Handler($context, $inputs) {
+    $vcHostname = $inputs.vcHostname
+    $vcUsername = $inputs.vcUsername
+    $vcPassword = $inputs.vcPassword
+    $vmName = $inputs.vmName
+    $folderPath = $inputs.folderName
+
+    Set-PowerCLIConfiguration -InvalidCertificateAction Ignore -Confirm:$false | Out-Null
+    Connect-VIServer $vcHostname -User $vcUsername -Password $vcPassword | Out-Null
+
+    $vm = Get-VM -Name "$vmName"
+
+    $datacenter = Get-Datacenter -VM $vm
+    $folderRoot = Get-Folder -Name "vm" -Location $datacenter
+
+    $folders = $folderPath -split '/'
+    $currentFolder = $folderRoot
+
+    foreach ($folder in $folders) {
+        $checkFolder = Get-Folder -Name $folder -Location $currentFolder -ErrorAction SilentlyContinue
+        if (-not $checkFolder) {
+            $checkFolder = New-Folder -Name $folder -Location $currentFolder
+        }
+        $currentFolder = $checkFolder
+    }
+
+    Move-VM -VM $vm -Destination $currentFolder | Out-Null
+
+    Write-Output "VM PowerOn and moved to folder path: $folderPath"
+}
+]]></script>
+</dunes-script-module>

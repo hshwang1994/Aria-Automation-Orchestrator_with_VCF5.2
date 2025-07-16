@@ -1,0 +1,95 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="AaManager" result-type="Properties" api-version="6.0.0" id="e1fdc5d9-7c8a-4a47-a6f1-3a5bc654ea4c" version="0.0.0" category-name="com.gvp">
+  <param n="admin" t="boolean"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[return {
+    _client: function () {
+        var accessType = admin ? "Admin" : "Default";
+        for each(var host in VraHostManager.findHostsByType("vra-onprem")) { if (host.name == accessType) { return host.createRestClient(); } }
+        throw "Error [AaManager()] : could not find manager";
+    } (),
+    _encodeUrl: function (url) { return encodeURI(url); },
+    // GET
+    getAsString: function (url) {
+        var req = this._client.createRequest("GET", this._encodeUrl(url), null);
+        var res = this._client.execute(req);
+        System.log("AA-GET: " + url + " >> " + res.statusCode);
+        if (res.statusCode >= 400) { throw "Error [AaManager.get(" + url + ")] : " + res.contentAsString; }
+        return res.contentAsString;
+    },
+    getUerp: function (url) {
+        return this.get("/provisioning/uerp" + url);
+    },
+    get: function (url) {
+        var content = this.getAsString(url);
+        if (content.substring(0, 3) === "---") {return content;} // goodmit add this line for get a kube-config 
+        if (content) { return JSON.parse(content); }
+        else { return null; }
+    },
+    // POST
+    postAsString: function (url, data) {
+        var req = this._client.createRequest("POST", this._encodeUrl(url), data);
+        var res = this._client.execute(req);
+        System.log("AA-POST: " + url + " >> " + res.statusCode);
+        if (res.statusCode >= 400) { throw "Error [AaManager.post(" + url + ")] : " + res.contentAsString; }
+        return res.contentAsString;
+    },
+    postUerp: function (url, data) {
+        return this.post("/provisioning/uerp" + url, data);
+    },
+    post: function (url, data) {
+        var content = this.postAsString(url, JSON.stringify(data));
+        if (content) { return JSON.parse(content); }
+        else { return null; }
+    },
+    // PUT
+    putAsString: function (url, data) {
+        var req = this._client.createRequest("PUT", this._encodeUrl(url), data);
+        var res = this._client.execute(req);
+        System.log("AA-PUT: " + url + " >> " + res.statusCode);
+        if (res.statusCode >= 400) { throw "Error [AaManager.put(" + url + ")] : " + res.contentAsString; }
+        return res.contentAsString;
+    },
+    putUerp: function (url, data) {
+        return this.put("/provisioning/uerp" + url, data);
+    },
+    put: function (url, data) {
+        var content = this.putAsString(url, JSON.stringify(data));
+        if (content) { return JSON.parse(content); }
+        else { return null; }
+    },
+    // PATCH
+    patchAsString: function (url, data) {
+        var req = this._client.createRequest("PATCH", this._encodeUrl(url), data);
+        var res = this._client.execute(req);
+        System.log("AA-PATCH: " + url + " >> " + res.statusCode);
+        if (res.statusCode >= 400) { throw "Error [AaManager.patch(" + url + ")] : " + res.contentAsString; }
+        return res.contentAsString;
+    },
+    patchUerp: function (url, data) {
+        return this.patch("/provisioning/uerp" + url, data);
+    },
+    patch: function (url, data) {
+        var content = this.patchAsString(url, JSON.stringify(data));
+        if (content) { return JSON.parse(content); }
+        else { return null; }
+    },
+    // DELETE
+    deleteAsString: function (url) {
+        var req = this._client.createRequest("DELETE", this._encodeUrl(url), null);
+        var res = this._client.execute(req);
+        System.log("AA-DELETE: " + url + " >> " + res.statusCode);
+        if (res.statusCode >= 400) {
+            throw "Error [AaManager.delete(" + url + ")] : " + res.contentAsString;
+        }
+        return res.contentAsString;
+    },
+    deleteUerp: function (url) {
+        return this.delete("/provisioning/uerp" + url);
+    },
+    delete: function (url) {
+        var content = this.deleteAsString(url);
+        if (content) { return JSON.parse(content); }
+        else { return null; }
+    }
+};]]></script>
+</dunes-script-module>

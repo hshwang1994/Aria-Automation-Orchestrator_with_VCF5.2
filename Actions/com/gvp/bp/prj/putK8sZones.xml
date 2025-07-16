@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="putK8sZones" result-type="Any" api-version="6.0.0" id="e5e4c966-2ec9-4e36-8507-018362564b53" version="0.0.0" category-name="com.gvp.bp.prj">
+  <param n="kzId" t="string"><![CDATA[]]></param>
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.bvp").AaManager(true);
+
+return aa.put("/cmx/api/resources/k8s-zones/"+kzId+"/projects",[
+    {
+        "projectId": projectId
+    }
+]);]]></script>
+</dunes-script-module>

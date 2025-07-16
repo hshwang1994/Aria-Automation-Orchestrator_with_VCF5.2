@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="Create_loadbalancer_service" result-type="string" api-version="6.0.0" id="1c83274d-1d7e-4295-b9d6-ac8053745820" version="0.0.0" category-name="com.gvp.bp.nlb.l4">
+  <param n="displayName" t="string"><![CDATA[]]></param>
+  <param n="tier1Id" t="string"><![CDATA[]]></param>
+  <param n="computeGwPath" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!displayName)   throw "displayName cannot be null";
+if (!tier1Id)       throw "tier1Id cannot be null";
+if (!computeGwPath) throw "computeGwPath cannot be null";
+
+var aa       = System.getModule("com.bvp").AaManager(true);
+var gw       = aa.getUerp(computeGwPath);
+var endpoint = aa.getUerp(gw.endpointLinks[0]);
+var host     = endpoint.endpointProperties.hostName.split(".")[0];
+var nsx      = System.getModule("com.bvp").NsxManager(host);
+
+var existingService;
+try {
+  existingService = nsx.get("/policy/api/v1/infra/lb-services/" + displayName);
+  return existingService;
+} catch (e) {
+  var msg = e.toString();
+  if (msg.indexOf('"error_code": 600') === -1) {
+    throw "로드밸런서 조회 중 예기치 못한 오류: " + msg;
+  }
+  // 600 NOT_FOUND 면 ‘없음’ 이므로 2) 단계의 생성 로직으로
+}
+
+// 2) 없으면 PUT 으로 생성
+var lbService = nsx.put(
+  "/policy/api/v1/infra/lb-services/" + displayName,
+  {
+    resource_type:          "LBService",
+    display_name:           displayName,
+    description:            "Created by Aria Automation",
+    size:                   "SMALL",
+    relax_scale_validation: true,
+    error_log_level:        "INFO",
+    enabled:                true,
+    connectivity_path:      "/infra/tier-1s/" + tier1Id,
+    tags: [{
+      scope: "vpcLbId",
+      tag:   displayName
+    }]
+  }
+);
+
+return lbService;
+]]></script>
+</dunes-script-module>

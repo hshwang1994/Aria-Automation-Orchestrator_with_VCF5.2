@@ -1,0 +1,89 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item1" object-name="workflow:name=generic" id="d70617ca-fa22-4b8a-8b5f-5f1dba7202e6" version="0.0.2" api-version="6.0.0" allowed-operations="vfe" editor-version="2.0" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[Backup Value Pack]]></display-name>
+  <position y="50.0" x="100.0"/>
+  <input>
+    <param name="projectId" type="string"/>
+  </input>
+  <workflow-item name="item0" type="end" end-mode="0">
+    <in-binding/>
+    <position y="50.0" x="300.0"/>
+  </workflow-item>
+  <workflow-item name="item1" out-name="item0" type="task">
+    <display-name><![CDATA[Scriptable task]]></display-name>
+    <script encoded="false"><![CDATA[var com = System.getModule("com.bvp").Common();
+var timeStr = com.getDateTimeString();
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var rm = System.getModule("com.bvp").ResourceManager();
+
+// blueprint & catalog & form
+var blueprints = {};
+var forms = {};
+for each(var blueprint in aa.get("/blueprint/api/blueprints?projects=" + projectId).content) {
+    var lastVersionId = null;
+    var lastUpdated = "1900-01-01T01:01:01.000000Z";
+    for each(var version in aa.get("/blueprint/api/blueprints/" + blueprint.id + "/versions").content) {
+        if (version.status == "RELEASED" && version.updatedAt > lastUpdated) {
+            lastVersionId = version.id;
+            lastUpdated = version.updatedAt;
+        }
+    }
+    if (lastVersionId) {
+        blueprints[blueprint.id] = aa.get("/blueprint/api/blueprints/" + blueprint.id + "/versions/" + lastVersionId);
+        for each(var catalog in aa.get("/catalog/api/admin/items?search=" + blueprint.name).content) {
+            if (catalog.name == blueprint.name) {
+                for each(var form in aa.get("/form-service/api/forms/search?term=" + blueprint.name).content) {
+                    if (form.formName == blueprint.name) {
+                        forms[blueprint.id] = form;
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+    }
+}
+rm.saveJson("BVP/Backup/" + timeStr + "/blueprint.json", blueprints);
+rm.saveJson("BVP/Backup/" + timeStr + "/form.json", forms);
+
+// abx
+abx = {};
+for each(var action in aa.get("/abx/api/resources/actions?size=1000").content) {
+    try {
+        abx[action.id] = aa.get("/abx/api/resources/actions/" + action.id + "?projectId=" + projectId);
+    } catch (e) {
+        System.error("Could not get " + action.id + ": " + e);
+    }
+}
+rm.saveJson("BVP/Backup/" + timeStr + "/abx.json", abx);
+
+// custom resource
+var cr = {};
+for each(var resource in aa.get("/form-service/api/custom/resource-types?size=1000").content) {
+    cr[resource.id] = aa.get("/form-service/api/custom/resource-types/" + resource.id);
+}
+rm.saveJson("BVP/Backup/" + timeStr + "/cr.json", cr);
+
+// resource action
+var ra = {};
+for each(var action in aa.get("/form-service/api/custom/resource-actions?size=1000").content) {
+    ra[action.id] = aa.get("/form-service/api/custom/resource-actions/" + action.id);
+}
+rm.saveJson("BVP/Backup/" + timeStr + "/ra.json", ra);
+
+// subscription
+var sub = {};
+for each(var s in aa.get("/event-broker/api/subscriptions?size=1000&$filter=type eq 'RUNNABLE'").content) {
+    sub[s.id] = aa.get("/event-broker/api/subscriptions/" + s.id);
+}
+rm.saveJson("BVP/Backup/" + timeStr + "/sub.json", sub);]]></script>
+    <in-binding>
+      <bind name="projectId" type="string" export-name="projectId"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.0" x="160.0"/>
+  </workflow-item>
+  <presentation/>
+</workflow>

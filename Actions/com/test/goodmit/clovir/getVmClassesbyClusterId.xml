@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getVmClassesbyClusterId" result-type="Array/Properties" api-version="6.0.0" id="f4d2b735-999a-40d7-8b19-93b2b1b74ab5" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <param n="clusterId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (clusterId == null || clusterId == undefined){
+    return null;
+};
+var aa = System.getModule("com.ecs").AaManager(true);
+
+var endpointLink = aa.get("/cmx/api/resources/supervisor-clusters?$filter=id eq '"+ clusterId +"'").content[0].endpointLink;
+var endpointLinkSplit = endpointLink.split("/");
+var endpointId = endpointLinkSplit[endpointLinkSplit.length - 1];
+
+var vmClasses =  aa.get("/cmx/api/resources/vsphere/endpoints/"+ endpointId +"/virtual-machine-classes");
+
+var result = []
+for each(var str in vmClasses){
+    result.push({
+        label: str,
+        name: str,
+    });
+}
+result.push({
+    label: "",
+    name: ""
+})
+
+return result;
+]]></script>
+</dunes-script-module>

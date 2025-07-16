@@ -1,0 +1,72 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item1" object-name="workflow:name=generic" id="86b677cd-c66b-474a-be17-5bbc63550402" version="0.0.0" api-version="6.0.0" allowed-operations="vfe" editor-version="2.0" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[test_hshwang]]></display-name>
+  <position y="50.0" x="100.0"/>
+  <input>
+    <param name="resourceName" type="string"/>
+  </input>
+  <attrib name="endpointId" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="projectId" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="computeId" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="vraMachine" type="VRA:Machine" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="vraHost" type="VRA:Host" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="deploymentId" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <workflow-item name="item0" type="end" end-mode="0">
+    <in-binding/>
+    <position y="50.0" x="440.0"/>
+  </workflow-item>
+  <workflow-item name="item1" out-name="item0" type="task">
+    <display-name><![CDATA[Scriptable task]]></display-name>
+    <script encoded="false"><![CDATA[// """""""""변수 지정 구간"""""""""
+var vraHosts = Server.findAllForType("VRA:Host");
+vraHost = vraHosts[1];
+
+var resourceNamefilter = "name eq '" + resourceName + "'";
+var machineEntities = VraEntitiesFinder.getMachines(vraHost, resourceNamefilter);
+
+// 여러개의 배열이 검색되기 때문에 deploymentId가 존재하는 머신만 vraMachine에 저장
+var vraMachine = null; // deploymentId가 존재하는 머신을 저장할 변수
+
+// machineEntities에서 deploymentId가 존재하는 첫 번째 머신을 선택
+for (var i = 0; i < machineEntities.length; i++) {
+    if (machineEntities[i].deploymentId) {
+        vraMachine = machineEntities[i];
+        break;
+    }
+}
+System.log("몇개개개개 : " + vraMachine);
+
+var endpointIds = vraMachine.cloudAccountIdsExtension;
+var parsedEndpointId = JSON.parse(endpointIds);
+endpointId = parsedEndpointId[0];
+deploymentId = vraMachine.deploymentId;
+projectId = vraMachine.projectId;
+computeId = vraMachine.id;]]></script>
+    <in-binding>
+      <bind name="resourceName" type="string" export-name="resourceName"/>
+    </in-binding>
+    <out-binding>
+      <bind name="computeId" type="string" export-name="computeId"/>
+      <bind name="deploymentId" type="string" export-name="deploymentId"/>
+      <bind name="projectId" type="string" export-name="projectId"/>
+      <bind name="endpointId" type="string" export-name="endpointId"/>
+      <bind name="vraHost" type="VRA:Host" export-name="vraHost"/>
+      <bind name="vraMachine" type="VRA:Machine" export-name="vraMachine"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.0" x="220.0"/>
+  </workflow-item>
+  <presentation/>
+</workflow>

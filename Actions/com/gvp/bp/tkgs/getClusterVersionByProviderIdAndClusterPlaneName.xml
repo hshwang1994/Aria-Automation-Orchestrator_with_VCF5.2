@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getClusterVersionByProviderIdAndClusterPlaneName" result-type="string" api-version="6.0.0" id="f89d2d2b-ad09-45ca-9be9-53f1047a6435" version="0.0.0" category-name="com.gvp.bp.tkgs">
+  <param n="providerId" t="string"><![CDATA[]]></param>
+  <param n="clusterplan" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!providerId || !clusterplan) {
+    return "";
+}
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var resp = aa.get("/cmx/api/resources/cluster-plans");
+var plans = resp.content || [];
+var version;
+
+for (var i = 0; i < plans.length; i++) {
+    var plan = plans[i];
+    if (plan.cloudAccountSelfLinkId === providerId && plan.name === clusterplan) {
+        var topo = plan.definition.spec.distribution;
+        version = topo.version;
+        break;
+    }
+}
+
+return version.toString();]]></script>
+</dunes-script-module>

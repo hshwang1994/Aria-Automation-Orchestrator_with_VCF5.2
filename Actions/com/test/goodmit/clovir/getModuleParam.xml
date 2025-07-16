@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getModuleParam" result-type="Array/string" api-version="6.0.0" id="b6e0415d-f6a7-4411-a7bb-440c9427333c" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <param n="input" t="Array/string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var result = [];
+for each (module in input) {
+    result.push("# Wirte "+ module + " Parameter");
+}
+return result;]]></script>
+</dunes-script-module>

@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getVpcSubnetLinksByProfileLink" result-type="Array/Properties" api-version="6.0.0" id="fc3aeeb0-c183-4af4-9380-12fd0a8720b9" version="0.1.1" allowed-operations="vfe" category-name="com.bvp.bp.vm">
+  <description><![CDATA[BP:Virtual Machine]]></description>
+  <param n="profileLink" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!profileLink) { throw "profileLink cannot be null"; }
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var subnets = aa.getUerp("/resources/sub-networks?expand&$filter=customProperties.vpc eq '" + profileLink + "'");
+var result = [];
+for each(var subnetLink in subnets.documentLinks) {
+    var subnet = subnets.documents[subnetLink];
+    result.push({
+        label: subnet.customProperties.displayName ? subnet.customProperties.displayName : subnet.name,
+        value: subnetLink
+    });
+}
+return result.sort(function (a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});]]></script>
+</dunes-script-module>

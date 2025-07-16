@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getVpcProjectDomainByProfileLink" result-type="string" api-version="6.0.0" id="75bc2a26-4956-4925-8b51-9b5c8a23b982" version="0.0.0" category-name="com.gvp.bp.gpuvm">
+  <param n="profileLink" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!profileLink) { return null; }
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var profile = aa.getUerp(profileLink);
+return profile.customProperties.vpcProjectDomain ? profile.customProperties.vpcProjectDomain : profile.name;]]></script>
+</dunes-script-module>

@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getAdministratorsByProjectId" result-type="Array/string" api-version="6.0.0" id="ba34fada-55d7-4ca8-b46f-e936b02d8817" version="0.0.1" allowed-operations="vfe" category-name="com.bvp.bp.prj">
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!projectId) { return []; }
+var aa = System.getModule("com.bvp").AaManager(true);
+var result = [];
+for each(var user in aa.get("/iaas/api/projects/" + projectId).administrators) { result.push(user.email); }
+return result;]]></script>
+</dunes-script-module>

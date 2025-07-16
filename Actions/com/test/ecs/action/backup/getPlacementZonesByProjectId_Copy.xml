@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getPlacementZonesByProjectId_Copy" result-type="Array/Properties" api-version="6.0.0" id="f81e7d2c-d210-4b30-b79b-d820821fbdf5" version="0.1.0" allowed-operations="vfe" category-name="com.test.ecs.action.backup">
+  <description><![CDATA[BP:Virtual Private Cloud
+BP:Virtual Machine]]></description>
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!projectId) { return []; }
+var aa = System.getModule("com.ecs").AaManager(true);
+var result = [];
+for each(var zone in aa.get("/iaas/api/projects/" + projectId).zones) {
+    var placementZoneLink = "/provisioning/resources/placement-zones/" + zone.zoneId;
+    var placementZone = aa.getUerp(placementZoneLink);
+    result.push({
+        label: placementZone.desc ? placementZone.desc : placementZone.name,
+        value: placementZoneLink,
+    });
+}
+return result.sort(function (a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});]]></script>
+</dunes-script-module>

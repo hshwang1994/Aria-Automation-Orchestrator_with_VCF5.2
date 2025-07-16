@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getSupervisorCluster" result-type="Array/Properties" api-version="6.0.0" id="fe54f477-54fd-4287-a01e-e1dd1f9becca" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.ecs").AaManager(true);
+
+var result = [];
+for each(var cluster in aa.get("/cmx/api/resources/supervisor-clusters").content) {
+    result.push({
+        label: cluster.name,
+        value: cluster.id,
+    });
+}
+
+
+return result.sort(function (a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});
+]]></script>
+</dunes-script-module>

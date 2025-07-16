@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:workflow xmlns:ns2="http://vmware.com/vco/workflow" root-name="item1" object-name="workflow:name=generic" id="28717f9d-4750-4f01-9448-90cea45eeee7" editor-version="2.0" version="0.0.0" api-version="6.0.0" restartMode="1" resumeFromFailedMode="0">
+    <display-name>VM 자원 변경</display-name>
+    <position y="50.0" x="100.0"/>
+    <input>
+        <param name="_metadata_main_catalog" type="string"/>
+        <param name="_metadata_catalog" type="string"/>
+        <param name="resourceId" type="string"/>
+        <param name="cpuCount" type="number"/>
+        <param name="memoryCount" type="number"/>
+        <param name="requestMessage" type="string"/>
+        <param name="diskProperties" type="Array/CompositeType(mount:string,size:number):diskProperties"/>
+    </input>
+    <output/>
+    <workflow-item name="item0" type="end" end-mode="0" comparator="0">
+        <in-binding/>
+        <out-binding/>
+        <position y="50.0" x="380.0"/>
+    </workflow-item>
+    <workflow-item name="item1" out-name="item0" type="task" comparator="0">
+        <display-name>Scriptable task</display-name>
+        <script encoded="false">function removeDuplicates(arr1, arr2) {
+    function isDuplicate(obj, arr) {
+        var strObj = JSON.stringify(obj);
+        return arr.some(function(item) {
+            return JSON.stringify(item) === strObj;
+        });
+    }
+
+    var uniqueArr1 = arr1.filter(function(obj) {
+        return !isDuplicate(obj, arr2);
+    });
+
+    var uniqueArr2 = arr2.filter(function(obj) {
+        return !isDuplicate(obj, arr1);
+    });
+
+    return uniqueArr1.concat(uniqueArr2);
+};
+
+function removeDuplicatesByKey(arr1, arr2, key) {
+    function isDuplicate(obj, arr) {
+        return arr.some(function(item) {
+            return item[key] === obj[key];
+        });
+    }
+
+    var uniqueArr1 = arr1.filter(function(obj) {
+        return !isDuplicate(obj, arr2);
+    });
+
+    return uniqueArr1;
+}
+
+function checkRequestStatus(requestId){
+    var requestSuccess = false;
+    var sleepCount = 0;
+    while(!requestSuccess){
+        var requests = aa.get("/deployment/api/resources/"+resourceId+"/requests").content;
+        for each(var r in requests){
+            if(r.id == request.id){
+                var action = r;
+            }
+        }
+        if(action.status == "SUCCESSFUL"){requestSuccess = true;}
+        
+        System.sleep(10000);
+        sleepCount++;
+        if(sleepCount&gt;10){ throw System.log("Waiting Resize Rquest Timeout"); };
+    }
+    return  action.name + " - "+requestId + " Successful"
+}
+
+function createDiskSpaceCheckScript(requiredSpaceGB) {
+    'use strict';
+    return '#!/bin/bash\n\n' +
+    '# GB를 bytes로 변환\n' +
+    'required_space=' + requiredSpaceGB + '\n' +
+    'required_space_bytes=$((required_space * 1024 * 1024 * 1024))\n\n' +
+    '# LVM 볼륨 그룹의 남은 용량 확인 (bytes 단위)\n' +
+    'vg_free_space=0\n' +
+    'if command -v vgs &amp;&gt; /dev/null; then\n' +
+    '    vg_free_space=$(sudo vgs --noheadings --units b --nosuffix -o vg_free | awk \'{sum += $1} END {print sum}\')\n' +
+    'fi\n\n' +
+    '# 초기 상태 디스크의 사용 가능한 공간 확인\n' +
+    'unallocated_space=0\n' +
+    '# LVM PV로 사용중인 디스크/파티션 목록 가져오기\n' +
+    'pv_disks=$(sudo pvs --noheadings -o pv_name | awk \'{print $1}\' | sed "s/[0-9]*$//")\n\n' +
+    '# 디스크 검사\n' +
+    'while read -r device size type mountpoint; do\n' +
+    '    device_path="/dev/${device}"\n' +
+    '    \n' +
+    '    # 실제 디스크이고 (파티션이 아님)\n' +
+    '    if [ "$type" = "disk" ]; then\n' +
+    '        # 부팅 디스크 제외\n' +
+    '        if ! sudo grep -q "$(basename $device)" /proc/cmdline; then\n' +
+    '            # LVM PV로 사용되지 않는지 확인\n' +
+    '            if ! echo "$pv_disks" | grep -q "$device_path"; then\n' +
+    '                # 파티션 테이블이 없거나 비어있는지 확인\n' +
+    '                if ! sudo fdisk -l "$device_path" 2&gt;/dev/null | grep -q "^/dev/"; then\n' +
+    '                    # 파일시스템이 없는지 확인\n' +
+    '                    if ! sudo blkid "$device_path" &amp;&gt;/dev/null; then\n' +
+    '                        # 마운트되지 않았는지 확인\n' +
+    '                        if [ -z "$mountpoint" ]; then\n' +
+    '                            disk_size=$(echo $size | numfmt --from=iec)\n' +
+    '                            unallocated_space=$((unallocated_space + disk_size))\n' +
+    '                        fi\n' +
+    '                    fi\n' +
+    '                fi\n' +
+    '            fi\n' +
+    '        fi\n' +
+    '    fi\n' +
+    'done &lt; &lt;(sudo lsblk -b -o NAME,SIZE,TYPE,MOUNTPOINT | grep -v "^loop")\n\n' +
+    '# 총 사용 가능한 공간 계산\n' +
+    'total_available_space=$((vg_free_space + unallocated_space))\n\n' +
+    '# 가능 여부 판단 및 결과 출력\n' +
+    'if [ $total_available_space -ge $required_space_bytes ]; then\n' +
+    '    echo "true"\n' +
+    '    exit 0\n' +
+    'else\n' +
+    '    echo "false"\n' +
+    '    exit 1\n' +
+    'fi';
+};
+//==========================================================================
+var aa = System.getModule("com.bvp").AaManager(true);
+var machine = aa.get("/iaas/api/machines/" + resourceId);
+var endpointId = machine.cloudAccountIds[0];
+var endpointLink = "/resources/endpoints/" + endpointId;
+var endpointName = aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0];
+var vcConf = System.getModule("com.bvp").ConfManager().load("/BVP/Endpoint/" + endpointName);
+var execScripts = System.getModule("com.bvp").execScripts;
+var execScriptsWithArgs = System.getModule("com.gvp").execScripts;
+var vraHosts = Server.findAllForType("VRA:Host"); 
+for each(var host in vraHosts) {
+    if(host.name == "Admin"){
+        vraHost = host;
+    }
+}
+var addDiskActionId = "Cloud.vSphere.Machine.Add.Disk";
+var resizeActionId = "Cloud.vSphere.Machine.Resize";
+var mountDisk = machine.customProperties.mountDisk!=""?JSON.parse(machine.customProperties.mountDisk):[];
+var requestResize = (cpuCount!=machine.customProperties.cpuCount)||(memoryCount!=machine.customProperties.memoryGB)?true:false;
+if(diskProperties == null){
+    var requestMountDisk = false;
+} else {
+    var requestMountDisk = JSON.stringify(diskProperties)!=JSON.stringify(mountDisk)?true:false;
+}
+var diskDefaultCapa = 100; // 추가되는 디스크 크기
+var lvmScript = System.getModule("com.gvp").getResourceContent("/goodmit", "diskMgmtLvmAddExtend.sh");
+var encoded = System.getModule("com.gvp").base64Encode(lvmScript);
+
+//=====================================================================================
+
+// Resize VM
+if(requestResize==true){
+    var request = aa.post("/deployment/api/resources/"+resourceId+"/requests",{
+        "actionId": resizeActionId,
+        "inputs": {
+            "cpuCount": cpuCount,
+            "totalMemoryMB": memoryCount*1024,
+        }
+    })
+
+    System.log(checkRequestStatus(request.id));
+};
+
+//==========================================================================
+// Mount Disk
+if(requestMountDisk==true){
+    
+    // Disk Exsist Check
+    var machineDiskList = VraEntitiesFinder.getMachineDisksByMachineId(vraHost, resourceId);
+    var checkMachineDisk = [];
+    for each( var machineDisk in machineDiskList ){
+        var dName = machineDisk.name;
+        if(dName.indexOf('CD/DVD') !== -1){
+            System.log("detect CD/DVD Machine Disk " + dName);
+        } else if(dName.indexOf('Floppy') !== -1) {
+            System.log("detect Floppy Machine Disk " + dName);
+        } else {
+            checkMachineDisk.push(machineDisk);
+        } 
+    }
+    var isAlreadyExDisk = checkMachineDisk.length&gt;1?true:false;
+
+    // 추가된 디스크가 없을 경우 디스크 추가
+    if(isAlreadyExDisk==false){
+        var request = aa.post("/deployment/api/resources/"+resourceId +"/requests",{
+            "actionId": addDiskActionId,            //"Cloud.vSphere.Machine.Add.Disk"
+            "inputs": {
+                "name": "Disk-"+ System.getModule("com.gvp").getRandomString("lowerDigit", "8") ,
+                "capacityGb": diskDefaultCapa,
+            },
+        });
+
+        System.log(checkRequestStatus(request.id));
+    }
+
+    // 기존 마운트 포인트와 중복된 정보 제거
+    var outputDiskInfo = isAlreadyExDisk==true?removeDuplicates(mountDisk, diskProperties):diskProperties;
+
+
+    // 디스크 추가 및 마운트
+    for each(var diskProperty in outputDiskInfo){
+        var count = isAlreadyExDisk?checkMachineDisk.length:1; // 추가 할 디스크 number 정의
+        
+        // 기존 마운트 포인트에 대한 확장 용량 계산
+        if(isAlreadyExDisk==true){
+            for each(var exMountDisk in mountDisk){
+                if(exMountDisk.mount == diskProperty.mount){
+                    var diskCapa = diskProperty.size - exMountDisk.size;
+                };
+            };
+        } ;
+        // 용량 체크 및 용량 부족 시 디스크 추가
+        var isItEnoughSpace = false;
+        while(!isItEnoughSpace){
+            var scripts = createDiskSpaceCheckScript(diskCapa?String(diskCapa):String(diskProperty.size));
+            var checkSpace = execScripts(vcConf.hostname, vcConf.username, vcConf.password, machine.name, "cloody", "VMware1!", scripts);
+            if(checkSpace.indexOf("true") != -1){
+                isItEnoughSpace = true;
+            } else {
+                var request = aa.post("/deployment/api/resources/"+resourceId +"/requests",{
+                    "actionId": addDiskActionId,
+                    "inputs": {
+                        "name": "Disk-"+ System.getModule("com.gvp").getRandomString("lowerDigit", "8") ,
+                        "capacityGb": diskDefaultCapa,
+                    },
+                });
+                System.log(checkRequestStatus(request.id));
+                count++;
+            };
+        }
+
+        // 마운트
+        var args = diskProperty.mount + " " + diskProperty.size;
+        var scriptText = [
+        'sudo echo "' + encoded + '" | base64 -d &gt; /tmp/myscript.sh',
+        'sudo chmod +x /tmp/myscript.sh',
+        'sudo /tmp/myscript.sh ' + args,
+        //'sudo rm /tmp/myscript.sh'
+        ].join(" &amp;&amp; ");
+        var setDiskMount = execScripts(vcConf.hostname, vcConf.username, vcConf.password, machine.name, "cloody", "VMware1!", scriptText);
+    };
+
+
+
+    // 가상머신 커스텀 프로퍼티 추가
+    var result = "";
+    if(machine.customProperties.mountDisk != ""){
+        var cp = JSON.parse(machine.customProperties.mountDisk);
+        var base = removeDuplicatesByKey(cp, diskProperties, "mount");
+        for each(var obj in diskProperties){
+            base.push(obj);
+        };
+        result = JSON.stringify(base);
+    } else {
+        result = JSON.stringify(diskProperties);
+    };
+    aa.patch("/iaas/api/machines/"+resourceId,{
+    "customProperties": {
+        "mountDisk": result
+    }
+    });
+
+}
+
+</script>
+        <in-binding>
+            <bind name="resourceId" type="string" export-name="resourceId"/>
+            <bind name="cpuCount" type="number" export-name="cpuCount"/>
+            <bind name="memoryCount" type="number" export-name="memoryCount"/>
+            <bind name="diskProperties" type="Array/CompositeType(mount:string,size:number):diskProperties" export-name="diskProperties"/>
+        </in-binding>
+        <out-binding/>
+        <description>Simple task with custom script capability.</description>
+        <position y="80.0" x="160.0"/>
+    </workflow-item>
+</ns2:workflow>

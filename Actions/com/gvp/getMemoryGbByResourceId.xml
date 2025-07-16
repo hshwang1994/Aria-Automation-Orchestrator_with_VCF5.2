@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getMemoryGbByResourceId" result-type="number" api-version="6.0.0" id="5018172c-9484-46a9-94a6-ea1c6d90c3b7" version="0.0.0" category-name="com.gvp">
+  <param n="resourceId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if(resourceId ==null){
+    return null;
+}
+var aa = System.getModule("com.bvp").AaManager(true);
+return aa.get("/iaas/api/machines/" + resourceId).customProperties.memoryGB]]></script>
+</dunes-script-module>

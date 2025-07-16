@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getDetachableIAipInterfacesByComputeName_Copy" result-type="Array/Properties" api-version="6.0.0" id="2d12befe-997a-482c-a79a-0f50e7c23f89" version="0.0.0" allowed-operations="vfe" category-name="com.test.ecs.action.backup">
+  <param n="computeName" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.ecs").AaManager(true);
+var computes = aa.getUerp("/resources/compute?expand&$filter=name eq '" + computeName + "'");
+var result = [];
+for each(var computeLink in computes.documentLinks) {
+    var compute = computes.documents[computeLink];
+    for (var i = 0; i < compute.networkInterfaceLinks.length; i++) {
+        var interface = aa.getUerp(compute.networkInterfaceLinks[i]);
+        if (interface.customProperties.vpcAccessIp && interface.customProperties.vpcAccessIp != "NONE") {
+            result.push({
+                label: "[" + i + "] " + interface.address,
+                value: interface.documentSelfLink,
+            });
+        }
+    }
+    break;
+}
+return result;]]></script>
+</dunes-script-module>

@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item1" object-name="workflow:name=generic" id="5b5cd8a9-658f-499b-85da-be0b0ff66ec1" version="0.0.1" api-version="6.0.0" allowed-operations="vfe" editor-version="2.0" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[Security Group Post Provision]]></display-name>
+  <position y="50.0" x="100.0"/>
+  <input>
+    <param name="inputProperties" type="Properties"/>
+  </input>
+  <workflow-item name="item0" type="end" end-mode="0">
+    <in-binding/>
+    <position y="50.0" x="340.0"/>
+  </workflow-item>
+  <workflow-item name="item1" out-name="item0" type="task">
+    <display-name><![CDATA[Scriptable task]]></display-name>
+    <script encoded="false"><![CDATA[var aa = System.getModule("com.bvp").AaManager(true);
+var resourceId = inputProperties.resourceIds[0];
+var resource = aa.get("/deployment/api/resources/" + resourceId);
+var endpointId = inputProperties.endpointId;
+var endpointLink = "/resources/endpoints/" + endpointId;
+var endpoint = aa.getUerp(endpointLink);
+var nsx = System.getModule("com.bvp").NsxManager(endpoint.endpointProperties.hostName.split(".")[0]);
+var sg = null;
+for each(var group in nsx.get("/policy/api/v1/infra/domains/default/groups?sort_by=create_time&sort_ascending=false").results) {
+    if (group.display_name == resource.name) {
+        sg = group;
+        break;
+    }
+}
+if (sg) {
+    var expression = [];
+    for each(var tag in sg.tags) {
+        expression.push({
+            value: tag.scope + "|" + tag.tag,
+            member_type: "VirtualMachine",
+            key: "Tag",
+            operator: "EQUALS",
+            resource_type: "Condition"
+        });
+    }
+    nsx.put("/policy/api/v1/infra/domains/default/groups/" + sg.id, {
+        display_name: sg.display_name,
+        resource_type: sg.resource_type,
+        tags: sg.tags,
+        _revision: 0,
+        expression: expression
+    });
+} else {
+    throw "could not find group";
+}
+]]></script>
+    <in-binding>
+      <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="61.0" x="177.0"/>
+  </workflow-item>
+  <presentation/>
+</workflow>

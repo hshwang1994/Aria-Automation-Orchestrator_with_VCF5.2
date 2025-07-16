@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getInterfacesByComputeLink" result-type="Array/Properties" api-version="6.0.0" id="eb1bff61-4f64-442c-9731-9d43fb31c986" version="0.1.1" allowed-operations="vfe" category-name="com.bvp.bp.aip">
+  <param n="computeLink" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.bvp").AaManager(true);
+var compute = aa.getUerp(computeLink);
+var result = [];
+for (var i = 0; i < compute.networkInterfaceLinks.length; i++) {
+    var interface = aa.getUerp(compute.networkInterfaceLinks[i]);
+    result.push({
+        label: "인터페이스"+"[" + i + "] : " + interface.address,
+        value: interface.documentSelfLink,
+    });
+}
+return result;]]></script>
+</dunes-script-module>

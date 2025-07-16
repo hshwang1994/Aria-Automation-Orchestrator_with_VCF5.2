@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getResourceElementContentByResourceElement" result-type="string" api-version="6.0.0" id="84388149-1543-43eb-982a-ed334aa8cf13" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <param n="resourceElement" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if(resourceElement == null){ return null};
+
+if(resourceElement.contentType.split("/")[0] == "text"){
+    var mime = resourceElement.getContentAsMimeAttachment;
+    return mime.content;
+}]]></script>
+</dunes-script-module>

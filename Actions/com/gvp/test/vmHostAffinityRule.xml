@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="vmHostAffinityRule" result-type="string" api-version="6.0.0" id="7f67c9d6-39d9-41ed-8111-f36892be0d5f" version="0.0.0" category-name="com.gvp.test">
+  <script encoded="false"><![CDATA[
+var spec = new VcClusterConfigSpecEx();
+spec.drsConfig = new VcClusterDrsConfigInfo();
+spec.dpmConfig = new VcClusterDpmConfigInfo();
+var rulesSpec = new Array();
+rulesSpec[0] = new VcClusterRuleSpec();
+rulesSpec[0].operation = VcArrayUpdateOperation.add;
+rulesSpec[0].info = new VcClusterVmHostRuleInfo();
+rulesSpec[0].info.name = ruleName;
+rulesSpec[0].info.vmGroupName = vmGPName;
+rulesSpec[0].info.affineHostGroupName = hostGPName;
+rulesSpec[0].info.mandatory = false;   //must 일 경우true /  should일 경우 false 변경필요
+rulesSpec[0].info.userCreated = true;
+rulesSpec[0].info.enabled = true;
+spec.rulesSpec = rulesSpec;
+var modify = true;
+task = cluster.reconfigureComputeResource_Task(spec, modify);   // ClusterComputeResource-domain-c1027
+
+
+]]></script>
+</dunes-script-module>

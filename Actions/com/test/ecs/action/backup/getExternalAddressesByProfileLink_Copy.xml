@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getExternalAddressesByProfileLink_Copy" result-type="Array/string" api-version="6.0.0" id="ef157475-8190-49e1-98d7-f531aa30076c" version="0.1.0" allowed-operations="vfe" category-name="com.test.ecs.action.backup">
+  <description><![CDATA[BP:Access IP]]></description>
+  <param n="profileLink" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var conv = System.getModule("com.test.ecs.common").Converter();
+var aa = System.getModule("com.ecs").AaManager(true);
+var profile = aa.getUerp(profileLink);
+var subnetLink = profile.isolationExternalSubnetLink;
+var result = [];
+if (subnetLink) {
+    result.push('*');
+    var subnetRanges = aa.getUerp("/resources/subnet-ranges?expand&$filter=subnetLink eq '" + subnetLink + "'");
+    for each(var subnetRangeLink in subnetRanges.documentLinks) {
+        var subnetRange = subnetRanges.documents[subnetRangeLink];
+        var startIpNumeric = conv.ip.getNumeric(subnetRange.startIPAddress);
+        var endIpNumeric = conv.ip.getNumeric(subnetRange.endIPAddress);
+        var usedIpAddresses = aa.getUerp("/resources/ip-addresses?expand&$filter=(subnetRangeLink eq '" + subnetRangeLink + "') and (ipAddressStatus ne 'AVAILABLE')");
+        var used = [];
+        for each(var usedIpAddressLink in usedIpAddresses.documentLinks) {
+            used.push(conv.ip.getNumeric(usedIpAddresses.documents[usedIpAddressLink].ipAddress));
+        }
+        for (var ip = startIpNumeric; ip <= endIpNumeric; ip++) {
+            if (used.indexOf(ip) < 0) {
+                var ipStr = conv.ip.getString(ip);
+                result.push(ipStr);
+            }
+        }
+    }   
+}
+return result;]]></script>
+</dunes-script-module>

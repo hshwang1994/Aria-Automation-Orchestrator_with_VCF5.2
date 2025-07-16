@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getVpcProfileLinksByProjectId" result-type="Array/Properties" api-version="6.0.0" id="a4bddeb4-2645-42cc-b043-6713dc2c363d" version="0.1.1" category-name="com.gvp.bp.aip">
+  <description><![CDATA[BP:Virtual Machine]]></description>
+  <param n="networktype" t="string"><![CDATA[]]></param>
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!projectId)   throw new Error("projectId cannot be null");
+if (!networktype) throw new Error("networktype cannot be null");
+
+var aa = System.getModule("com.bvp").AaManager(true);
+
+var profiles = aa.getUerp(
+  "/provisioning/mgmt/network-profile?$filter="
++ "(customProperties.vpcProjectId eq '" + projectId + "')"
+);
+
+var result = [];
+
+for each (var profileLink in profiles.documentLinks) {
+  var profile   = profiles.documents[profileLink];
+  var infraLink = profile.customProperties.vpcInfraProfileLink;
+  if (!infraLink) continue;
+
+  var infra = aa.get(infraLink);
+  var hasType = infra.expandedTags.some(function(item) {
+    var tagValue = item.tag.split("\n")[1] || item.tag;
+    return tagValue.toLowerCase().indexOf(networktype.toLowerCase()) !== -1;
+  });
+
+  if (hasType) {
+    result.push({
+      label: profile.desc || profile.name,
+      value: profileLink
+    });
+  }
+}
+
+result.sort(function(a, b) {
+  return a.label.localeCompare(b.label);
+});
+
+return result;
+]]></script>
+</dunes-script-module>

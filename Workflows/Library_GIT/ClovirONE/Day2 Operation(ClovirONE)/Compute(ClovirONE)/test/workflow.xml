@@ -1,0 +1,409 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item12" object-name="workflow:name=generic" id="c56326cd-43df-4856-a060-1c3bfa952504" version="0.0.0" api-version="6.0.0" allowed-operations="vfe" editor-version="2.0" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[test]]></display-name>
+  <position y="20.0" x="160.0"/>
+  <input>
+    <param name="inputProperties" type="Properties"/>
+  </input>
+  <attrib name="var_0" type="Any" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="var_1" type="Array/Any" read-only="false">
+    <value encoded="n"><![CDATA[[]]]></value>
+  </attrib>
+  <attrib name="isItEnough" type="boolean" read-only="false">
+    <value encoded="n"><![CDATA[false]]></value>
+  </attrib>
+  <attrib name="vmUserNameFromConfig" type="string" read-only="false" conf-id="8fd52cf1-d098-4d3a-933b-3a7116371bf5" conf-key="guest_lin_id">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="vmPasswordFromConfig" type="SecureString" read-only="false" conf-id="8fd52cf1-d098-4d3a-933b-3a7116371bf5" conf-key="guest_lin_pwd"/>
+  <attrib name="getPathUri" type="string" read-only="false">
+    <value encoded="n"><![CDATA[/deployment/api/deployments/a0c6a895-877e-435b-a9d7-061561a22228/resources/dce7e3ce-0f2f-4805-b5cf-e39fe3553adf/actions/Cloud.SecurityGroup.Reconfigure.SecurityGroup]]></value>
+  </attrib>
+  <attrib name="stringResult" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="input" type="Properties" read-only="false">
+    <value encoded="n"><![CDATA[{}]]></value>
+  </attrib>
+  <attrib name="postPathUri" type="string" read-only="false">
+    <value encoded="n"><![CDATA[/deployment/api/deployments/a0c6a895-877e-435b-a9d7-061561a22228/resources/dce7e3ce-0f2f-4805-b5cf-e39fe3553adf/requests]]></value>
+  </attrib>
+  <attrib name="payload" type="string" read-only="false">
+    <value encoded="n"><![CDATA[{     "actionId":"Cloud.SecurityGroup.Reconfigure.SecurityGroup",     "inputs":{         "rules":[             {                 "name": "ujmoon-rule-01",                 "ports": "80,443",                 "access": "Allow",                 "source": "/provisioning/resources/compute-security-groups/dce7e3ce-0f2f-4805-b5cf-e39fe3553adf",                 "protocol": "TCP",                 "direction": "inbound",                 "resourceLink": "/provisioning/resources/compute-security-groups/dce7e3ce-0f2f-4805-b5cf-e39fe3553adf"                  }     ]     } }]]></value>
+  </attrib>
+  <attrib name="uriPath" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="emptyPayload" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="vraHost" type="VRA:Host" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <workflow-item name="item0" type="end" end-mode="0">
+    <in-binding/>
+    <position y="10.0" x="600.0"/>
+  </workflow-item>
+  <workflow-item name="item1" type="task">
+    <display-name><![CDATA[Scriptable task]]></display-name>
+    <script encoded="false"><![CDATA[var datacenter = VcPlugin.getAllDatacenters();
+var vm = datacenter[0];
+var sdk = VcPlugin.findSdkConnectionForUUID('98aef97a-b37e-4e23-9f22-ba0bc814373a');
+
+// Get TaskManager service
+
+
+var sdktm = vm.sdkConnection.taskManager;
+
+
+// Create FilterSpec containing vm reference to filter 
+
+
+var filter = new VcTaskFilterSpec();
+
+
+var spec = new VcTaskFilterSpecByEntity();
+
+
+spec.entity = vm.reference;
+
+
+spec.recursion = VcTaskFilterSpecRecursionOption.all;
+
+
+//filter.entity = spec;
+
+var timeSpec = new VcTaskFilterSpecByTime();
+
+var nowTime = VcPlugin.currentTime(sdk);
+var preTime = VcPlugin.currentTime(sdk);
+
+var nowMin = nowTime.getMinutes();
+var fMin = nowMin -10 ;
+preTime.setMinutes(fMin);
+var bTime = preTime;
+
+timeSpec.beginTime = bTime;
+timeSpec.endTime = nowTime;
+timeSpec.timeType = VcTaskFilterSpecTimeOption.completedTime;
+
+filter.time = timeSpec;
+
+// Create collector
+//var collector = sdktm.createCollectorForTasks(filter);
+
+//collector.resetCollector();
+
+//System.log(collector);
+
+//var_0 = sdktm;
+//var var_1 = Server.getAllPluginTypes();
+//var test = Server.findAllForType("VC:Task");
+//System.log(sdktm.moref);
+]]></script>
+    <in-binding/>
+    <out-binding/>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="110.0" x="440.0"/>
+  </workflow-item>
+  <workflow-item name="item2" type="task">
+    <display-name><![CDATA[Scriptable task]]></display-name>
+    <script encoded="false"><![CDATA[var sdk = VcPlugin.findSdkConnectionForUUID('98aef97a-b37e-4e23-9f22-ba0bc814373a');
+var date = VcPlugin.currentTime(sdk);
+var nowMin = date.getMinutes();
+var beginMin = nowMin - 10;
+date.setMinutes(beginMin);
+debug = date;
+
+
+]]></script>
+    <in-binding/>
+    <out-binding>
+      <bind name="debug" type="Any"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="120.0" x="80.0"/>
+  </workflow-item>
+  <workflow-item name="item3" type="task">
+    <display-name><![CDATA[Scriptable task]]></display-name>
+    <script encoded="false"><![CDATA[var aa = System.getModule("com.ecs").AaManager(true);
+var deploymentUrl = "/deployment/api/deployments/" + "65722060-a968-4bfb-945c-062f9ebb3cda";
+
+System.log(aa.getAsString(deploymentUrl));
+]]></script>
+    <in-binding/>
+    <out-binding>
+      <bind name="var_0" type="Any" export-name="var_0"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="110.0" x="220.0"/>
+  </workflow-item>
+  <workflow-item name="item4" type="task">
+    <display-name><![CDATA[getresource]]></display-name>
+    <script encoded="false"><![CDATA[// var_1 = Server.getAllResourceElementCategories();
+// System.log(var_1[2].path);
+
+var var_0 = Server.getResourceElementCategoryWithPath("goodmit");
+var_1 = var_0.resourceElements;
+var var_2 = var_1.filter(function(str) { return str.name === "diskMgmtLvm.sh";});
+var v = var_2[0].getContentAsMimeAttachment();
+System.log(v.name);
+System.log(v.id);
+System.log(v.content);
+
+//System.log(Server.findAllForType("MimeAttachment"));
+]]></script>
+    <in-binding/>
+    <out-binding>
+      <bind name="var_1" type="Array/Any" export-name="var_1"/>
+      <bind name="var_0" type="Any" export-name="var_0"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="110.0" x="820.0"/>
+  </workflow-item>
+  <workflow-item name="item5" type="task">
+    <display-name><![CDATA[getVcVirtualMachine]]></display-name>
+    <script encoded="false"><![CDATA[var vmName = "finalsw.opera.cloud.org.com";
+//var_1 = Server.findAllForType("VC:VirtualMachine", "xpath:name[matches(.,'" + vmName + "')]");
+//var_0 = var_1[0];
+
+var_1 = VcPlugin.getAllVirtualMachines(null,"xpath:name[matches(.,'" + vmName + "')]");
+var_0 = var_1[0];]]></script>
+    <in-binding/>
+    <out-binding>
+      <bind name="var_0" type="Any" export-name="var_0"/>
+      <bind name="var_1" type="Array/Any" export-name="var_1"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="160.0" x="280.0"/>
+  </workflow-item>
+  <workflow-item name="item6" type="task">
+    <display-name><![CDATA[disk space check test]]></display-name>
+    <script encoded="false"><![CDATA[var aa = System.getModule("com.ecs").AaManager(true);
+var endpointId = vraMachine.cloudAccountIds[0];
+var endpointLink = "/resources/endpoints/" + endpointId;
+var endpointName = aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0];
+var vcConf = System.getModule("com.ecs").ConfManager().load("/Endpoint/" + endpointName);
+var createDiskSpaceCheckScript = function(requiredSpaceGB) {
+    'use strict';
+    return '#!/bin/bash\n\n' +
+    '# GB를 bytes로 변환\n' +
+    'required_space=' + requiredSpaceGB + '\n' +
+    'required_space_bytes=$((required_space * 1024 * 1024 * 1024))\n\n' +
+    '# LVM 볼륨 그룹의 남은 용량 확인 (bytes 단위)\n' +
+    'vg_free_space=0\n' +
+    'if command -v vgs &> /dev/null; then\n' +
+    '    vg_free_space=$(sudo vgs --noheadings --units b --nosuffix -o vg_free | awk \'{sum += $1} END {print sum}\')\n' +
+    'fi\n\n' +
+    '# 초기 상태 디스크의 사용 가능한 공간 확인\n' +
+    'unallocated_space=0\n' +
+    '# LVM PV로 사용중인 디스크/파티션 목록 가져오기\n' +
+    'pv_disks=$(sudo pvs --noheadings -o pv_name | awk \'{print $1}\' | sed "s/[0-9]*$//")\n\n' +
+    '# 디스크 검사\n' +
+    'while read -r device size type mountpoint; do\n' +
+    '    device_path="/dev/${device}"\n' +
+    '    \n' +
+    '    # 실제 디스크이고 (파티션이 아님)\n' +
+    '    if [ "$type" = "disk" ]; then\n' +
+    '        # 부팅 디스크 제외\n' +
+    '        if ! sudo grep -q "$(basename $device)" /proc/cmdline; then\n' +
+    '            # LVM PV로 사용되지 않는지 확인\n' +
+    '            if ! echo "$pv_disks" | grep -q "$device_path"; then\n' +
+    '                # 파티션 테이블이 없거나 비어있는지 확인\n' +
+    '                if ! sudo fdisk -l "$device_path" 2>/dev/null | grep -q "^/dev/"; then\n' +
+    '                    # 파일시스템이 없는지 확인\n' +
+    '                    if ! sudo blkid "$device_path" &>/dev/null; then\n' +
+    '                        # 마운트되지 않았는지 확인\n' +
+    '                        if [ -z "$mountpoint" ]; then\n' +
+    '                            disk_size=$(echo $size | numfmt --from=iec)\n' +
+    '                            unallocated_space=$((unallocated_space + disk_size))\n' +
+    '                        fi\n' +
+    '                    fi\n' +
+    '                fi\n' +
+    '            fi\n' +
+    '        fi\n' +
+    '    fi\n' +
+    'done < <(sudo lsblk -b -o NAME,SIZE,TYPE,MOUNTPOINT | grep -v "^loop")\n\n' +
+    '# 총 사용 가능한 공간 계산\n' +
+    'total_available_space=$((vg_free_space + unallocated_space))\n\n' +
+    '# 가능 여부 판단 및 결과 출력\n' +
+    'if [ $total_available_space -ge $required_space_bytes ]; then\n' +
+    '    echo "true"\n' +
+    '    exit 0\n' +
+    'else\n' +
+    '    echo "false"\n' +
+    '    exit 1\n' +
+    'fi';
+};
+var scripts = createDiskSpaceCheckScript(265);
+var execScripts = System.getModule("com.ecs.common").execScripts;
+var checkSpace = execScripts(vcConf.hostname, vcConf.username, vcConf.password, vraMachine.name, vmUserNameFromConfig, vmPasswordFromConfig, scripts);
+System.log(typeof(checkSpace) + " "+checkSpace);
+var check = checkSpace;
+if(check.indexOf('true') != -1){
+    isItEnough = true;
+    System.log("True check")
+    System.log(check)
+    System.log(check == "true")
+} else {
+    isItEnough = false;
+    System.log("False check")
+    System.log(check)
+    System.log(check == "true")
+};
+]]></script>
+    <in-binding>
+      <bind name="vraMachine" type="VRA:Machine"/>
+      <bind name="vmUserNameFromConfig" type="string" export-name="vmUserNameFromConfig"/>
+      <bind name="vmPasswordFromConfig" type="SecureString" export-name="vmPasswordFromConfig"/>
+    </in-binding>
+    <out-binding>
+      <bind name="isItEnough" type="boolean" export-name="isItEnough"/>
+      <bind name="var_0" type="Any" export-name="var_0"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="140.0" x="660.0"/>
+  </workflow-item>
+  <workflow-item name="item7" type="task">
+    <display-name><![CDATA[Scriptable task]]></display-name>
+    <script encoded="false"><![CDATA[//var_1 = Server.findAllForType("VRA:NetworkInterface");
+
+var_1 = VraEntitiesFinder.getRequestTrackers(vra);]]></script>
+    <in-binding>
+      <bind name="vra" type="VRA:Host"/>
+    </in-binding>
+    <out-binding>
+      <bind name="var_0" type="Any" export-name="var_0"/>
+      <bind name="var_1" type="Array/Any" export-name="var_1"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="90.0" x="380.0"/>
+  </workflow-item>
+  <workflow-item name="item8" type="link" linked-workflow-id="36cb38fa-1901-4b4d-840a-33f6368757ea">
+    <display-name><![CDATA[Get operation]]></display-name>
+    <in-binding>
+      <bind name="host" type="VRA:Host">
+        <description><![CDATA[VMware Aria Automation host]]></description>
+      </bind>
+      <bind name="pathUri" type="string" export-name="getPathUri">
+        <description><![CDATA[Resource path uri]]></description>
+      </bind>
+      <bind name="inputHeaders" type="Properties" export-name="input">
+        <description><![CDATA[Request headers]]></description>
+      </bind>
+    </in-binding>
+    <out-binding>
+      <bind name="statusCode" type="number" export-name="">
+        <description><![CDATA[Response status code (HTTP standard - 200/400 etc.)]]></description>
+      </bind>
+      <bind name="contentAsString" type="string" export-name="stringResult">
+        <description><![CDATA[Response content]]></description>
+      </bind>
+      <bind name="statusMessage" type="string" export-name="">
+        <description><![CDATA[Response status message]]></description>
+      </bind>
+      <bind name="headers" type="Array/string" export-name="">
+        <description><![CDATA[Response headers]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[ ]]></description>
+    <position y="110.0" x="560.0"/>
+  </workflow-item>
+  <workflow-item name="item9" type="link" linked-workflow-id="727698f0-ba8e-4f48-883f-4c03085a79f4">
+    <display-name><![CDATA[Post operation]]></display-name>
+    <in-binding>
+      <bind name="pathUri" type="string" export-name="postPathUri">
+        <description><![CDATA[Request path uri]]></description>
+      </bind>
+      <bind name="host" type="VRA:Host">
+        <description><![CDATA[VMware Aria Automation host]]></description>
+      </bind>
+      <bind name="payload" type="string" export-name="payload">
+        <description><![CDATA[Request payload]]></description>
+      </bind>
+      <bind name="inputHeaders" type="Properties" export-name="input">
+        <description><![CDATA[Request headers]]></description>
+      </bind>
+    </in-binding>
+    <out-binding>
+      <bind name="headers" type="Array/string" export-name="">
+        <description><![CDATA[Response headers]]></description>
+      </bind>
+      <bind name="statusMessage" type="string" export-name="">
+        <description><![CDATA[Response status message]]></description>
+      </bind>
+      <bind name="contentAsString" type="string" export-name="stringResult">
+        <description><![CDATA[Response content]]></description>
+      </bind>
+      <bind name="statusCode" type="number" export-name="">
+        <description><![CDATA[Response status code (HTTP standard - 200/400 etc.)]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[ ]]></description>
+    <position y="160.0" x="460.0"/>
+  </workflow-item>
+  <workflow-item name="item10" type="task">
+    <display-name><![CDATA[Scriptable task]]></display-name>
+    <script encoded="false"><![CDATA[var vraHosts = Server.findAllForType("VRA:Host");
+vraHost = vraHosts[1];
+uriPath = "/deployment/api/deployments/" + inputProperties.deploymentId + "/resources/" + inputProperties.resourceIds[0] + "/requests";
+var testRuleName = "project-default-rule";
+var resourceUriLink = "/provisioning/resources/compute-security-groups/" + inputProperties.resourceIds[0];
+emptyPayload = '{ "actionId":"Cloud.SecurityGroup.Reconfigure.SecurityGroup", "inputs":{ "rules":[ { "name": "' + testRuleName + '", "ports": "80,443", "access": "Allow", "source": "' + resourceUriLink + '", "protocol": "TCP", "direction": "inbound", "resourceLink": "' + resourceUriLink + '" } ] } }']]></script>
+    <in-binding>
+      <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+    </in-binding>
+    <out-binding>
+      <bind name="vraHost" type="VRA:Host" export-name="vraHost"/>
+      <bind name="uriPath" type="string" export-name="uriPath"/>
+      <bind name="emptyPayload" type="string" export-name="emptyPayload"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.0" x="200.0"/>
+  </workflow-item>
+  <workflow-item name="item11" type="link" linked-workflow-id="06998d5f-27ea-4c02-b62f-e45140a8072c">
+    <display-name><![CDATA[Delete operation]]></display-name>
+    <in-binding>
+      <bind name="host" type="VRA:Host" export-name="vraHost">
+        <description><![CDATA[VMware Aria Automation host]]></description>
+      </bind>
+      <bind name="pathUri" type="string" export-name="uriPath">
+        <description><![CDATA[Resource path Uri]]></description>
+      </bind>
+      <bind name="inputHeaders" type="Properties" export-name="input">
+        <description><![CDATA[Request headers]]></description>
+      </bind>
+    </in-binding>
+    <out-binding>
+      <bind name="statusCode" type="number" export-name="">
+        <description><![CDATA[Response status code]]></description>
+      </bind>
+      <bind name="contentAsString" type="string" export-name="stringResult">
+        <description><![CDATA[Response content]]></description>
+      </bind>
+      <bind name="statusMessage" type="string" export-name="">
+        <description><![CDATA[Response status message]]></description>
+      </bind>
+      <bind name="headers" type="Array/string" export-name="">
+        <description><![CDATA[Response headers]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[ ]]></description>
+    <position y="60.0" x="360.0"/>
+  </workflow-item>
+  <workflow-item name="item12" out-name="item0" type="task">
+    <display-name><![CDATA[Scriptable task]]></display-name>
+    <script encoded="false"><![CDATA[var vraHosts = Server.findAllForType("VRA:Host");
+var vraHost = vraHosts[1];
+var_0 = VraEntitiesFinder.getRequestTracker(vraHost,"38039cb5-a2c6-4450-8490-6f963b835856");]]></script>
+    <in-binding/>
+    <out-binding>
+      <bind name="var_0" type="Any" export-name="var_0"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="20.0" x="320.0"/>
+  </workflow-item>
+  <presentation/>
+</workflow>

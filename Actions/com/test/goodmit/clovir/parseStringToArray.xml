@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="parseStringToArray" result-type="Array/string" api-version="6.0.0" id="b81bc7c3-d90f-4232-878b-fd40928b9b36" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <param n="str" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[function parseStringToArray(str) {
+    try {
+        // 문자열 앞뒤 공백 제거
+        while (str[0] === ' ' || str[0] === '\t' || str[0] === '\n' || str[0] === '\r') {
+            str = str.substring(1);
+        }
+        while (str[str.length - 1] === ' ' || str[str.length - 1] === '\t' || 
+               str[str.length - 1] === '\n' || str[str.length - 1] === '\r') {
+            str = str.substring(0, str.length - 1);
+        }
+        
+        // 대괄호 제거
+        if (str[0] === '[') {
+            str = str.substring(1);
+        }
+        if (str[str.length - 1] === ']') {
+            str = str.substring(0, str.length - 1);
+        }
+        
+        // 빈 문자열 체크
+        if (str.length === 0) {
+            return [];
+        }
+        
+        // 문자열을 배열로 변환
+        var result = [];
+        var currentItem = '';
+        var inQuotes = false;
+        var quoteChar = '';
+        
+        for (var i = 0; i < str.length; i++) {
+            var char = str[i];
+            
+            // 따옴표 처리
+            if ((char === '"' || char === "'") && (i === 0 || str[i - 1] !== '\\')) {
+                if (!inQuotes) {
+                    inQuotes = true;
+                    quoteChar = char;
+                } else if (char === quoteChar) {
+                    inQuotes = false;
+                    quoteChar = '';
+                } else {
+                    currentItem += char;
+                }
+                continue;
+            }
+            
+            // 쉼표를 만나면 현재 아이템을 배열에 추가
+            if (char === ',' && !inQuotes) {
+                // 앞뒤 공백 제거
+                while (currentItem[0] === ' ') {
+                    currentItem = currentItem.substring(1);
+                }
+                while (currentItem[currentItem.length - 1] === ' ') {
+                    currentItem = currentItem.substring(0, currentItem.length - 1);
+                }
+                
+                result.push(currentItem);
+                currentItem = '';
+                continue;
+            }
+            
+            currentItem += char;
+        }
+        
+        // 마지막 아이템 처리
+        if (currentItem) {
+            // 마지막 아이템의 앞뒤 공백 제거
+            while (currentItem[0] === ' ') {
+                currentItem = currentItem.substring(1);
+            }
+            while (currentItem[currentItem.length - 1] === ' ') {
+                currentItem = currentItem.substring(0, currentItem.length - 1);
+            }
+            
+            result.push(currentItem);
+        }
+        return result;
+    } catch (error) {
+        System.error("Error parsing string to array: " + error);
+        throw "Failed to parse string to array: " + error;
+    }
+}
+return parseStringToArray(str);]]></script>
+</dunes-script-module>

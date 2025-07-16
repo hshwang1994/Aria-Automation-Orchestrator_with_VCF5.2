@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="AllDeploymentDelete_excludeProjectId" result-type="Array/string" api-version="6.0.0" id="250c0ccc-8324-45fc-a6f6-26027e924e62" version="0.0.0" category-name="com.gvp.test">
+  <param n="catalog" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[// AllDeploymentDelete: 지정된 카탈로그 유형의 Deployment를 삭제하되,
+// 특정 프로젝트 ID의 Deployment는 제외합니다.
+
+var aa = System.getModule("com.bvp").AaManager(true);
+
+// 제외할 프로젝트 ID
+var excludeProjectId = "3b7ec488-09dd-4174-b4ec-6d31145cd2af";
+
+/**
+ * 주어진 카탈로그(type)에 속하는 deployment ID 리스트를 가져옵니다.
+ * 단, excludeProjectId와 일치하는 deployment는 제외합니다.
+ */
+function getDeploymentIdsByCatalog(type) {
+    var ids = [];
+    var page = 0;
+    var size = 50;
+    var resp;
+
+    do {
+        resp = aa.get("/deployment/api/deployments?page=" + page + "&size=" + size);
+        var items = resp.content || [];
+
+        for (var i = 0; i < items.length; i++) {
+            var item = items[i];
+            if (item.inputs 
+                && item.inputs._metadata_catalog === type 
+                && item.projectId !== excludeProjectId) {
+                ids.push(item.id);
+            }
+        }
+        page++;
+    } while (resp.last === false);
+
+    return ids;
+}
+
+/**
+ * getDeploymentIdsByCatalog에서 반환된 ID들을 순회하며 삭제 요청을 보냅니다.
+ */
+function deleteDeploymentsByCatalog(type) {
+    var idsToDelete = getDeploymentIdsByCatalog(type);
+
+    for (var i = 0; i < idsToDelete.length; i++) {
+        var id = idsToDelete[i];
+        System.log("Deleting deployment: " + id);
+        aa.delete("/deployment/api/deployments/" + id);
+    }
+
+    return idsToDelete;
+}
+
+// 실제 실행: catalog 변수에는 호출 시 사용할 _metadata_catalog 값을 지정합니다.
+deleteDeploymentsByCatalog(catalog);
+]]></script>
+</dunes-script-module>

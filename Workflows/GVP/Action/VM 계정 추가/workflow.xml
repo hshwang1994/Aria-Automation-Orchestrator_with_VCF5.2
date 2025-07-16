@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:workflow xmlns:ns2="http://vmware.com/vco/workflow" root-name="item1" object-name="workflow:name=generic" id="cd81b9eb-afad-42c2-a856-8c05a7e5426d" editor-version="2.0" version="0.0.0" api-version="6.0.0" restartMode="1" resumeFromFailedMode="0">
+    <display-name>VM 계정 추가</display-name>
+    <position y="50.0" x="100.0"/>
+    <input>
+        <param name="_metadata_main_catalog" type="string"/>
+        <param name="_metadata_catalog" type="string"/>
+        <param name="resourceId" type="string"/>
+        <param name="accountProperties" type="Array/CompositeType(userName:string,password:string):userAccount"/>
+        <param name="requestMessage" type="string"/>
+    </input>
+    <output/>
+    <workflow-item name="item0" type="end" end-mode="0" comparator="0">
+        <in-binding/>
+        <out-binding/>
+        <position y="50.0" x="360.0"/>
+    </workflow-item>
+    <workflow-item name="item1" out-name="item0" type="task" comparator="0">
+        <display-name>Scriptable task</display-name>
+        <script encoded="false">var aa = System.getModule("com.bvp").AaManager(true);
+var machine = aa.get("/iaas/api/machines/" + resourceId);
+var endpointId = machine.cloudAccountIds[0];
+var endpointLink = "/resources/endpoints/" + endpointId;
+var endpointName = aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0];
+var vcConf = System.getModule("com.bvp").ConfManager().load("BVP/Endpoint/" + endpointName);
+var execScripts = System.getModule("com.bvp").execScripts;
+function generateScript(userInfos, osType) {
+  var script = '';
+
+  if (osType === 'LINUX') {
+    script += '#!/bin/bash\n';
+    for (var i = 0; i &lt; userInfos.length; i++) {
+      var user = userInfos[i];
+      script += 'sudo useradd -s /bin/bash -m ' + user.userName + ' &amp;&amp; echo "' + user.userName + ':' + user.password + '" | sudo chpasswd\n';
+    }
+  } else if (osType === 'WINDOW') {
+    for (var j = 0; j &lt; userInfos.length; j++) {
+      var winUser = userInfos[j];
+      script += 'net user ' + winUser.userName + ' ' + winUser.password + ' /add\n';
+    }
+  } else {
+    script = '지원하지 않는 운영체제입니다.';
+  }
+
+  return script;
+}
+
+var scripts = generateScript(accountProperties, machine.customProperties.osType);
+execScripts(vcConf.hostname, vcConf.username, vcConf.password, machine.name, "cloody", "VMware1!", scripts);
+</script>
+        <in-binding>
+            <bind name="resourceId" type="string" export-name="resourceId"/>
+            <bind name="accountProperties" type="Array/CompositeType(userName:string,password:string):userAccount" export-name="accountProperties"/>
+        </in-binding>
+        <out-binding/>
+        <description>Simple task with custom script capability.</description>
+        <position y="60.0" x="200.0"/>
+    </workflow-item>
+</ns2:workflow>

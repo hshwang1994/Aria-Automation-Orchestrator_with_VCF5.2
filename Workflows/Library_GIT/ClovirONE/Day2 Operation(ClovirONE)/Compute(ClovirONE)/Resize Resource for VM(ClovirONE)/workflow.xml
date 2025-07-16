@@ -1,0 +1,623 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item6" object-name="workflow:name=generic" id="862adc2b-6560-4ff0-b8f1-a6b6ee8795d9" version="0.0.1" api-version="6.0.0" allowed-operations="vfe" editor-version="2.0" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[Resize Resource for VM(ClovirONE)]]></display-name>
+  <position y="60.0" x="60.0"/>
+  <input>
+    <param name="cpuCount" type="number"/>
+    <param name="memoryCount" type="number"/>
+    <param name="corePerSocket" type="number"/>
+    <param name="requestMessage" type="string"/>
+    <param name="resourceName" type="string"/>
+    <param name="requestResize" type="boolean"/>
+    <param name="requestAddDisk" type="boolean"/>
+    <param name="diskDescription" type="string"/>
+    <param name="projectId" type="string"/>
+    <param name="diskPersistent" type="boolean"/>
+    <param name="diskEncrypted" type="boolean"/>
+    <param name="diskSourceReference" type="string"/>
+    <param name="diskContentBase64" type="string"/>
+    <param name="diskCustomProperties" type="Properties"/>
+    <param name="diskUnitNumber" type="string"/>
+    <param name="diskScsiController" type="string"/>
+    <param name="diskAttachmentProperties" type="Properties"/>
+    <param name="diskProperties" type="Array/CompositeType(mount:string,size:number):diskProperties"/>
+  </input>
+  <attrib name="vraHost" type="VRA:Host" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="vraMachine" type="VRA:Machine" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="rebootMachine" type="boolean" read-only="false">
+    <value encoded="n"><![CDATA[true]]></value>
+  </attrib>
+  <attrib name="isResizeByFlavor" type="boolean" read-only="false">
+    <value encoded="n"><![CDATA[false]]></value>
+  </attrib>
+  <attrib name="resizeOutput" type="VRA:RequestTracker" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="Null" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="vraBlockDevice" type="VRA:BlockDevice" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="addDiskOutput" type="VRA:RequestTracker" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="scriptOutputText" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="scriptOutputExitCode" type="number" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="vraProject" type="VRA:Project" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="deploymentId" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="isAlreadyExDisk" type="boolean" read-only="false">
+    <value encoded="n"><![CDATA[false]]></value>
+  </attrib>
+  <attrib name="newDiskSize" type="number" read-only="false">
+    <value encoded="n"><![CDATA[100.0]]></value>
+  </attrib>
+  <attrib name="vcVirtualMachine" type="VC:VirtualMachine" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="vmUserNameFromConfig" type="string" read-only="false" conf-id="8fd52cf1-d098-4d3a-933b-3a7116371bf5" conf-key="guest_lin_id">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="vmPasswordFromConfig" type="SecureString" read-only="false" conf-id="8fd52cf1-d098-4d3a-933b-3a7116371bf5" conf-key="guest_lin_pwd"/>
+  <attrib name="scriptArguments" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="NullArray" type="Array/string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="isItEnoughSpace" type="boolean" read-only="false">
+    <value encoded="n"><![CDATA[false]]></value>
+  </attrib>
+  <attrib name="scriptType" type="string" read-only="false">
+    <value encoded="n"><![CDATA[bash]]></value>
+  </attrib>
+  <attrib name="script" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="mountPath" type="Array/string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="diskCapacityInGB" type="Array/string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="volumeCount" type="number" read-only="false">
+    <value encoded="n"><![CDATA[0.0]]></value>
+  </attrib>
+  <attrib name="diskName" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="resourceDirName" type="string" read-only="false">
+    <value encoded="n"><![CDATA[goodmit]]></value>
+  </attrib>
+  <attrib name="resourceFileName" type="string" read-only="false">
+    <value encoded="n"><![CDATA[diskMgmtLvm.sh]]></value>
+  </attrib>
+  <workflow-item name="item0" type="end" end-mode="0">
+    <in-binding/>
+    <position y="60.0" x="960.0"/>
+  </workflow-item>
+  <workflow-item name="item1" out-name="item9" type="link" linked-workflow-id="44be494e-8faa-41ca-8967-d2b53e24b232">
+    <display-name><![CDATA[Resize Machine]]></display-name>
+    <in-binding>
+      <bind name="machine" type="VRA:Machine" export-name="vraMachine">
+        <description><![CDATA[machine to resized. ]]></description>
+      </bind>
+      <bind name="host" type="VRA:Host" export-name="vraHost">
+        <description><![CDATA[VMware Aria Automation Host]]></description>
+      </bind>
+      <bind name="flavor" type="string" export-name="Null">
+        <description><![CDATA[Flavor name]]></description>
+      </bind>
+      <bind name="cpuCount" type="number" export-name="cpuCount">
+        <description><![CDATA[Number of CPUs to resize machine]]></description>
+      </bind>
+      <bind name="coreCount" type="number" export-name="corePerSocket">
+        <description><![CDATA[Number of cores per socket]]></description>
+      </bind>
+      <bind name="memory" type="number" export-name="memoryCount">
+        <description><![CDATA[Memory in MB to resize.]]></description>
+      </bind>
+      <bind name="rebootMachine" type="boolean" export-name="rebootMachine">
+        <description><![CDATA[Only applicable for vSphere VMs with the Hot Add option enabled. If set to false, VM is resized without reboot]]></description>
+      </bind>
+      <bind name="isResizeByFlavor" type="boolean" export-name="isResizeByFlavor">
+        <description><![CDATA[Boolean to check whether machine resize is based on Flavor configuration.]]></description>
+      </bind>
+    </in-binding>
+    <out-binding>
+      <bind name="requestTracker" type="VRA:RequestTracker" export-name="resizeOutput">
+        <description><![CDATA[VMware Aria Automation Tracker object for resize machine.]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[ ]]></description>
+    <position y="10.0" x="460.0"/>
+  </workflow-item>
+  <workflow-item name="item2" out-name="item3" type="link" linked-workflow-id="badb432f-6125-41c3-a2ec-c5c11c91425b">
+    <display-name><![CDATA[Create Disk]]></display-name>
+    <in-binding>
+      <bind name="host" type="VRA:Host" export-name="vraHost">
+        <description><![CDATA[VMware Aria Automation Host Connection object]]></description>
+      </bind>
+      <bind name="name" type="string" export-name="diskName">
+        <description><![CDATA[Block Device Name ]]></description>
+      </bind>
+      <bind name="projectInput" type="VRA:Project" export-name="vraProject">
+        <description><![CDATA[VMware Aria Automation project instance]]></description>
+      </bind>
+      <bind name="description" type="string" export-name="Null">
+        <description><![CDATA[Block Device description]]></description>
+      </bind>
+      <bind name="capacityInGB" type="number" export-name="newDiskSize">
+        <description><![CDATA[Capacity of the block device in GB]]></description>
+      </bind>
+      <bind name="sourceReference" type="string" export-name="Null">
+        <description><![CDATA[Reference to URI using which the block device has to be created]]></description>
+      </bind>
+      <bind name="encrypted" type="boolean" export-name="diskEncrypted">
+        <description><![CDATA[Flag to indicate whether the block device should be encrypted or not]]></description>
+      </bind>
+      <bind name="deploymentId" type="string" export-name="deploymentId">
+        <description><![CDATA[The id of the deployment that is associated with this resource]]></description>
+      </bind>
+      <bind name="diskContentBase64" type="string" export-name="diskContentBase64">
+        <description><![CDATA[Content of a disk, base64 encoded]]></description>
+      </bind>
+      <bind name="persistent" type="boolean" export-name="diskPersistent">
+        <description><![CDATA[Flag indicating the block device survives a delete action]]></description>
+      </bind>
+      <bind name="tags" type="Array/string" export-name="NullArray">
+        <description><![CDATA[A set of tag keys and optional values that should be set on any resource that is produced from this specification]]></description>
+      </bind>
+      <bind name="constraints" type="Array/string" export-name="NullArray">
+        <description><![CDATA[Constraints that are used to drive placement policies for the block device]]></description>
+      </bind>
+      <bind name="customProperties" type="Properties" export-name="diskCustomProperties">
+        <description><![CDATA[Additional custom properties to extend this resource]]></description>
+      </bind>
+    </in-binding>
+    <out-binding>
+      <bind name="blockDevice" type="VRA:BlockDevice" export-name="vraBlockDevice">
+        <description><![CDATA[Block Device Object]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[ ]]></description>
+    <position y="100.0" x="480.0"/>
+  </workflow-item>
+  <workflow-item name="item3" out-name="item21" type="link" linked-workflow-id="116ad485-d612-4865-afe9-96bb1d23286c">
+    <display-name><![CDATA[Attach Machine Disk]]></display-name>
+    <in-binding>
+      <bind name="blockDevice" type="VRA:BlockDevice" export-name="vraBlockDevice">
+        <description><![CDATA[Disk Object]]></description>
+      </bind>
+      <bind name="machine" type="VRA:Machine" export-name="vraMachine">
+        <description><![CDATA[Machine Object]]></description>
+      </bind>
+      <bind name="unitNumber" type="string" export-name="diskUnitNumber">
+        <description><![CDATA[Unit Number]]></description>
+      </bind>
+      <bind name="scsiController" type="string" export-name="diskScsiController">
+        <description><![CDATA[SCSI Controller]]></description>
+      </bind>
+      <bind name="diskAttachmentProperties" type="Properties" export-name="diskAttachmentProperties">
+        <description><![CDATA[Custom properties used to attach machine disk]]></description>
+      </bind>
+    </in-binding>
+    <out-binding>
+      <bind name="requestTracker" type="VRA:RequestTracker" export-name="addDiskOutput">
+        <description><![CDATA[VMware Aria Automation Request Tracker Object]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[ ]]></description>
+    <position y="100.0" x="640.0"/>
+  </workflow-item>
+  <workflow-item name="item6" out-name="item7" type="task">
+    <display-name><![CDATA[Set Variables]]></display-name>
+    <script encoded="false"><![CDATA[// get vra host 
+var vraHosts = Server.findAllForType("VRA:Host"); 
+vraHost = vraHosts[1];
+
+// get vra machine
+var machineEntities = VraEntitiesFinder.getMachines(vraHost,"name eq " + resourceName);
+var machine = machineEntities[1];
+vraMachine = machine;
+
+// get vc virtual machine
+var vmArray = Server.findAllForType("VC:VirtualMachine", "xpath:name[matches(.,'" + resourceName + "')]");
+vcVirtualMachine = vmArray[0];
+
+//get project id , deployment id
+vraProject = VraEntitiesFinder.getProject(vraHost, projectId);
+
+deploymentId = machine.deploymentId;
+
+// Disk Exsist Check
+var machineDiskList = VraEntitiesFinder.getMachineDisksByMachineId(vraHost, machine.id);
+var checkMachineDisk = [];
+for each( var machineDisk in machineDiskList ){
+    var dName = machineDisk.name;
+    if(dName.indexOf('CD/DVD') !== -1){
+        System.log("detect CD/DVD Machine Disk " + dName);
+    } else {
+        checkMachineDisk.push(machineDisk);
+    } 
+}
+if (checkMachineDisk.length > 1){
+    isAlreadyExDisk = true; 
+} else {
+    isAlreadyExDisk = false;
+}
+
+// get disk  mountPath Array, diskCapacityInGB Array 
+var mountArray = [];
+var capaArray = [];
+for each(diskProperty in diskProperties){
+    mountArray.push(diskProperty.mount);
+    var size = (diskProperty.size).toString();
+    capaArray.push(size);
+};
+mountPath = mountArray;
+diskCapacityInGB = capaArray;
+
+
+//set disk name
+var countStr = (volumeCount).toString();
+diskName = vraMachine.name + "-disk" + countStr;]]></script>
+    <in-binding>
+      <bind name="resourceName" type="string" export-name="resourceName"/>
+      <bind name="projectId" type="string" export-name="projectId"/>
+      <bind name="diskProperties" type="Array/CompositeType(mount:string,size:number):diskProperties" export-name="diskProperties"/>
+      <bind name="volumeCount" type="number" export-name="volumeCount"/>
+    </in-binding>
+    <out-binding>
+      <bind name="vraHost" type="VRA:Host" export-name="vraHost"/>
+      <bind name="vraMachine" type="VRA:Machine" export-name="vraMachine"/>
+      <bind name="vraProject" type="VRA:Project" export-name="vraProject"/>
+      <bind name="deploymentId" type="string" export-name="deploymentId"/>
+      <bind name="isAlreadyExDisk" type="boolean" export-name="isAlreadyExDisk"/>
+      <bind name="vcVirtualMachine" type="VC:VirtualMachine" export-name="vcVirtualMachine"/>
+      <bind name="mountPath" type="Array/string" export-name="mountPath"/>
+      <bind name="diskCapacityInGB" type="Array/string" export-name="diskCapacityInGB"/>
+      <bind name="diskName" type="string" export-name="diskName"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="70.0" x="120.0"/>
+  </workflow-item>
+  <workflow-item name="item7" type="switch">
+    <display-name><![CDATA[Switch]]></display-name>
+    <script encoded="false"><![CDATA[// Generated by the system, cannot be edited
+if (requestResize === true) {
+  return "item31";
+} else if (requestAddDisk === true) {
+  return "item12";
+} else if (true) {
+  return "item0";
+}
+]]></script>
+    <in-binding>
+      <bind name="requestResize" type="boolean" export-name="requestResize"/>
+      <bind name="requestAddDisk" type="boolean" export-name="requestAddDisk"/>
+    </in-binding>
+    <out-binding/>
+    <condition name="requestResize" type="boolean" comparator="0" label="item31"/>
+    <condition name="requestAddDisk" type="boolean" comparator="0" label="item12"/>
+    <condition name="" type="boolean" comparator="6" label="item0"/>
+    <description><![CDATA[Basic switch activity based on a workflow attribute or parameter.]]></description>
+    <position y="70.0" x="240.0"/>
+  </workflow-item>
+  <workflow-item name="item9" type="switch">
+    <display-name><![CDATA[Switch]]></display-name>
+    <script encoded="false"><![CDATA[// Generated by the system, cannot be edited
+if (requestAddDisk === true) {
+  return "item12";
+} else if (true) {
+  return "item0";
+}
+]]></script>
+    <in-binding>
+      <bind name="requestAddDisk" type="boolean" export-name="requestAddDisk"/>
+    </in-binding>
+    <out-binding/>
+    <condition name="requestAddDisk" type="boolean" comparator="0" label="item12"/>
+    <condition name="" type="boolean" comparator="6" label="item0"/>
+    <description><![CDATA[Basic switch activity based on a workflow attribute or parameter.]]></description>
+    <position y="10.0" x="600.0"/>
+  </workflow-item>
+  <workflow-item name="item12" out-name="item2" type="condition" alt-out-name="item21" comparator="0">
+    <display-name><![CDATA[New or Old Disk]]></display-name>
+    <script encoded="false"><![CDATA[// Generated by the system, cannot be edited
+return (isAlreadyExDisk === false);]]></script>
+    <in-binding>
+      <bind name="isAlreadyExDisk" type="boolean" export-name="isAlreadyExDisk"/>
+    </in-binding>
+    <out-binding/>
+    <condition name="isAlreadyExDisk" type="boolean" comparator="1" label="null"/>
+    <description><![CDATA[Custom decision based on a custom script.]]></description>
+    <position y="100.0" x="340.0"/>
+  </workflow-item>
+  <workflow-item name="item21" out-name="item23" type="task">
+    <display-name><![CDATA[check volume space]]></display-name>
+    <script encoded="false"><![CDATA[var aa = System.getModule("com.ecs").AaManager(true);
+var endpointId = vraMachine.cloudAccountIds[0];
+var endpointLink = "/resources/endpoints/" + endpointId;
+var endpointName = aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0];
+var vcConf = System.getModule("com.ecs").ConfManager().load("/Endpoint/" + endpointName);
+var createDiskSpaceCheckScript = function(requiredSpaceGB) {
+    'use strict';
+    return '#!/bin/bash\n\n' +
+    '# GB를 bytes로 변환\n' +
+    'required_space=' + requiredSpaceGB + '\n' +
+    'required_space_bytes=$((required_space * 1024 * 1024 * 1024))\n\n' +
+    '# LVM 볼륨 그룹의 남은 용량 확인 (bytes 단위)\n' +
+    'vg_free_space=0\n' +
+    'if command -v vgs &> /dev/null; then\n' +
+    '    vg_free_space=$(sudo vgs --noheadings --units b --nosuffix -o vg_free | awk \'{sum += $1} END {print sum}\')\n' +
+    'fi\n\n' +
+    '# 초기 상태 디스크의 사용 가능한 공간 확인\n' +
+    'unallocated_space=0\n' +
+    '# LVM PV로 사용중인 디스크/파티션 목록 가져오기\n' +
+    'pv_disks=$(sudo pvs --noheadings -o pv_name | awk \'{print $1}\' | sed "s/[0-9]*$//")\n\n' +
+    '# 디스크 검사\n' +
+    'while read -r device size type mountpoint; do\n' +
+    '    device_path="/dev/${device}"\n' +
+    '    \n' +
+    '    # 실제 디스크이고 (파티션이 아님)\n' +
+    '    if [ "$type" = "disk" ]; then\n' +
+    '        # 부팅 디스크 제외\n' +
+    '        if ! sudo grep -q "$(basename $device)" /proc/cmdline; then\n' +
+    '            # LVM PV로 사용되지 않는지 확인\n' +
+    '            if ! echo "$pv_disks" | grep -q "$device_path"; then\n' +
+    '                # 파티션 테이블이 없거나 비어있는지 확인\n' +
+    '                if ! sudo fdisk -l "$device_path" 2>/dev/null | grep -q "^/dev/"; then\n' +
+    '                    # 파일시스템이 없는지 확인\n' +
+    '                    if ! sudo blkid "$device_path" &>/dev/null; then\n' +
+    '                        # 마운트되지 않았는지 확인\n' +
+    '                        if [ -z "$mountpoint" ]; then\n' +
+    '                            disk_size=$(echo $size | numfmt --from=iec)\n' +
+    '                            unallocated_space=$((unallocated_space + disk_size))\n' +
+    '                        fi\n' +
+    '                    fi\n' +
+    '                fi\n' +
+    '            fi\n' +
+    '        fi\n' +
+    '    fi\n' +
+    'done < <(sudo lsblk -b -o NAME,SIZE,TYPE,MOUNTPOINT | grep -v "^loop")\n\n' +
+    '# 총 사용 가능한 공간 계산\n' +
+    'total_available_space=$((vg_free_space + unallocated_space))\n\n' +
+    '# 가능 여부 판단 및 결과 출력\n' +
+    'if [ $total_available_space -ge $required_space_bytes ]; then\n' +
+    '    echo "true"\n' +
+    '    exit 0\n' +
+    'else\n' +
+    '    echo "false"\n' +
+    '    exit 1\n' +
+    'fi';
+};
+var scripts = createDiskSpaceCheckScript(diskCapacityInGB[volumeCount]);
+var execScripts = System.getModule("com.ecs.common").execScripts;
+var checkSpace = execScripts(vcConf.hostname, vcConf.username, vcConf.password, vraMachine.name, vmUserNameFromConfig, vmPasswordFromConfig, scripts);
+if(checkSpace.indexOf("true") != -1){
+    isItEnoughSpace = true;
+} else {
+    isItEnoughSpace = false;
+};]]></script>
+    <in-binding>
+      <bind name="vraMachine" type="VRA:Machine" export-name="vraMachine"/>
+      <bind name="vmUserNameFromConfig" type="string" export-name="vmUserNameFromConfig"/>
+      <bind name="vmPasswordFromConfig" type="SecureString" export-name="vmPasswordFromConfig"/>
+      <bind name="diskCapacityInGB" type="Array/string" export-name="diskCapacityInGB"/>
+      <bind name="volumeCount" type="number" export-name="volumeCount"/>
+    </in-binding>
+    <out-binding>
+      <bind name="isItEnoughSpace" type="boolean" export-name="isItEnoughSpace"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="150.0" x="200.0"/>
+  </workflow-item>
+  <workflow-item name="item23" out-name="item29" type="condition" alt-out-name="item2" comparator="0">
+    <display-name><![CDATA[is it enough space]]></display-name>
+    <script encoded="false"><![CDATA[// Generated by the system, cannot be edited
+return (isItEnoughSpace === true);]]></script>
+    <in-binding>
+      <bind name="isItEnoughSpace" type="boolean" export-name="isItEnoughSpace"/>
+    </in-binding>
+    <out-binding/>
+    <condition name="isItEnoughSpace" type="boolean" comparator="0" label="null"/>
+    <description><![CDATA[Custom decision based on a custom script.]]></description>
+    <position y="210.0" x="180.0"/>
+  </workflow-item>
+  <workflow-item name="item24" out-name="item25" type="task">
+    <display-name><![CDATA[Set Script Arguments]]></display-name>
+    <script encoded="false"><![CDATA[scriptArguments = mountPath[volumeCount] + " " + diskCapacityInGB[volumeCount];
+]]></script>
+    <in-binding>
+      <bind name="mountPath" type="Array/string" export-name="mountPath"/>
+      <bind name="diskCapacityInGB" type="Array/string" export-name="diskCapacityInGB"/>
+      <bind name="volumeCount" type="number" export-name="volumeCount"/>
+    </in-binding>
+    <out-binding>
+      <bind name="scriptArguments" type="string" export-name="scriptArguments"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="220.0" x="460.0"/>
+  </workflow-item>
+  <workflow-item name="item25" out-name="item26" type="link" linked-workflow-id="fca15735-43da-43e1-b4cc-7cb741fa4859">
+    <display-name><![CDATA[ClovirOne - Run Script In Guest (No logging script-output)]]></display-name>
+    <in-binding>
+      <bind name="vm" type="VC:VirtualMachine" export-name="vcVirtualMachine">
+        <description><![CDATA[Virtual Machine (VC)]]></description>
+      </bind>
+      <bind name="username" type="string" export-name="vmUserNameFromConfig">
+        <description><![CDATA[Guest OS username]]></description>
+      </bind>
+      <bind name="password" type="SecureString" export-name="vmPasswordFromConfig">
+        <description><![CDATA[Guest OS password]]></description>
+      </bind>
+      <bind name="scriptType" type="string" export-name="scriptType">
+        <description><![CDATA[bash / bat / powershell]]></description>
+      </bind>
+      <bind name="script" type="string" export-name="script">
+        <description><![CDATA[Script Text]]></description>
+      </bind>
+      <bind name="inputArgument" type="string" export-name="scriptArguments"/>
+    </in-binding>
+    <out-binding>
+      <bind name="scriptOutputText" type="string" export-name="scriptOutputText">
+        <description><![CDATA[Output of the script]]></description>
+      </bind>
+      <bind name="scriptExitCode" type="number" export-name="scriptOutputExitCode">
+        <description><![CDATA[Exit code of the script]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[ ]]></description>
+    <position y="220.0" x="620.0"/>
+  </workflow-item>
+  <workflow-item name="item26" prototype-id="increase-counter" out-name="item28" content-mode="x" type="task">
+    <display-name><![CDATA[Increase counter]]></display-name>
+    <script encoded="false"><![CDATA[//Auto-generated script
+counter = counter + 1;]]></script>
+    <in-binding>
+      <bind name="counter" type="number" export-name="volumeCount">
+        <description><![CDATA[Item to increase]]></description>
+      </bind>
+    </in-binding>
+    <out-binding>
+      <bind name="counter" type="number" export-name="volumeCount">
+        <description><![CDATA[Increased item]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[Increment a counter by one.]]></description>
+    <position y="220.0" x="820.0"/>
+  </workflow-item>
+  <workflow-item name="item28" out-name="item0" type="custom-condition" alt-out-name="item21">
+    <display-name><![CDATA[Decision]]></display-name>
+    <script encoded="false"><![CDATA[if(mountPath.length == volumeCount ){
+    return true;
+} else {
+    return false;
+}
+]]></script>
+    <in-binding>
+      <bind name="mountPath" type="Array/string" export-name="mountPath"/>
+      <bind name="volumeCount" type="number" export-name="volumeCount"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Custom decision based on a custom script.]]></description>
+    <position y="140.0" x="760.0"/>
+  </workflow-item>
+  <workflow-item name="item29" out-name="item24" type="task" script-module="com.test.goodmit.clovir/getResourceContent">
+    <display-name><![CDATA[getResourceContent]]></display-name>
+    <script encoded="false"><![CDATA[//Auto generated script, cannot be modified !
+actionResult = System.getModule("com.test.goodmit.clovir").getResourceContent(dirName, fileName);
+]]></script>
+    <in-binding>
+      <bind name="dirName" type="string" export-name="resourceDirName"/>
+      <bind name="fileName" type="string" export-name="resourceFileName"/>
+    </in-binding>
+    <out-binding>
+      <bind name="actionResult" type="string" export-name="script"/>
+    </out-binding>
+    <description><![CDATA[Add a note to the workflow schema.]]></description>
+    <position y="220.0" x="340.0"/>
+  </workflow-item>
+  <workflow-item name="item31" out-name="item1" type="task">
+    <display-name><![CDATA[precheck]]></display-name>
+    <script encoded="false"><![CDATA[var currentNumCpu = vcVirtualMachine.config.hardware.numCPU;
+var requestedNumCpu = cpuCount;
+var currentMemoryGB = vcVirtualMachine.config.hardware.memoryMB / 1024;
+var requestedMemoryMB = memoryCount * 1024; // Convert input from GB to MB
+
+// Validate Memory Input
+if (requestedMemoryMB <= 0 || requestedMemoryMB > 1024) { // 1024GB = 1048576MB
+    throw "Invalid memory size!";
+};
+
+// Validate CPU Input
+if (requestedNumCpu <= 0 || requestedNumCpu > 128) { 
+    throw "Invalid CPU count!";
+};
+
+// Check reboot condition
+if((requestedNumCpu !== currentNumCpu && !VM_Name.config.cpuHotAddEnabled) || (requestedMemoryMB !== currentMemoryGB && !VM_Name.config.memoryHotAddEnabled) || (requestedNumCpu < currentNumCpu || requestedMemoryMB < currentMemoryGB)){
+    rebootMachine = true;
+} else {
+    rebootMachine = false;
+};]]></script>
+    <in-binding>
+      <bind name="vcVirtualMachine" type="VC:VirtualMachine" export-name="vcVirtualMachine"/>
+      <bind name="cpuCount" type="number" export-name="cpuCount"/>
+      <bind name="memoryCount" type="number" export-name="memoryCount"/>
+      <bind name="rebootMachine" type="boolean" export-name="rebootMachine"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="40.0" x="340.0"/>
+  </workflow-item>
+  <presentation>
+    <p-param name="cpuCount">
+      <desc><![CDATA[cpuCount]]></desc>
+    </p-param>
+    <p-param name="memoryCount">
+      <desc><![CDATA[memoryCount]]></desc>
+    </p-param>
+    <p-param name="corePerSocket">
+      <desc><![CDATA[corePerSocket]]></desc>
+    </p-param>
+    <p-param name="requestMessage">
+      <desc><![CDATA[requestMessage]]></desc>
+    </p-param>
+    <p-param name="resourceName">
+      <desc><![CDATA[resourceName]]></desc>
+    </p-param>
+    <p-param name="requestResize">
+      <desc><![CDATA[requestResize]]></desc>
+    </p-param>
+    <p-param name="requestAddDisk">
+      <desc><![CDATA[requestAddDisk]]></desc>
+    </p-param>
+    <p-param name="diskDescription">
+      <desc><![CDATA[diskDescription]]></desc>
+    </p-param>
+    <p-param name="projectId">
+      <desc><![CDATA[projectId]]></desc>
+    </p-param>
+    <p-param name="diskPersistent">
+      <desc><![CDATA[diskPersistent]]></desc>
+    </p-param>
+    <p-param name="diskEncrypted">
+      <desc><![CDATA[diskEncrypted]]></desc>
+    </p-param>
+    <p-param name="diskSourceReference">
+      <desc><![CDATA[diskSourceReference]]></desc>
+    </p-param>
+    <p-param name="diskContentBase64">
+      <desc><![CDATA[diskContentBase64]]></desc>
+    </p-param>
+    <p-param name="diskCustomProperties">
+      <desc><![CDATA[diskCustomProperties]]></desc>
+    </p-param>
+    <p-param name="diskUnitNumber">
+      <desc><![CDATA[diskUnitNumber]]></desc>
+    </p-param>
+    <p-param name="diskScsiController">
+      <desc><![CDATA[diskScsiController]]></desc>
+    </p-param>
+    <p-param name="diskAttachmentProperties">
+      <desc><![CDATA[diskAttachmentProperties]]></desc>
+    </p-param>
+    <p-param name="diskProperties">
+      <desc><![CDATA[diskProperties]]></desc>
+    </p-param>
+  </presentation>
+</workflow>

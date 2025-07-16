@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getInstancesVMByVpcSubnetLinks" result-type="Array/Properties" api-version="6.0.0" id="28c911c9-7ab6-464b-a66f-1b05636ef530" version="0.0.1" category-name="com.gvp.bp.nlb">
+  <param n="subnetLink" t="string"/>
+  <param n="projectId" t="string"/>
+  <script encoded="false"><![CDATA[var projectLink = "/provisioning/resources/projects/" + projectId;
+
+if (!subnetLink) {
+    throw "subnetLink cannot be null";
+}
+
+var aa = System.getModule("com.bvp").AaManager(true);
+
+var ifaceResp = aa.getUerp("/resources/network-interfaces?expand&$filter=subnetLink eq '" + subnetLink + "'");
+if (!ifaceResp.documentLinks || ifaceResp.documentLinks.length === 0) {
+    throw "현재 연결된 VM이 없습니다. 먼저 VM을 배포 후 확인해주세요.";
+}
+
+var interfaceLinks = ifaceResp.documentLinks;
+
+var computeResp = aa.getUerp(
+    "/resources/compute?expand&$filter=projectAuthLink eq '" + projectLink + "'&size=10000"
+);
+if (!computeResp.documentLinks || computeResp.documentLinks.length === 0) {
+    throw "해당 프로젝트 내에 VM이 존재하지 않습니다.";
+}
+
+var result    = [];
+var seenLinks = {};
+
+for each (var computeLink in computeResp.documentLinks) {
+    var compDoc  = computeResp.documents[computeLink];
+    var nicLinks = compDoc.networkInterfaceLinks || [];
+
+    for each (var ifLink in interfaceLinks) {
+        if (nicLinks.indexOf(ifLink) !== -1) {
+            if (!seenLinks[computeLink]) {
+                seenLinks[computeLink] = true;
+                result.push({
+                    label: compDoc.hostName,
+                    value: computeLink
+                });
+            }
+            break;
+        }
+    }
+}
+
+if (result.length === 0) {
+    throw "현재 연결하는 서브넷에 연결된 VM을 찾을 수 없습니다.";
+}
+
+result.sort(function(a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});
+
+return result;
+]]></script>
+</dunes-script-module>

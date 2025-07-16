@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:workflow xmlns:ns2="http://vmware.com/vco/workflow" root-name="item1" object-name="workflow:name=generic" id="39c20a99-b941-4aeb-80c9-8d2aaa8722fc" editor-version="2.0" version="0.0.0" api-version="6.0.0" restartMode="1" resumeFromFailedMode="0">
+    <display-name>Disk.Detach</display-name>
+    <position y="50.0" x="100.0"/>
+    <input>
+        <param name="_metadata_main_catalog" type="string"/>
+        <param name="_metadata_catalog" type="string"/>
+        <param name="vmResourceId" type="string"/>
+        <param name="nfsResourceId" type="string"/>
+        <param name="requestMessage" type="string"/>
+    </input>
+    <output/>
+    <workflow-item name="item0" type="end" end-mode="0" comparator="0">
+        <in-binding/>
+        <out-binding/>
+        <position y="50.0" x="360.0"/>
+    </workflow-item>
+    <workflow-item name="item1" out-name="item0" type="task" comparator="0">
+        <display-name>Scriptable task</display-name>
+        <script encoded="false"></script>
+        <in-binding>
+            <bind name="vmResourceId" type="string" export-name="vmResourceId"/>
+            <bind name="nfsResourceId" type="string" export-name="nfsResourceId"/>
+        </in-binding>
+        <out-binding/>
+        <description>Simple task with custom script capability.</description>
+        <position y="60.0" x="200.0"/>
+    </workflow-item>
+</ns2:workflow>

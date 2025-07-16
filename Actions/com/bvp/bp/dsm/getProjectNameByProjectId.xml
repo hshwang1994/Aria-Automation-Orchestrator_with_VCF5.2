@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getProjectNameByProjectId" result-type="string" api-version="6.0.0" id="1ef48093-7b73-49f5-886c-1c1e60b970dd" version="0.1.1" allowed-operations="vfe" category-name="com.bvp.bp.dsm">
+  <description><![CDATA[BP:DBaaS]]></description>
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!projectId) { throw "projectId cannot be null"; }
+
+var aa = System.getModule("com.bvp").AaManager(true);
+return aa.get("/iaas/api/projects/" + projectId).name;]]></script>
+</dunes-script-module>

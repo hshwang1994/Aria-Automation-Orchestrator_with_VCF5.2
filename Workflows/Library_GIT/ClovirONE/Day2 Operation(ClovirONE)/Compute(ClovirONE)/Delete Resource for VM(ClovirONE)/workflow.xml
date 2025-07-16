@@ -1,0 +1,201 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item1" object-name="workflow:name=generic" id="0805595b-0119-4180-ac63-36e8b861f642" version="0.0.0" api-version="6.0.0" allowed-operations="vfe" editor-version="2.0" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[Delete Resource for VM(ClovirONE)]]></display-name>
+  <position y="230.0" x="40.0"/>
+  <input>
+    <param name="resourceName" type="string"/>
+  </input>
+  <attrib name="vraMachine" type="VRA:Machine" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="vraHost" type="VRA:Host" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="computeId" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="projectId" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="deploymentId" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="Error" type="string" read-only="false">
+    <value encoded="n"><![CDATA[Error]]></value>
+  </attrib>
+  <attrib name="isSingleMachine" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="message" type="string" read-only="false">
+    <value encoded="n"><![CDATA[VM의 전원이 켜져있습니다]]></value>
+  </attrib>
+  <attrib name="endpointId" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="powerState" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="resource" type="Array/VRA:Machine" read-only="false">
+    <value encoded="n"><![CDATA[[]]]></value>
+  </attrib>
+  <workflow-note x="526.0" y="42.5" w="516.0" h="193.0" color="var(--cds-alias-utility-yellow)">
+    <description><![CDATA[Deployment ID를 조회할 때 나오는 VM이 1개만 참조될 때]]></description>
+  </workflow-note>
+  <workflow-note x="528.0" y="265.5" w="520.0" h="190.0" color="var(--cds-alias-utility-yellow)">
+    <description><![CDATA[Deployment ID를 조회할 때 나오는 VM이 2개 이상일 때]]></description>
+  </workflow-note>
+  <workflow-item name="item0" type="end" end-mode="0">
+    <in-binding/>
+    <position y="120.0" x="960.0"/>
+  </workflow-item>
+  <workflow-item name="item1" out-name="item15" type="task">
+    <display-name><![CDATA[Set Variables]]></display-name>
+    <script encoded="false"><![CDATA[var vraHosts = Server.findAllForType("VRA:Host");
+vraHost = vraHosts[1];
+
+var resourceNamefilter = "name eq '" + resourceName + "'";
+var machineEntities = VraEntitiesFinder.getMachines(vraHost, resourceNamefilter);
+
+// 여러개의 배열이 검색되기 때문에 machineEntities에서 deploymentId가 존재하는 첫 번째 머신을 선택
+var vraMachine = null;
+for (var i = 0; i < machineEntities.length; i++) {
+    if (machineEntities[i].deploymentId) {
+        vraMachine = machineEntities[i];
+        break;
+    }
+}
+
+var endpointIds = vraMachine.cloudAccountIdsExtension;
+var parsedEndpointId = JSON.parse(endpointIds);
+endpointId = parsedEndpointId[0];
+deploymentId = vraMachine.deploymentId;
+projectId = vraMachine.projectId;
+computeId = vraMachine.id;]]></script>
+    <in-binding>
+      <bind name="resourceName" type="string" export-name="resourceName"/>
+    </in-binding>
+    <out-binding>
+      <bind name="vraHost" type="VRA:Host" export-name="vraHost"/>
+      <bind name="vraMachine" type="VRA:Machine" export-name="vraMachine"/>
+      <bind name="computeId" type="string" export-name="computeId"/>
+      <bind name="deploymentId" type="string" export-name="deploymentId"/>
+      <bind name="projectId" type="string" export-name="projectId"/>
+      <bind name="endpointId" type="string" export-name="endpointId"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="240.0" x="120.0"/>
+  </workflow-item>
+  <workflow-item name="item3" out-name="item6" type="custom-condition" alt-out-name="item8">
+    <display-name><![CDATA[Deployment에 포함된 VM갯수 확인]]></display-name>
+    <script encoded="false"><![CDATA[if (isSingleMachine === "true") {
+    return true;
+} else {
+    return false;
+}]]></script>
+    <in-binding>
+      <bind name="isSingleMachine" type="string" export-name="isSingleMachine"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Custom decision based on a custom script.]]></description>
+    <position y="230.0" x="380.0"/>
+  </workflow-item>
+  <workflow-item name="item6" out-name="item12" type="custom-condition" alt-out-name="item9">
+    <display-name><![CDATA[VM 전원 상태 확인]]></display-name>
+    <script encoded="false"><![CDATA[if (powerState === "PoweredOff") {
+    return true;
+} else {
+    return false;
+}]]></script>
+    <in-binding>
+      <bind name="powerState" type="string" export-name="powerState"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Custom decision based on a custom script.]]></description>
+    <position y="120.0" x="380.0"/>
+  </workflow-item>
+  <workflow-item name="item8" out-name="item13" type="custom-condition" alt-out-name="item11">
+    <display-name><![CDATA[VM 전원 상태 확인]]></display-name>
+    <script encoded="false"><![CDATA[if (powerState === "PoweredOff") {
+    return true;
+} else {
+    return false;
+}]]></script>
+    <in-binding>
+      <bind name="powerState" type="string" export-name="powerState"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Custom decision based on a custom script.]]></description>
+    <position y="340.0" x="380.0"/>
+  </workflow-item>
+  <workflow-item name="item9" throw-bind-name="message" type="end" end-mode="1">
+    <in-binding/>
+    <position y="50.0" x="420.0"/>
+  </workflow-item>
+  <workflow-item name="item11" throw-bind-name="message" type="end" end-mode="1">
+    <in-binding/>
+    <position y="410.0" x="420.0"/>
+  </workflow-item>
+  <workflow-item name="item12" out-name="item0" type="link" linked-workflow-id="31255a49-05b0-4b6e-a727-19477c9bb5c4">
+    <display-name><![CDATA[Delete Deployment(ClovirONE)]]></display-name>
+    <in-binding>
+      <bind name="deploymentId" type="string" export-name="deploymentId"/>
+    </in-binding>
+    <out-binding>
+      <bind name="deploymentStatus" type="string" export-name=""/>
+    </out-binding>
+    <description><![CDATA[ ]]></description>
+    <position y="130.0" x="560.0"/>
+  </workflow-item>
+  <workflow-item name="item13" out-name="item14" type="link" linked-workflow-id="0ef78279-9b56-4e0b-84e7-846147d7f71e">
+    <display-name><![CDATA[Delete Resources(ClovirONE)]]></display-name>
+    <in-binding>
+      <bind name="computeId" type="string" export-name="computeId"/>
+    </in-binding>
+    <out-binding>
+      <bind name="computeStatus" type="string" export-name=""/>
+    </out-binding>
+    <description><![CDATA[ ]]></description>
+    <position y="350.0" x="560.0"/>
+  </workflow-item>
+  <workflow-item name="item14" type="end" end-mode="0">
+    <in-binding/>
+    <position y="340.0" x="960.0"/>
+  </workflow-item>
+  <workflow-item name="item15" out-name="item3" type="task">
+    <display-name><![CDATA[상태 확인]]></display-name>
+    <script encoded="false"><![CDATA[// """"""""" Deployment에 포함된 가상머신이 2개 이상인지 찾는 구간 """""""""
+// Deployment ID를 기반으로 머신 리소스 검색
+var deploymentIdfilter = "deploymentId eq '" + deploymentId + "'";
+var resource = VraEntitiesFinder.getMachines(vraHost, deploymentIdfilter);
+
+// 머신 개수를 기반으로 isSingleMachine 설정
+var isSingleMachine;
+if (resource.length === 1) {
+    isSingleMachine = "true";
+} else if (resource.length > 1) {
+    isSingleMachine = "false";
+}
+
+// """"""""" PowerCLI를 통해서 VM의 전원상태를 확인  """""""""
+var aa = System.getModule("com.ecs").AaManager(true);
+var endpointLink = "/resources/endpoints/" + endpointId;
+var endpointName = aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0];
+var vcConf = System.getModule("com.ecs").ConfManager().load("/Endpoint/" + endpointName);
+var vmpowerCheck = System.getModule("com.goodmit.clovir.common").vmpowerCheck;
+powerState = vmpowerCheck(vcConf.hostname, vcConf.username, vcConf.password, resourceName);]]></script>
+    <in-binding>
+      <bind name="deploymentId" type="string" export-name="deploymentId"/>
+      <bind name="endpointId" type="string" export-name="endpointId"/>
+      <bind name="vraHost" type="VRA:Host" export-name="vraHost"/>
+      <bind name="resource" type="Array/VRA:Machine" export-name="resource"/>
+      <bind name="resourceName" type="string" export-name="resourceName"/>
+    </in-binding>
+    <out-binding>
+      <bind name="isSingleMachine" type="string" export-name="isSingleMachine"/>
+      <bind name="powerState" type="string" export-name="powerState"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="240.0" x="240.0"/>
+  </workflow-item>
+  <presentation/>
+</workflow>

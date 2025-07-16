@@ -1,0 +1,120 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="installPackages" result-type="string" api-version="6.0.0" id="4aac724d-2b5b-4054-906e-2360395e6266" version="0.0.2" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <param n="vcHostname" t="string"><![CDATA[]]></param>
+  <param n="vcUsername" t="string"><![CDATA[]]></param>
+  <param n="vcPassword" t="string"><![CDATA[]]></param>
+  <param n="vmName" t="string"><![CDATA[]]></param>
+  <param n="vmUsername" t="string"><![CDATA[]]></param>
+  <param n="vmPassword" t="string"><![CDATA[]]></param>
+  <param n="packageName" t="Array/string"><![CDATA[]]></param>
+  <param n="version" t="Array/string"><![CDATA[]]></param>
+  <param n="options" t="Array/string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[// 패키지 설치 스크립트 생성 함수
+function generateInstallScript(packageNames, versions, options) {
+    // packageNames: string[], versions: string[], options: string[]
+    var script = "";
+        
+    // OS 확인 스크립트
+    script += 'if [ -f /etc/os-release ]; then\n';
+    script += '    . /etc/os-release\n';
+    script += 'else\n';
+    script += '    echo "Cannot determine OS distribution"\n';
+    script += '    exit 1\n';
+    script += 'fi\n\n';
+        
+    // 배포판별 설치 명령어 생성
+    script += 'if [[ "$ID" == "ubuntu" ]] || [[ "$ID" == "debian" ]]; then\n';
+    script += '    INSTALL_CMD="apt-get install -y"\n';
+    script += '    sudo apt-get update\n';
+    script += '    PACKAGES=(\n';
+    
+    // Ubuntu/Debian 패키지 목록 생성
+    for (var i = 0; i < packageNames.length; i++) {
+        if (versions[i]) {
+            script += '        "' + packageNames[i] + '=' + versions[i] + '"\n';
+        } else {
+            script += '        "' + packageNames[i] + '"\n';
+        }
+    }
+    script += '    )\n';
+    script += '    OPTIONS=(\n';
+    for (var i = 0; i < packageNames.length; i++) {
+        script += '        "' + (options[i] || '') + '"\n';
+    }
+    script += '    )\n';
+     
+    script += 'elif [[ "$ID" == "centos" ]] || [[ "$ID" == "rhel" ]]; then\n';
+    script += '    INSTALL_CMD="yum install -y"\n';
+    script += '    PACKAGES=(\n';
+    
+    // CentOS/RHEL 패키지 목록 생성
+    for (var i = 0; i < packageNames.length; i++) {
+        if (versions[i]) {
+            script += '        "' + packageNames[i] + '-' + versions[i] + '"\n';
+        } else {
+            script += '        "' + packageNames[i] + '"\n';
+        }
+    }
+    script += '    )\n';
+    script += '    OPTIONS=(\n';
+    for (var i = 0; i < packageNames.length; i++) {
+        script += '        "' + (options[i] || '') + '"\n';
+    }
+    script += '    )\n';
+     
+    script += 'else\n';
+    script += '    echo "Unsupported Linux distribution: $ID"\n';
+    script += '    exit 1\n';
+    script += 'fi\n\n';
+
+    // 패키지 설치 실행
+    script += 'FAILED_PACKAGES=()\n';
+    script += 'for i in "${!PACKAGES[@]}"; do\n';
+    script += '    PACKAGE="${PACKAGES[$i]}"\n';
+    script += '    OPTION="${OPTIONS[$i]}"\n';
+    script += '    if sudo $INSTALL_CMD "$PACKAGE" $OPTION; then\n';
+    script += '        echo "Successfully installed $PACKAGE"\n';
+    script += '    else\n';
+    script += '        echo "Failed to install $PACKAGE"\n';
+    script += '        FAILED_PACKAGES+=("$PACKAGE")\n';
+    script += '    fi\n';
+    script += 'done\n\n';
+    
+    // 설치 결과 확인
+    script += 'if [ ${#FAILED_PACKAGES[@]} -eq 0 ]; then\n';
+    script += '    echo "All packages were successfully installed"\n';
+    script += '    exit 0\n';
+    script += 'else\n';
+    script += '    echo "Failed to install the following packages: ${FAILED_PACKAGES[*]}"\n';
+    script += '    exit 1\n';
+    script += 'fi\n';
+
+    return script;
+}
+
+try {
+    // vSphere 연결
+    var execScripts = System.getModule("com.ecs.common").execScripts;
+    
+    
+    var installScript = generateInstallScript(packageName, version, options);
+    
+    var result = execScripts(vcHostname, vcUsername, vcPassword, 
+                            vmName, vmUsername, vmPassword, installScript);
+    
+    // 결과 확인
+    if (result.indexOf("All packages were successfully installed") !== -1) {
+        System.log("All packages installation completed");
+        return {
+            success: true,
+            message: "Successfully installed all packages",
+            details: result
+        };
+    } else {
+        throw "Installation failed: " + result;
+    }
+} catch (error) {
+    System.error("Failed to install packages: " + error);
+    throw "Packages installation failed: " + error;
+}]]></script>
+</dunes-script-module>

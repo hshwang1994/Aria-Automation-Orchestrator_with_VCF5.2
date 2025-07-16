@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getVpcSubnetsByProfileLink_Copy" result-type="Array/Properties" api-version="6.0.0" id="fa1988bb-ac39-41f8-87dc-423ce23c430b" version="0.1.0" allowed-operations="vfe" category-name="com.test.ecs.action.backup">
+  <description><![CDATA[BP:Virtual Machine]]></description>
+  <param n="profileLink" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.ecs").AaManager(true);
+var subnets = aa.getUerp("/resources/sub-networks?expand&$filter=customProperties.vpc eq '" + profileLink + "'");
+var result = [];
+for each(var subnetLink in subnets.documentLinks) {
+    var subnet = subnets.documents[subnetLink];
+    result.push({
+        label: subnet.customProperties.displayName ? subnet.customProperties.displayName : subnet.name,
+        value: subnetLink
+    });
+}
+return result.sort(function (a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});]]></script>
+</dunes-script-module>

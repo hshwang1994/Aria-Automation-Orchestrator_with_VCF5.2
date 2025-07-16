@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="execPyUrl_Copy" result-type="string" api-version="6.0.0" id="0e8e2019-8531-40b5-8e27-49f4397d2455" version="0.0.0" allowed-operations="vfe" category-name="com.test.ecs.common.backup" memory-limit="128000000">
+  <runtime><![CDATA[python:3.10]]></runtime>
+  <param n="method" t="string"><![CDATA[]]></param>
+  <param n="url" t="string"><![CDATA[]]></param>
+  <param n="data" t="string"><![CDATA[]]></param>
+  <param n="headers" t="Properties"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[import ssl
+import time
+import json
+import http.client
+
+def handler(context, inputs):
+    url = inputs['url']
+    proto, path = url.split("://")
+    proto = proto.lower()
+    host = path.split("/")[0]
+    path = path.replace(host, "", 1)
+    method = inputs['method'].upper()
+    headers = inputs['headers']
+
+    if proto == "http": conn = http.client.HTTPConnection(host)
+    elif proto == "https": conn = http.client.HTTPSConnection(host, context=ssl._create_unverified_context())
+    else: raise Exception('Error [execPyCurl] : un-supported protocol')
+
+    if method in ['POST', 'PUT', 'PATCH']:
+        body = inputs['data']
+        if not body: body = ''
+        conn.request(method, path, body=body, headers=headers)
+    else: conn.request(method, path, headers=headers)
+    res = conn.getresponse()
+    print('pyURL {}: {} >> {}'.format(method, url, res.status))
+    if res.status >= 400:
+        if res.status == 429:
+            time.sleep(1)
+            res = handler(context, inputs)
+        else: raise Exception('Error [execPyCurl] : {}'.format(res.read().decode("utf-8")))
+    return res.read().decode("utf-8")]]></script>
+</dunes-script-module>

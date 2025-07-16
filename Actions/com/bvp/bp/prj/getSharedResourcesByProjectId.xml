@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getSharedResourcesByProjectId" result-type="string" api-version="6.0.0" id="5a7bd558-ae36-444a-85b2-edbddfea80b7" version="0.0.1" allowed-operations="vfe" category-name="com.bvp.bp.prj">
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!projectId) { return []; }
+var aa = System.getModule("com.bvp").AaManager(true);
+return aa.get("/iaas/api/projects/" + projectId).sharedResources ? "true" : "false"]]></script>
+</dunes-script-module>

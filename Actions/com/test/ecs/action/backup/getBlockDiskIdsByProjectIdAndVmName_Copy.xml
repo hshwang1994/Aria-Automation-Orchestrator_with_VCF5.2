@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getBlockDiskIdsByProjectIdAndVmName_Copy" result-type="Array/Properties" api-version="6.0.0" id="a1437908-84a8-41e4-a284-47add86adcfc" version="0.0.0" allowed-operations="vfe" category-name="com.test.ecs.action.backup">
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <param n="vmName" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.ecs").AaManager(true);
+var vm = aa.get("/deployment/api/resources?resourceTypes=Cloud.vSphere.Machine&search=" + vmName).content;
+var result = [];
+for each(var vm in aa.get("/deployment/api/resources?resourceTypes=Cloud.vSphere.Machine&search=" + vmName).content) {
+    var diskNames = [];
+    for each(var disk in vm.properties.storage.disks) {
+        diskNames.push(disk.diskFile.split("/")[1].replace(".vmdk", ""));
+    }
+    System.log(JSON.stringify(diskNames, null, 2));    
+    for each(var disk in aa.get("/deployment/api/resources?resourceTypes=Cloud.vSphere.Disk&projects=" + projectId).content) {
+        var properties = disk.properties;
+        if (properties.type == "HDD" && !properties.bootOrder) {
+            if (diskNames.indexOf(properties.providerId) < 0) {
+                result.push({
+                    label: properties.displayName ? properties.displayName : disk.name,
+                    value: disk.id,
+                });
+            }
+        }
+    }
+    return result.sort(function (a, b) {
+        return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+    });
+
+}
+return result;
+]]></script>
+</dunes-script-module>

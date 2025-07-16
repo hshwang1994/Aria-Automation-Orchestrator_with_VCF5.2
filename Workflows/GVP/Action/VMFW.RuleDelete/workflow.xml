@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:workflow xmlns:ns2="http://vmware.com/vco/workflow" root-name="item1" object-name="workflow:name=generic" id="8618bea6-d522-4b92-9e01-480d6287c81b" editor-version="2.0" version="0.0.1" api-version="6.0.0" allowed-operations="vef" restartMode="1" resumeFromFailedMode="0">
+    <display-name>VMFW.RuleDelete</display-name>
+    <position y="50.0" x="100.0"/>
+    <input>
+        <param name="resourceId" type="string"/>
+        <param name="_metadata_main_catalog" type="string"/>
+        <param name="_metadata_catalog" type="string"/>
+        <param name="requestMessage" type="string"/>
+        <param name="source" type="string"/>
+        <param name="tcpServices" type="string"/>
+        <param name="udpServices" type="string"/>
+        <param name="action" type="string"/>
+    </input>
+    <output>
+        <param name="output" type="string"/>
+    </output>
+    <workflow-item name="item0" type="end" end-mode="0" comparator="0">
+        <in-binding/>
+        <out-binding/>
+        <position y="50.0" x="440.0"/>
+    </workflow-item>
+    <workflow-item name="item1" out-name="item0" type="task" comparator="0">
+        <display-name>Scriptable task</display-name>
+        <script encoded="false">var aa = System.getModule("com.bvp").AaManager(true);
+var vm = aa.get("/deployment/api/resources/" + resourceId);
+var portType = tcpServices != null?"TCP":"UDP";
+var port = tcpServices!=null?tcpServices:udpServices;
+var ruleId = vm.properties.name +"-" + portType + port + "-" + action
+var vmNetworks = vm.properties.networks;
+var vpcProfilelink = vm.properties.vpc;
+for each(var t in vm.properties.tags){
+    if(t.key == "vpcSegId"){
+        var tag = t;
+    }
+}
+var networkProfile = aa.getUerp(vpcProfilelink);
+var vpcManagedGatewayLink = networkProfile.customProperties.vpcManagedGatewayLink;
+var vpcManagedGateway = aa.getUerp(vpcManagedGatewayLink);
+var vpcManagedTier1Path = networkProfile.customProperties.vpcManagedTier1Path;
+var nsx = System.getModule("com.bvp").NsxManager(aa.getUerp(vpcManagedGateway.endpointLinks[0]).endpointProperties.hostName.split(".")[0]);
+
+// Rule 검색
+var rule = nsx.get("/policy/api/v1/search/query?query=resource_type:Rule AND id:" + ruleId).results[0];
+// Source Group에서 source 제거
+var sourceGroup = rule.source_groups;
+sourceGroup.pop(source);
+// Source가 없을 경우 Rule 삭제
+if(sourceGroup.length == 0) {
+    nsx.delete("/policy/api/v1" + rule.path);
+    output = "Rule has empty Source Group, Rule Deleted"
+} else {
+    rule.source_groups = sourceGroup;
+    nsx.patch("/policy/api/v1" + rule.path, rule);
+    output = "Source Group member edited"
+}
+
+// SecurityPolicy 검색
+var sp = nsx.get("/policy/api/v1" + rule.parent_path);
+// SecurityPolicy에 Rule이 존재하지 않을 경우 삭제
+if(sp.rule_count == 0){
+    nsx.delete("/policy/api/v1" + rule.parent_path);
+}
+
+// Group 멤버 검색
+var group = nsx.get("/policy/api/v1/infra/domains/default/groups/" + tag.value + "/members/virtual-machines");
+// Group 멤버가 존재하지 않을 경우 삭제
+if(group.result_count == 0){
+    nsx.delete("/policy/api/v1/infra/domains/default/groups/" + tag.value);
+}
+/*
+var vmNetworks = vm.properties.networks;
+var vpcProfilelink = vm.properties.vpc;
+for each(var t in vm.properties.tags){
+    if(t.key == "vpcSegId"){
+        var tag = t;
+    }
+}
+var networkProfile = aa.getUerp(vpcProfilelink);
+var vpcManagedGatewayLink = networkProfile.customProperties.vpcManagedGatewayLink;
+var vpcManagedGateway = aa.getUerp(vpcManagedGatewayLink);
+var vpcManagedTier1Path = networkProfile.customProperties.vpcManagedTier1Path;
+var nsx = System.getModule("com.bvp").NsxManager(aa.getUerp(vpcManagedGateway.endpointLinks[0]).endpointProperties.hostName.split(".")[0]);
+
+// Rule 검색
+var rule = nsx.get("/policy/api/v1/search/query?query=resource_type:Rule AND id:" + ruleId).results[0];
+// Rule 삭제
+nsx.delete("/policy/api/v1" + rule.path);
+
+// SecurityPolicy 검색
+var sp = nsx.get("/policy/api/v1" + rule.parent_path);
+// SecurityPolicy에 Rule이 존재하지 않을 경우 삭제
+if(sp.rule_count == 0){
+    nsx.delete("/policy/api/v1" + rule.parent_path);
+}
+
+// Group 멤버 검색
+var group = nsx.get("/policy/api/v1/infra/domains/default/groups/" + tag.value + "/members/virtual-machines");
+// Group 멤버가 존재하지 않을 경우 삭제
+if(group.result_count == 0){
+    nsx.delete("/policy/api/v1/infra/domains/default/groups/" + tag.value);
+}
+*/</script>
+        <in-binding>
+            <bind name="resourceId" type="string" export-name="resourceId"/>
+            <bind name="source" type="string" export-name="source"/>
+            <bind name="tcpServices" type="string" export-name="tcpServices"/>
+            <bind name="udpServices" type="string" export-name="udpServices"/>
+            <bind name="action" type="string" export-name="action"/>
+        </in-binding>
+        <out-binding>
+            <bind name="output" type="string" export-name="output"/>
+        </out-binding>
+        <description>Simple task with custom script capability.</description>
+        <position y="60.0" x="220.0"/>
+    </workflow-item>
+</ns2:workflow>

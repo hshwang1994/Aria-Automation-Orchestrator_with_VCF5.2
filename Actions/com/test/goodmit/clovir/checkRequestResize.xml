@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="checkRequestResize" result-type="boolean" api-version="6.0.0" id="e085cb3c-6097-4f7f-9694-c084e28067a8" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <param n="requestCpu" t="number"><![CDATA[]]></param>
+  <param n="requestMemory" t="number"><![CDATA[]]></param>
+  <param n="machineId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if(requestCpu == null || requestMemory == null || machineId == null){
+    return false;
+}
+var aa = System.getModule("com.ecs").AaManager(true);
+
+var machine = aa.get("/iaas/api/machines/"+machineId).customProperties;
+
+if(machine.cpuCount == requestCpu && machine.memoryGB == requestMemory){
+    return false;
+} else{ return true;};]]></script>
+</dunes-script-module>

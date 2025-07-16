@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getImagesByPlacementZoneLinkandOStype" result-type="Array/string" api-version="6.0.0" id="84ef5ef5-6394-4724-832e-739f15784dcb" version="0.1.1" category-name="com.gvp.bp.vm">
+  <description><![CDATA[BP:Virtual Machine]]></description>
+  <param n="placementZoneLink" t="string"><![CDATA[]]></param>
+  <param n="ostype" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!placementZoneLink) { return null; }
+if (!ostype) { return null; }
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var zone = aa.getUerp(placementZoneLink);
+
+var provisioningRegionLink = zone.provisioningRegionLink;
+if (!provisioningRegionLink) { throw "provisioningRegionLink cannot be null"; }
+var targetRegionId = provisioningRegionLink.split("/").pop();
+
+var imagesResponse = aa.get("/iaas/api/images");
+var contentArray = imagesResponse.content || [];
+
+var ostypeLower = ostype.toLowerCase();
+
+var result = [];
+for each (var group in contentArray) {
+    var regionHref = group._links.region.href;
+    var regionId = regionHref.split("/").pop();
+    if (regionId === targetRegionId) {
+        for (var imageName in group.mapping) {
+            var nameLower = imageName.toString().toLowerCase();
+            if (nameLower.indexOf(ostypeLower) !== -1) {
+                result.push(imageName.toString());
+            }
+        }
+    }
+}
+
+return result;
+]]></script>
+</dunes-script-module>

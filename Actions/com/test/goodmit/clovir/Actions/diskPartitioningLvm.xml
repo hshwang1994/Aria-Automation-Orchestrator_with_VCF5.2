@@ -1,0 +1,158 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="diskPartitioningLvm" result-type="string" api-version="6.0.0" id="0449d694-f5fc-4b34-b172-d021a3c94f0d" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir.Actions">
+  <script encoded="false"><![CDATA[function generateInstallScript(devicePath, mountPoint, requireSize) {
+    var script = '#!/bin/bash\n\n';
+    
+    // 사용법 함수
+    script += '# 사용법 함수\n';
+    script += 'usage() {\n';
+    script += '    echo "Usage: $0 <device_path> <mount_point> <required_size_GB>"\n';
+    script += '    echo "Example: $0 /dev/sdb /data 50"\n';
+    script += '    exit 1\n';
+    script += '}\n\n';
+
+    // 파라미터 체크
+    script += '# 파라미터 체크\n';
+    script += 'if [ $# -ne 3 ]; then\n';
+    script += '    usage\n';
+    script += 'fi\n\n';
+
+    // 변수 설정
+    script += 'DEVICE=' + devicePath + '\n';
+    script += 'MOUNT_POINT='+ mountPoint + '\n';
+    script += 'REQUIRED_SIZE_GB='+requireSize+'\n';
+    script += 'VG_NAME="vg_data"\n\n';
+
+    // LVM 유틸리티 체크
+    script += '# LVM 관련 유틸리티 체크\n';
+    script += 'for cmd in pvcreate vgcreate lvcreate vgs lvs; do\n';
+    script += '    if ! command -v $cmd &> /dev/null; then\n';
+    script += '        logger -p user.error "Error: $cmd command not found. Please install LVM2"\n';
+    script += '        echo "Error: $cmd command not found. Please install LVM2"\n';
+    script += '        exit 1\n';
+    script += '    fi\n';
+    script += 'done\n\n';
+
+    // 장치 존재 여부 확인
+    script += '# 장치 존재 여부 확인\n';
+    script += 'if [ ! -b "$DEVICE" ]; then\n';
+    script += '    logger -p user.error "Error: Device $DEVICE does not exist"\n';
+    script += '    echo "Error: Device $DEVICE does not exist"\n';
+    script += '    exit 1\n';
+    script += 'fi\n\n';
+
+    // 볼륨 그룹 초기화
+    script += '# 볼륨 그룹 초기화 (처음 실행시에만)\n';
+    script += 'if ! vgs $VG_NAME &> /dev/null; then\n';
+    script += '    # 물리 볼륨 생성\n';
+    script += '    if ! pvcreate $DEVICE; then\n';
+    script += '        logger -p user.error "Error: Failed to create physical volume on $DEVICE"\n';
+    script += '        echo "Error: Failed to create physical volume on $DEVICE"\n';
+    script += '        exit 1\n';
+    script += '    fi\n';
+    script += '    # 볼륨 그룹 생성\n';
+    script += '    if ! vgcreate $VG_NAME $DEVICE; then\n';
+    script += '        logger -p user.error "Error: Failed to create volume group $VG_NAME"\n';
+    script += '        echo "Error: Failed to create volume group $VG_NAME"\n';
+    script += '        exit 1\n';
+    script += '    fi\n';
+    script += 'fi\n\n';
+
+    // 사용 가능한 공간 확인
+    script += '# 사용 가능한 공간 확인 (GB 단위)\n';
+    script += 'FREE_SPACE=$(vgs --noheadings --units g -o vg_free $VG_NAME | tr -d \' \' | cut -d\'.\' -f1)\n';
+    script += 'if [ $REQUIRED_SIZE_GB -gt $FREE_SPACE ]; then\n';
+    script += '    logger -p user.error "Error: Required size ${REQUIRED_SIZE_GB}GB exceeds available free space ${FREE_SPACE}GB"\n';
+    script += '    echo "Error: Required size ${REQUIRED_SIZE_GB}GB exceeds available free space ${FREE_SPACE}GB"\n';
+    script += '    exit 1\n';
+    script += 'fi\n\n';
+
+    // 마운트 포인트 생성
+    script += '# 마운트 포인트 생성\n';
+    script += 'if [ ! -d "$MOUNT_POINT" ]; then\n';
+    script += '    mkdir -p "$MOUNT_POINT"\n';
+    script += '    if [ $? -ne 0 ]; then\n';
+    script += '        logger -p user.error "Error: Failed to create mount point $MOUNT_POINT"\n';
+    script += '        echo "Error: Failed to create mount point $MOUNT_POINT"\n';
+    script += '        exit 1\n';
+    script += '    fi\n';
+    script += 'fi\n\n';
+
+    // 논리 볼륨 관련
+    script += '# 논리 볼륨 이름 생성 (마운트 포인트 기반)\n';
+    script += 'LV_NAME="lv_$(basename $MOUNT_POINT)"\n\n';
+
+    script += '# 논리 볼륨 생성\n';
+    script += 'if ! lvcreate -L ${REQUIRED_SIZE_GB}G -n $LV_NAME $VG_NAME; then\n';
+    script += '    logger -p user.error "Error: Failed to create logical volume $LV_NAME"\n';
+    script += '    echo "Error: Failed to create logical volume $LV_NAME"\n';
+    script += '    exit 1\n';
+    script += 'fi\n\n';
+
+    // 파일시스템 생성
+    script += '# 파일시스템 생성\n';
+    script += 'if ! mkfs.ext4 "/dev/$VG_NAME/$LV_NAME"; then\n';
+    script += '    logger -p user.error "Error: Failed to create filesystem on /dev/$VG_NAME/$LV_NAME"\n';
+    script += '    echo "Error: Failed to create filesystem on /dev/$VG_NAME/$LV_NAME"\n';
+    script += '    exit 1\n';
+    script += 'fi\n\n';
+
+    // fstab 업데이트
+    script += '# fstab에 마운트 정보 추가\n';
+    script += 'echo "/dev/$VG_NAME/$LV_NAME $MOUNT_POINT ext4 defaults 0 0" >> /etc/fstab\n';
+    script += 'if [ $? -ne 0 ]; then\n';
+    script += '    logger -p user.error "Error: Failed to update /etc/fstab"\n';
+    script += '    echo "Error: Failed to update /etc/fstab"\n';
+    script += '    exit 1\n';
+    script += 'fi\n\n';
+
+    // 마운트 실행
+    script += '# 마운트 실행\n';
+    script += 'mount "/dev/$VG_NAME/$LV_NAME" "$MOUNT_POINT"\n';
+    script += 'if [ $? -ne 0 ]; then\n';
+    script += '    logger -p user.error "Error: Failed to mount /dev/$VG_NAME/$LV_NAME to $MOUNT_POINT"\n';
+    script += '    echo "Error: Failed to mount /dev/$VG_NAME/$LV_NAME to $MOUNT_POINT"\n';
+    script += '    exit 1\n';
+    script += 'fi\n\n';
+
+    // 상태 출력
+    script += '# 현재 볼륨 그룹 상태 출력\n';
+    script += 'echo "Current Volume Group Status:"\n';
+    script += 'vgs $VG_NAME\n';
+    script += 'echo "Current Logical Volumes:"\n';
+    script += 'lvs $VG_NAME\n\n';
+
+    // 성공 로그
+    script += '# 성공 로그 기록\n';
+    script += 'logger -p user.info "Successfully created and mounted ${REQUIRED_SIZE_GB}GB volume at $MOUNT_POINT"\n';
+    script += 'echo "Successfully created and mounted ${REQUIRED_SIZE_GB}GB volume at $MOUNT_POINT"\n';
+
+    return script;
+}
+
+try {
+    // vSphere 연결
+    var execScripts = System.getModule("com.ecs.common").execScripts;
+    
+    var installScript = generateInstallScript(packageName, version, options);
+    
+    var result = execScripts(vcHostname, vcUsername, vcPassword, 
+                            vmName, vmUsername, vmPassword, installScript);
+    
+    // 결과 확인
+    if (result.indexOf("Successfully installed") !== -1) {
+        System.log("Package installation completed");
+        return {
+            success: true,
+            message: "Successfully installed package " + packageName,
+            details: result
+        };
+    } else {
+        throw "Installation failed: " + result;
+    }
+} catch (error) {
+    System.error("Failed to install package: " + error);
+    throw "Package installation failed: " + error;
+}
+]]></script>
+</dunes-script-module>

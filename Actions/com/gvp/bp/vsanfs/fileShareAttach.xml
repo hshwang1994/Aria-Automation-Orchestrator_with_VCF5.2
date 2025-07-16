@@ -1,0 +1,113 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="fileShareAttach" result-type="string" api-version="6.0.0" id="42e063ad-0061-4898-b160-b9985496b94b" version="0.0.0" category-name="com.gvp.bp.vsanfs">
+  <param n="uuid" t="string"><![CDATA[]]></param>
+  <param n="endpoint" t="string"><![CDATA[]]></param>
+  <param n="endpointCluster" t="string"><![CDATA[]]></param>
+  <param n="attachInfo" t="Array/Properties"><![CDATA[]]></param>
+  <param n="pusedo" t="string"/>
+  <script encoded="false"><![CDATA[var vcConf = System.getModule("com.bvp").ConfManager().load("GVP/VSANFS");
+var conf = System.getModule("com.bvp").ConfManager().load("GVP/Endpoint/10.11.10.59")
+var rest = System.getModule("com.bvp").RestManager("https://" + conf.hostname, {
+    "Authorization": "Basic " + System.getModule("com.bvp").Converter().base64.encode(conf.username + ":" + conf.password)
+    });
+
+var fsCreate = rest.post("/vsan/fileshare",{
+  "hostname": vcConf.hostname,
+  "cluster_name": vcConf.cluster[0],
+  "nfsInfo": {
+    "name": volumeName,
+    "size": size
+  }
+});
+
+var data = rest.get("/vsan/fileshare/" + fsCreate.uuid + "?hostname=" + vcConf.hostname + "&cluster_name=" + vcConf.cluster[0])
+var result = {
+    "uuid": data.uuid,
+    "pusedo": data.runtime.pusedo,
+    "accessType": data.config.permission[0].permissions,
+    "squash": data.config.permission[0].allowRoot == true? "root_squash": "no_root_squash",
+    "clients": data.config.permission[0].ips,
+    "usage": data.runtime.usedCapacity,
+    "endpoint": vcConf.hostname,
+    "endpointCluster": vcConf.cluster[0]
+};
+//return result
+
+var vcConf = System.getModule("com.bvp").ConfManager().load("GVP/VSANFS");
+var conf = System.getModule("com.bvp").ConfManager().load("GVP/Endpoint/10.11.10.59")
+var rest = System.getModule("com.bvp").RestManager("https://" + conf.hostname, {
+    "Authorization": "Basic " + System.getModule("com.bvp").Converter().base64.encode(conf.username + ":" + conf.password)
+    });
+
+var data = rest.get("/vsan/fileshare/" + uuid + "?hostname=" + endpoint + "&cluster_name=" + endpointCluster)
+var fstab = "echo '" + data.runtime.address + ":" + pusedo + " " + attachInfo[0].mountPath + " nfs4  rw  0  0'" + " | sudo tee -a /etc/fstab";
+var scripts = "sudo mkdir -p '" + mountPath + "'\n"
+scripts +=  fstab + " \n"
+scripts += "sudo mount " + mountPath +"\n"
+
+//##########################
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var cephVersionA = System.getModule("com.gvp").CephManager("ceph.gooddi.lab","0.1");
+var cephVersionB = System.getModule("com.gvp").CephManager("ceph.gooddi.lab","1.0");
+var cephVersionC = System.getModule("com.gvp").CephManager("ceph.gooddi.lab","2.0");
+
+var vm = aa.get("/deployment/api/resources/" + vmResourceId);
+var nfs = aa.get("/deployment/api/resources/" + nfsResourceId); 
+
+var endpointId = vm.properties.endpointId;
+var endpointLink = "/resources/endpoints/" + endpointId;
+var endpointName = aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0];
+var vcConf = System.getModule("com.bvp").ConfManager().load("BVP/Endpoint/" + endpointName);
+var guestConf = System.getModule("com.bvp").ConfManager().load("GVP/GuestAccount");
+var cephIp = System.getModule("com.bvp").ConfManager().load("GVP/Endpoint/ceph.gooddi.lab").hostname.split("://")[1].split(":")[0];
+var execScripts = System.getModule("com.bvp").execScripts;
+var fstab = "echo '" + cephIp + ":" + nfs.properties.pusedo + " " + mountPath + " nfs4  rw  0  0'" + " | sudo tee -a /etc/fstab" 
+var scripts = "sudo mkdir -p '" + mountPath + "'\n"
+scripts +=  fstab + " \n"
+scripts += "sudo mount " + mountPath +"\n"
+execScripts(vcConf.hostname, vcConf.username, vcConf.password, vm.properties.resourceName, guestConf.guest_lin_id, guestConf.guest_lin_pwd, scripts);
+
+if("attachedVm" in nfs.properties){
+    if(nfs.properties.attachedVm == null){
+        var vmIdArray = []
+    } else{
+        var vmIdArray = nfs.properties.attachedVm;
+    }
+    
+} else {
+    var vmIdArray = []
+}
+vmIdArray.push(vmResourceId);
+aa.post("/deployment/api/resources/" + nfsResourceId + "/requests",{
+    "actionId": "Custom.NFS.custom.attachedvmcontrol",
+    "inputs": {
+        "attachedVm": vmIdArray
+    }
+})
+
+var machine = aa.get("/iaas/api/machines/" + vmResourceId)
+if("nfs" in  machine.customProperties){
+    if(machine.customProperties.nfs == "" || machine.customProperties.nfs == "[]"){
+        var result = []
+    } else{
+        var result = JSON.parse(machine.customProperties.nfs);
+    }
+} else {
+    var result = []
+}
+var mountInfo = {
+    "fstab": cephIp + ":" + nfs.properties.pusedo + " " + mountPath + " nfs4  rw  0  0",
+    "mountPath": mountPath,
+    "size": nfs.properties.size,
+    "exportId": nfs.properties.exportId,
+    "subvolumeName": nfs.properties.subvolumeName,
+    "pusedo": nfs.properties.pusedo
+};
+result.push(mountInfo);
+aa.patch("/iaas/api/machines/"+ vmResourceId,{
+    "customProperties": {
+        "nfs": JSON.stringify(result)
+    }
+})]]></script>
+</dunes-script-module>

@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item1" object-name="workflow:name=generic" id="d9396fcb-494f-459b-afaf-9153e10a0897" version="0.0.0" api-version="6.0.0" allowed-operations="vfe" editor-version="2.0" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[Copy of Clear Available IP Addresses]]></display-name>
+  <position y="50.0" x="100.0"/>
+  <input>
+    <param name="released" type="boolean"/>
+  </input>
+  <workflow-item name="item0" type="end" end-mode="0">
+    <in-binding/>
+    <position y="50.0" x="340.0"/>
+  </workflow-item>
+  <workflow-item name="item1" out-name="item0" type="task">
+    <display-name><![CDATA[Scriptable task]]></display-name>
+    <script encoded="false"><![CDATA[var aa = System.getModule("com.ecs").AaManager(true);
+
+var ipAddresses = [];
+if (released) {
+    ipAddresses = aa.getUerp("/resources/ip-addresses?$filter=(ipAddressStatus eq 'AVAILABLE') or (ipAddressStatus eq 'RELEASED')");
+} else {
+    ipAddresses = aa.getUerp("/resources/ip-addresses?$filter=ipAddressStatus eq 'AVAILABLE'");
+}
+for each(var ipAddressLink in ipAddresses.documentLinks) {
+    aa.deleteUerp(ipAddressLink);
+}]]></script>
+    <in-binding>
+      <bind name="released" type="boolean" export-name="released"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.0" x="180.0"/>
+  </workflow-item>
+  <presentation/>
+</workflow>

@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getInterfacesByComputeNameForChangeIpAddress_Copy" result-type="Array/Properties" api-version="6.0.0" id="64853007-1cca-4de5-8742-b8df31a5955e" version="0.1.0" allowed-operations="vfe" category-name="com.test.ecs.action.backup">
+  <description><![CDATA[Act:Change IP Address]]></description>
+  <param n="computeName" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.ecs").AaManager(true);
+var computes = aa.getUerp("/resources/compute?expand&$filter=name eq '" + computeName + "'");
+var result = [];
+for each(var computeLink in computes.documentLinks) {
+    var compute = computes.documents[computeLink];
+    if (compute.customProperties.addressType == "permanent") {
+        return [{
+            label: "N/A",
+            value: "permanent"
+        }];
+    }
+    for (var i = 0; i < compute.networkInterfaceLinks.length; i++) {
+        var interface = aa.getUerp(compute.networkInterfaceLinks[i]);
+        result.push({
+            label: "[" + i + "] " + interface.address,
+            value: interface.documentSelfLink,
+        });
+    }
+    break;
+}
+return result;]]></script>
+</dunes-script-module>

@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="hshwangapitest" result-type="string" api-version="6.0.0" id="00c05a23-e9fc-489d-aa9d-a66d513161ae" version="0.0.0" category-name="com.gvp.test">
+  <script encoded="false"><![CDATA[var tanzucliConf = System.getModule("com.bvp").ConfManager().load("GVP/Endpoint/clovir-tanzu.gooddi.lab");
+var clovirUsername = tanzucliConf.username; // vCetner의 계정 정보
+var clovirPassword = tanzucliConf.password; // vCetner의 계정 정보
+var clovirHostname = tanzucliConf.hostname; // vCetner의 계정 정보
+var clovirPort = tanzucliConf.port; // vCetner의 계정 정보
+
+
+
+System.log(clovirHostname);
+System.log(clovirPort);
+System.log(clovirUsername);
+System.log(clovirPassword);]]></script>
+</dunes-script-module>

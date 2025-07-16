@@ -1,0 +1,1 @@
+{"schema":{"failed":{"id":"failed","type":{"dataType":"boolean"},"label":"failed","constraints":{"required":false}}},"layout":{"pages":[{"id":"page_pw6iiim8","title":"General","sections":[{"id":"section_82zp16hd","fields":[{"id":"failed","display":"checkbox","signpostPosition":"right-middle","state":{"visible":true,"read-only":false}}]}]}]},"itemId":""}

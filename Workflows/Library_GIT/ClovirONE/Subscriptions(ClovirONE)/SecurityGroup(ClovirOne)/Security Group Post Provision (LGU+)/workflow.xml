@@ -1,0 +1,247 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item3" object-name="workflow:name=generic" id="72dea4d0-4a0f-4259-8e53-4d9b3130f2be" version="0.0.0" api-version="6.0.0" allowed-operations="vfe" editor-version="2.0" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[Security Group Post Provision (LGU+)]]></display-name>
+  <position y="50.0" x="100.0"/>
+  <input>
+    <param name="inputProperties" type="Properties"/>
+  </input>
+  <attrib name="vraHost" type="VRA:Host" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="pathUri" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="payload" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="inputHeader" type="Properties" read-only="false">
+    <value encoded="n"><![CDATA[{}]]></value>
+  </attrib>
+  <attrib name="resultContent" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="resultStatusCode" type="number" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="resultStatusMessage" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="resultHeader" type="Array/string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="getPathUri" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="getResultContent" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="sleepTime" type="number" read-only="false">
+    <value encoded="n"><![CDATA[1.0]]></value>
+  </attrib>
+  <attrib name="count" type="number" read-only="false">
+    <value encoded="n"><![CDATA[0.0]]></value>
+  </attrib>
+  <workflow-item name="item0" type="end" end-mode="0">
+    <in-binding/>
+    <position y="50.0" x="1000.0"/>
+  </workflow-item>
+  <workflow-item name="item1" out-name="item9" type="link" linked-workflow-id="727698f0-ba8e-4f48-883f-4c03085a79f4">
+    <display-name><![CDATA[Post operation]]></display-name>
+    <in-binding>
+      <bind name="pathUri" type="string" export-name="pathUri">
+        <description><![CDATA[Request path uri]]></description>
+      </bind>
+      <bind name="host" type="VRA:Host" export-name="vraHost">
+        <description><![CDATA[VMware Aria Automation host]]></description>
+      </bind>
+      <bind name="payload" type="string" export-name="payload">
+        <description><![CDATA[Request payload]]></description>
+      </bind>
+      <bind name="inputHeaders" type="Properties" export-name="inputHeader">
+        <description><![CDATA[Request headers]]></description>
+      </bind>
+    </in-binding>
+    <out-binding>
+      <bind name="headers" type="Array/string" export-name="resultHeader">
+        <description><![CDATA[Response headers]]></description>
+      </bind>
+      <bind name="statusMessage" type="string" export-name="resultStatusMessage">
+        <description><![CDATA[Response status message]]></description>
+      </bind>
+      <bind name="contentAsString" type="string" export-name="resultContent">
+        <description><![CDATA[Response content]]></description>
+      </bind>
+      <bind name="statusCode" type="number" export-name="resultStatusCode">
+        <description><![CDATA[Response status code (HTTP standard - 200/400 etc.)]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[ ]]></description>
+    <position y="60.0" x="700.0"/>
+  </workflow-item>
+  <workflow-item name="item2" out-name="item6" type="task">
+    <display-name><![CDATA[Set Post pathUri, payload]]></display-name>
+    <script encoded="false"><![CDATA[try {
+    var jsonObject = JSON.parse(getResultContent);
+    System.log(jsonObject);
+} catch (e) {
+    System.log("Invalid JSON string:", e.message);
+};
+var content = jsonObject.content;
+var resourceId = "";
+for (var i = 0; i < content.length; i++) {
+    if (content[i].type === "Cloud.SecurityGroup") {
+        resourceId = content[i].properties.resourceId;
+        break;  // 첫 번째 Cloud.SecurityGroup을 찾으면 중단
+    }
+};
+
+pathUri = "/deployment/api/deployments/" + inputProperties.deploymentId + "/resources/" + resourceId + "/requests";
+var testRuleName = "project-default-rule";
+var resourceUriLink = "/provisioning/resources/compute-security-groups/" + resourceId;
+payload = '{ "actionId":"Cloud.SecurityGroup.Reconfigure.SecurityGroup", "inputs":{ "rules":[ { "name": "' + testRuleName + '", "ports": "80,443", "access": "Allow", "source": "' + resourceUriLink + '", "protocol": "TCP", "direction": "inbound", "resourceLink": "' + resourceUriLink + '" } ] } }'
+]]></script>
+    <in-binding>
+      <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+      <bind name="getResultContent" type="string" export-name="getResultContent"/>
+      <bind name="vraHost" type="VRA:Host" export-name="vraHost"/>
+    </in-binding>
+    <out-binding>
+      <bind name="pathUri" type="string" export-name="pathUri"/>
+      <bind name="payload" type="string" export-name="payload"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.0" x="420.0"/>
+  </workflow-item>
+  <workflow-item name="item3" out-name="item4" type="task">
+    <display-name><![CDATA[Set vraHost, getPathUri]]></display-name>
+    <script encoded="false"><![CDATA[var vraHosts = Server.findAllForType("VRA:Host");
+vraHost = vraHosts[1];
+getPathUri = "/deployment/api/deployments/" + inputProperties.deploymentId + "/resources/";]]></script>
+    <in-binding>
+      <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+    </in-binding>
+    <out-binding>
+      <bind name="getPathUri" type="string" export-name="getPathUri"/>
+      <bind name="vraHost" type="VRA:Host" export-name="vraHost"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.0" x="160.0"/>
+  </workflow-item>
+  <workflow-item name="item4" out-name="item2" type="link" linked-workflow-id="36cb38fa-1901-4b4d-840a-33f6368757ea">
+    <display-name><![CDATA[Get operation]]></display-name>
+    <in-binding>
+      <bind name="host" type="VRA:Host" export-name="vraHost">
+        <description><![CDATA[VMware Aria Automation host]]></description>
+      </bind>
+      <bind name="pathUri" type="string" export-name="getPathUri">
+        <description><![CDATA[Resource path uri]]></description>
+      </bind>
+      <bind name="inputHeaders" type="Properties" export-name="inputHeader">
+        <description><![CDATA[Request headers]]></description>
+      </bind>
+    </in-binding>
+    <out-binding>
+      <bind name="statusCode" type="number" export-name="">
+        <description><![CDATA[Response status code (HTTP standard - 200/400 etc.)]]></description>
+      </bind>
+      <bind name="contentAsString" type="string" export-name="getResultContent">
+        <description><![CDATA[Response content]]></description>
+      </bind>
+      <bind name="statusMessage" type="string" export-name="">
+        <description><![CDATA[Response status message]]></description>
+      </bind>
+      <bind name="headers" type="Array/string" export-name="">
+        <description><![CDATA[Response headers]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[ ]]></description>
+    <position y="60.0" x="300.0"/>
+  </workflow-item>
+  <workflow-item name="item6" out-name="item1" type="custom-condition" alt-out-name="item7">
+    <display-name><![CDATA[Check status]]></display-name>
+    <script encoded="false"><![CDATA[if (inputProperties.status ==="FINISHED" || count >= 20){
+    return true;
+} else {
+    return false
+}]]></script>
+    <in-binding>
+      <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+      <bind name="count" type="number" export-name="count"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Custom decision based on a custom script.]]></description>
+    <position y="50.0" x="560.0"/>
+  </workflow-item>
+  <workflow-item name="item7" prototype-id="sleep" out-name="item8" content-mode="x" type="task">
+    <display-name><![CDATA[Sleep]]></display-name>
+    <script encoded="false"><![CDATA[//Auto-generated script
+if ( sleepTime !== null )  {
+	System.sleep(sleepTime * 1000);
+}else  {
+	throw "'sleepTime' is NULL"; 
+}]]></script>
+    <in-binding>
+      <bind name="sleepTime" type="number" export-name="sleepTime">
+        <description><![CDATA[Time to sleep in seconds]]></description>
+      </bind>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Sleep a given number of seconds.]]></description>
+    <position y="130.0" x="560.0"/>
+  </workflow-item>
+  <workflow-item name="item8" prototype-id="increase-counter" out-name="item6" content-mode="x" type="task">
+    <display-name><![CDATA[Increase counter]]></display-name>
+    <script encoded="false"><![CDATA[//Auto-generated script
+counter = counter + 1;]]></script>
+    <in-binding>
+      <bind name="counter" type="number" export-name="count">
+        <description><![CDATA[Item to increase]]></description>
+      </bind>
+    </in-binding>
+    <out-binding>
+      <bind name="counter" type="number" export-name="count">
+        <description><![CDATA[Increased item]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[Increment a counter by one.]]></description>
+    <position y="130.0" x="420.0"/>
+  </workflow-item>
+  <workflow-item name="item9" out-name="item0" type="task">
+    <display-name><![CDATA[Edit DFW Direction]]></display-name>
+    <script encoded="false"><![CDATA[var aa = System.getModule("com.ecs").AaManager(true);
+
+var resources = aa.get("/deployment/api/deployments/" + inputProperties.deploymentId + "/resources");
+var resource = null;
+for each(var r in resources.content){
+    if(r.type ==="Cloud.SecurityGroup"){
+        resource = r;
+    };
+};
+
+
+var endpoint = aa.getUerp("/resources/endpoints/" + resource.properties.endpointId);
+
+var nsx = System.getModule("com.ecs").NsxManager(endpoint.endpointProperties.hostName.split(".")[0]);
+var securityPolicies =nsx.get("/policy/api/v1/infra/domains/default/security-policies");
+var securityPolicy = null;
+for each(var sp in securityPolicies.results ){
+    if(sp.display_name === inputProperties.requestInputs.displayName){
+        securityPolicy = sp;
+    }
+}
+var rules = nsx.get("/policy/api/v1/infra/domains/default/security-policies/" + spid + "/rules").results;
+rules[0].direction = "IN_OUT"
+
+var patch = nsx.patch("/policy/api/v1/infra/domains/default/security-policies/" + spid,{
+    "rules" : rules
+});
+]]></script>
+    <in-binding>
+      <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.0" x="820.0"/>
+  </workflow-item>
+  <presentation/>
+</workflow>

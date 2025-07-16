@@ -1,0 +1,61 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="vpcfwProvision" result-type="Properties" api-version="6.0.0" id="f1ed157d-fd55-45f1-9e89-2db351ce030c" version="0.0.0" category-name="com.gvp.bp.vpcfw">
+  <param n="endpointLink" t="string"><![CDATA[]]></param>
+  <param n="managedTier1Path" t="string"><![CDATA[]]></param>
+  <param n="routerName" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var conv = System.getModule("com.bvp").Converter();
+var aa = System.getModule("com.bvp").AaManager(true);
+var nsx = System.getModule("com.bvp").NsxManager(aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0]);
+
+var data = nsx.put("/policy/api/v1/infra/domains/default/gateway-policies/" + routerName + "-vpcfw-policy",{
+    "category": "LocalGatewayRules",
+    "rules": [
+        {
+            "action": "ALLOW",
+            "resource_type": "Rule",
+            "id": "default-rule",
+            "display_name": "default-rule",
+            "source_groups": [
+                "ANY"
+            ],
+            "destination_groups": [
+                "ANY"
+            ],
+            "services": [
+                "ANY"
+            ],      
+            "profiles": [
+                "ANY"
+            ],
+            "logged": false,
+            "scope": [
+                managedTier1Path
+            ],
+            "disabled": false,
+            "notes": "",
+            "direction": "IN_OUT",
+            "tag": "",
+            "ip_protocol": "IPV4_IPV6",
+            "sequence_number": 999999
+        }
+    ]
+});
+var rules = [];
+var rule = {
+    "id": data.rules[0].id,
+    "source": data.rules[0].source_groups,
+    "destination": data.rules[0].destination_groups,
+    "tcpServices" : [],
+    "udpServices" : [],
+    "action": data.rules[0].action,
+    "sequenceNumber": data.rules[0].sequence_number,
+};
+rules.push(rule);
+
+var result = {
+    "id": data.id,
+    "path": data.path,
+    "rules": rules,
+}
+return result;]]></script>
+</dunes-script-module>

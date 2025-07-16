@@ -1,0 +1,100 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item1" object-name="workflow:name=generic" id="7915f488-3f17-4d48-be4b-62f4d7ad49de" version="0.0.1" api-version="6.0.0" allowed-operations="vfe" editor-version="2.0" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[Event Trigger]]></display-name>
+  <position y="50.0" x="100.0"/>
+  <input>
+    <param name="inputProperties" type="Properties"/>
+  </input>
+  <workflow-item name="item0" type="end" end-mode="0">
+    <in-binding/>
+    <position y="50.0" x="340.0"/>
+  </workflow-item>
+  <workflow-item name="item1" out-name="item0" type="task">
+    <display-name><![CDATA[Scriptable task]]></display-name>
+    <script encoded="false"><![CDATA[try {
+    if (inputProperties.deploymentId) {
+        var aa = System.getModule("com.bvp").AaManager(true);
+        
+        var deploymentId = inputProperties.deploymentId;
+        var projectId;
+        var eventTarget;
+        var eventType;
+        var eventInfo;
+
+        if (inputProperties.projectId) {
+            projectId = inputProperties.projectId;
+            if (inputProperties.actionName && inputProperties.requestType) {
+                eventTarget = "ACTION";
+                eventType = inputProperties.actionName;
+                eventInfo = inputProperties.resourceType;
+            } else {
+                switch (inputProperties.eventType) {
+                    case "CREATE_DEPLOYMENT":
+                    case "DESTROY_DEPLOYMENT":
+                    case "CREATE_RESOURCE":
+                    case "DELETE_RESOURCE":
+                        var _et = inputProperties.eventType.split("_");
+                        eventTarget = _et[1];
+                        eventType = _et[0];
+                        switch (eventTarget) {
+                            case "DEPLOYMENT":
+                                switch (eventType) {
+                                    case "CREATE": eventInfo = inputProperties.requestInputs._metadata_resource_type; break;
+                                    case "DESTROY": eventInfo = ""; break;
+                                    default: throw "out of control";
+                                };
+                                break;
+                            case "RESOURCE":
+                                if (inputProperties.resourceType) { eventInfo = inputProperties.resourceType; }
+                                else { throw "out of control"; }
+                                break;
+                            default: throw "out of control";
+                        }
+                        break;
+                    default: throw "out of control";
+                }
+            }
+        } else {
+            var deployment = aa.get("/deployment/api/deployments/" + deploymentId);
+            projectId = deployment.projectId;
+            switch (inputProperties.approvalEventType) {
+                case "CREATE":
+                    eventTarget = "APPROVAL";
+                    eventType = "CREATE";
+                    eventInfo = inputProperties.approvalRequestId;
+                    break;
+                case "APPROVAL_REQUEST_APPROVED":
+                case "APPROVAL_REQUEST_REJECTED":
+                    var _et = inputProperties.approvalEventType.split("_");
+                    eventTarget = _et[0];
+                    eventType = _et[2];
+                    eventInfo = inputProperties.approvalRequestId;
+                    break;
+                default: throw "out of control";
+            }
+        }
+        var orbConf = System.getModule("com.bvp").ConfManager().load("BVP/Endpoint/Orbrium");
+        var rest = System.getModule("com.bvp").RestManager("https://" + orbConf.hostname);
+        rest.post("/api/aprx/v1/event/deployment/" + orbConf.selfEndpoint, {
+            accessKey: orbConf.accessKey,
+            secretKey: orbConf.secretKey,
+            projectId: projectId,
+            deploymentId: deploymentId,
+            eventTarget: eventTarget,
+            eventType: eventType,
+            eventInfo: eventInfo,
+            eventStatus: inputProperties.status ? inputProperties.status : "REQUESTED"
+        });
+    }
+} catch (e) {
+    System.log(e);
+}]]></script>
+    <in-binding>
+      <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.0" x="180.0"/>
+  </workflow-item>
+  <presentation/>
+</workflow>

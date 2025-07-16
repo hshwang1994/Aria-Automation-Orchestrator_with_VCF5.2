@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item1" object-name="workflow:name=generic" id="ce710495-682f-4b03-8773-ae9849d2710f" version="0.0.1" api-version="6.0.0" allowed-operations="vfe" editor-version="2.0" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[Delete Deployment]]></display-name>
+  <position y="50.0" x="100.0"/>
+  <input>
+    <param name="deploymentId" type="string"/>
+  </input>
+  <output>
+    <param name="deploymentStatus" type="string"/>
+  </output>
+  <workflow-item name="item0" type="end" end-mode="0">
+    <in-binding/>
+    <position y="50.0" x="340.0"/>
+  </workflow-item>
+  <workflow-item name="item1" out-name="item0" type="task">
+    <display-name><![CDATA[Scriptable task]]></display-name>
+    <script encoded="false"><![CDATA[var aa = System.getModule("com.bvp").AaManager(true);
+var deploymentUrl = "/deployment/api/deployments/" + deploymentId;
+try {
+    aa.delete(deploymentUrl);
+    while (true) {
+        System.sleep(5000);
+        try {
+            var deployment = aa.get(deploymentUrl);
+            deploymentStatus = deployment.status;
+            if (deploymentStatus == "DELETE_SUCCESSFUL") { break; }
+            else if (deploymentStatus.indexOf("FAILED") > -1) { break; }
+        } catch (e) {
+            deploymentStatus = "DELETE_SUCCESSFUL";
+            break;
+        }
+    }
+} catch (e) {
+    deploymentStatus = "DELETE_SUCCESSFUL";
+}]]></script>
+    <in-binding>
+      <bind name="deploymentId" type="string" export-name="deploymentId"/>
+    </in-binding>
+    <out-binding>
+      <bind name="deploymentStatus" type="string" export-name="deploymentStatus"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.0" x="180.0"/>
+  </workflow-item>
+  <presentation/>
+</workflow>

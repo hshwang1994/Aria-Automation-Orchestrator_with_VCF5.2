@@ -1,0 +1,266 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item1" object-name="workflow:name=generic" id="5ccb2c71-af83-48f1-80b2-22555dff9c11" version="0.0.0" api-version="6.0.0" allowed-operations="vfe" editor-version="2.0" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[Compute Post Provision by Window to CustomSpec (ClovirONE)]]></display-name>
+  <position y="50.0" x="100.0"/>
+  <input>
+    <param name="inputProperties" type="Properties"/>
+  </input>
+  <attrib name="computeName" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="CustomizationStatus" type="boolean" read-only="false">
+    <value encoded="n"><![CDATA[false]]></value>
+  </attrib>
+  <attrib name="counter" type="number" read-only="false">
+    <value encoded="n"><![CDATA[20.0]]></value>
+  </attrib>
+  <attrib name="sleepTime" type="number" read-only="false">
+    <value encoded="n"><![CDATA[120.0]]></value>
+  </attrib>
+  <attrib name="ExceptionMessage" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <workflow-note x="406.0" y="120.0" w="304.0" h="138.0" color="var(--cds-alias-utility-yellow)">
+    <description><![CDATA[사용자 지정 규격이 완료되었는지 체크
+]]></description>
+  </workflow-note>
+  <workflow-item name="item0" type="end" end-mode="0">
+    <in-binding/>
+    <position y="50.0" x="880.0"/>
+  </workflow-item>
+  <workflow-item name="item1" out-name="item2" type="task">
+    <display-name><![CDATA[컴퓨팅 리소스의 네트워크 및 NSX 정책을 동적으로 설정]]></display-name>
+    <script encoded="false"><![CDATA[var computeId = inputProperties.resourceIds[0];
+if (computeId && computeId != "N/A") {
+    var aa = System.getModule("com.ecs").AaManager(true);
+    var endpointId = inputProperties.endpointId;
+    var endpointLink = "/resources/endpoints/" + endpointId;
+    var endpointName = aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0];
+    var customProperties = inputProperties.customProperties;
+    //var rootPassword = customProperties.rootPassword ? customProperties.rootPassword : null;
+    //var rootPasswordNew = customProperties.rootPasswordNew ? customProperties.rootPasswordNew : null;
+    //var adminUsername = customProperties.adminUsername ? customProperties.adminUsername : null;
+    var adminPassword = customProperties.adminPassword ? customProperties.adminPassword : null;
+    var Username = customProperties.Username ? customProperties.Username : null; // 사용자 이름 가져오기
+    var Password = customProperties.Password ? customProperties.Password : null; // 사용자 비밀번호 가져오기
+    var EnableRDP = customProperties._enableRDP; // RDP 활성화 여부 가져오기
+    var BootScripts = customProperties.bootScripts ? customProperties.bootScripts : ""; // Boot Scripts 내용 가져오기
+    var computeLink = "/resources/compute/" + computeId;
+    var compute = aa.getUerp(computeLink);
+    var computeName = compute.name;
+    var addressType = compute.customProperties.vpc ? (compute.customProperties.addressType ? compute.customProperties.addressType : "permanent") : "permanent";
+    var nsx = null;
+    if (compute.customProperties.vpc) {
+        var vpc = aa.getUerp(compute.customProperties.vpc);
+        for each(var intfLink in compute.networkInterfaceLinks) {
+            var interfaceId = intfLink.split("/network-interfaces/")[1];
+            var interface = aa.getUerp(intfLink);
+            var macAddress = interface.customProperties.mac_address;
+            var subnet = aa.getUerp(interface.subnetLink);
+            if (!nsx) { nsx = System.getModule("com.ecs").NsxManager(aa.getUerp(subnet.endpointLink).endpointProperties.hostName.split(".")[0]);}
+            nsx.put("/policy/api/v1" + subnet.customProperties.__path + "/dhcp-static-binding-configs/" + interfaceId, {
+                resource_type: "DhcpV4StaticBindingConfig",
+                display_name: computeName + "-" + macAddress,
+                host_name: computeName,
+                ip_address: interface.address,
+                mac_address: macAddress,
+                gateway_address: interface.customProperties.gateways,
+                options: {}
+            });
+        }
+        if (nsx) {
+            nsx.put("/policy/api/v1" + vpc.customProperties.vpcManagedTier1Path + "/nat/USER/nat-rules/" + compute.id, {
+                action: "DNAT",
+                enabled: true,
+                display_name: compute.name,
+                destination_network: vpc.customProperties.vpcTransitAddress,
+                translated_network: compute.address,
+                service: "/infra/services/SSH",
+                translated_ports: (parseInt(compute.customProperties.__moref.split(":vm-")[1]) % 55000) + 10000,
+                firewall_match: "MATCH_INTERNAL_ADDRESS",
+                policy_based_vpn_mode: "BYPASS",
+                sequence_number: 0,
+                id: compute.id
+            });
+        }
+    }
+}]]></script>
+    <in-binding>
+      <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.0" x="240.0"/>
+  </workflow-item>
+  <workflow-item name="item2" out-name="item16" type="task">
+    <display-name><![CDATA[VM검색]]></display-name>
+    <script encoded="false"><![CDATA[var computeId = inputProperties.resourceIds[0];
+var aa = System.getModule("com.ecs").AaManager(true);
+var computeLink = "/resources/compute/" + computeId;
+var compute = aa.getUerp(computeLink);
+var computeName = compute.name;]]></script>
+    <in-binding>
+      <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+    </in-binding>
+    <out-binding>
+      <bind name="computeName" type="string" export-name="computeName"/>
+    </out-binding>
+    <description><![CDATA[workflow가 동작한 VM명을 검색하고 다음 스탭으로 전달 합니다]]></description>
+    <position y="60.0" x="420.0"/>
+  </workflow-item>
+  <workflow-item name="item3" throw-bind-name="ExceptionMessage" type="task" script-module="com.test.goodmit.clovir.Actions/checkCustomizationStatus">
+    <display-name><![CDATA[checkCustomizationStatus]]></display-name>
+    <script encoded="false"><![CDATA[//Auto generated script, cannot be modified !
+actionResult = System.getModule("com.test.goodmit.clovir.Actions").checkCustomizationStatus(computeName);
+]]></script>
+    <in-binding>
+      <bind name="computeName" type="string" export-name="computeName"/>
+    </in-binding>
+    <out-binding>
+      <bind name="actionResult" type="boolean" export-name="CustomizationStatus"/>
+    </out-binding>
+    <description><![CDATA[Add a note to the workflow schema.]]></description>
+    <position y="290.0" x="180.0"/>
+  </workflow-item>
+  <workflow-item name="item10" prototype-id="sleep" out-name="item16" content-mode="x" type="task">
+    <display-name><![CDATA[Sleep]]></display-name>
+    <script encoded="false"><![CDATA[//Auto-generated script
+if ( sleepTime !== null )  {
+	System.sleep(sleepTime * 1000);
+}else  {
+	throw "'sleepTime' is NULL"; 
+}]]></script>
+    <in-binding>
+      <bind name="sleepTime" type="number" export-name="sleepTime">
+        <description><![CDATA[Time to sleep in seconds]]></description>
+      </bind>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Sleep a given number of seconds.]]></description>
+    <position y="210.0" x="500.0"/>
+  </workflow-item>
+  <workflow-item name="item11" out-name="item0" type="task">
+    <display-name><![CDATA[Window 시스템설정(PowerCLI)]]></display-name>
+    <script encoded="false"><![CDATA[var computeId = inputProperties.resourceIds[0];
+if (computeId && computeId != "N/A") {
+    var aa = System.getModule("com.ecs").AaManager(true);
+    var endpointId = inputProperties.endpointId;
+    var endpointLink = "/resources/endpoints/" + endpointId;
+    var endpointName = aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0];
+    var customProperties = inputProperties.customProperties;
+    //var rootPassword = customProperties.rootPassword ? customProperties.rootPassword : null;
+    //var rootPasswordNew = customProperties.rootPasswordNew ? customProperties.rootPasswordNew : null;
+    //var adminUsername = customProperties.adminUsername ? customProperties.adminUsername : null;
+    var adminPassword = customProperties.adminPassword ? customProperties.adminPassword : null;
+    var Username = customProperties.Username ? customProperties.Username : null; // 사용자 이름 가져오기
+    var Password = customProperties.Password ? customProperties.Password : null; // 사용자 비밀번호 가져오기
+    var EnableRDP = customProperties._enableRDP; // RDP 활성화 여부 가져오기
+    var BootScripts = customProperties.bootScripts ? customProperties.bootScripts : ""; // Boot Scripts 내용 가져오기
+    var computeLink = "/resources/compute/" + computeId;
+    var compute = aa.getUerp(computeLink);
+    var computeName = compute.name;
+    var addressType = compute.customProperties.vpc ? (compute.customProperties.addressType ? compute.customProperties.addressType : "permanent") : "permanent";
+    if (adminPassword) {
+        // RDP 활성화 여부 확인 및 설정
+        var scripts = "";
+        if (EnableRDP == "true") {
+            scripts += "Enable-NetFirewallRule -DisplayGroup \"Remote Desktop\"\n";
+            scripts += "Set-ItemProperty -Path \"HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server\" -Name \"fDenyTSConnections\" -Value 0\n";
+            scripts += "Write-Host \"RDP has been enabled.\"\n";
+        } else {
+            scripts += "Write-Host \"RDP has been disabled.\"\n";
+        }
+
+    // Boot Scripts 실행
+        if (BootScripts !== "") {
+            scripts += "\n# Boot Scripts 실행\n";
+            scripts += "$tempScriptPath = \"C:\\Temp\\bootScripts.ps1\"\n";
+            scripts += "if (-not (Test-Path -Path \"C:\\Temp\")) {\n";
+            scripts += "    New-Item -Path \"C:\\Temp\" -ItemType Directory | Out-Null\n";
+            scripts += "}\n";
+            scripts += "Set-Content -Path $tempScriptPath -Value @\"" + BootScripts + "\"@\n";
+            scripts += "Write-Host \"Executing Boot Scripts from $tempScriptPath ...\"\n";
+            scripts += "Invoke-Expression -Command \"& $tempScriptPath\"\n";
+            scripts += "Write-Host \"Boot Scripts execution completed.\"\n";
+            scripts += "Remove-Item -Path $tempScriptPath -Force\n";
+        } else {
+            scripts += "Write-Host \"No Boot Scripts provided.\"\n";
+        }
+
+        // 사용자 계정 생성 및 권한 설정
+        scripts += "\n# 새로운 사용자 계정 생성\n";
+        scripts += "New-LocalUser -Name \"" + Username + "\" -Password (ConvertTo-SecureString -String \"" + Password + "\" -AsPlainText -Force) -FullName \"" + Username + "\" -Description \"User added by automation\" -AccountNeverExpires\n";
+        scripts += "Add-LocalGroupMember -Group \"Administrators\" -Member \"" + Username + "\"\n";
+        scripts += "Write-Host \"User " + Username + " has been added and granted administrator privileges.\"\n";
+
+        var vcConf = System.getModule("com.ecs").ConfManager().load("/Endpoint/" + endpointName);
+        var execScripts = System.getModule("com.ecs.common").execScripts;
+        execScripts(vcConf.hostname, vcConf.username, vcConf.password, computeName, "Administrator", adminPassword, scripts);
+
+        if (addressType != "permanent") {
+            while (true) {
+                System.sleep(1000);
+                System.log("try reboot");
+                try {
+                    aa.post("/iaas/api/machines/" + computeId + "/operations/reboot", {});
+                    break;
+                } catch (e) {
+                    System.log("reboot error : " + e);
+                }
+            }
+        }
+    }
+}
+System.log(scripts)]]></script>
+    <in-binding>
+      <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.0" x="580.0"/>
+  </workflow-item>
+  <workflow-item name="item12" throw-bind-name="ExceptionMessage" type="end" end-mode="1">
+    <in-binding/>
+    <position y="150.0" x="800.0"/>
+  </workflow-item>
+  <workflow-item name="item14" out-name="item10" catch-name="item12" throw-bind-name="ExceptionMessage" type="task">
+    <display-name><![CDATA[Scriptable task]]></display-name>
+    <script encoded="false"><![CDATA[// Decrease Counter 노드 스크립트
+if (counter > 0) {
+    counter -= 1; // 카운터 감소
+    System.log("Counter decreased to: " + counter);
+} else {
+    System.error("Counter reached zero. Workflow will terminate.");
+    throw "Counter reached zero."; // 예외 발생
+}
+
+// 분기 조건
+// counter > 0: → Sleep.
+// counter == 0: → Exception Handling.]]></script>
+    <in-binding>
+      <bind name="counter" type="number" export-name="counter"/>
+    </in-binding>
+    <out-binding>
+      <bind name="counter" type="number" export-name="counter"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="160.0" x="580.0"/>
+  </workflow-item>
+  <workflow-item name="item16" out-name="item11" type="decision-activity" alt-out-name="item14">
+    <display-name><![CDATA[checkCustomizationStatus]]></display-name>
+    <script encoded="false"><![CDATA[// Generated by the system, cannot be edited
+return true;]]></script>
+    <in-binding>
+      <bind name="computeName" type="string" export-name="computeName"/>
+    </in-binding>
+    <out-binding/>
+    <reference type="ScriptModule" id="com.test.goodmit.clovir.Actions/checkCustomizationStatus"/>
+    <description><![CDATA[Decision activity based on a workflow or an action.]]></description>
+    <position y="150.0" x="420.0"/>
+  </workflow-item>
+  <presentation>
+    <p-param name="inputProperties">
+      <desc><![CDATA[inputProperties]]></desc>
+    </p-param>
+  </presentation>
+</workflow>

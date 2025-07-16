@@ -1,0 +1,65 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="nfsProvision" result-type="Properties" api-version="6.0.0" id="23465ef8-be80-43e6-ad28-d33c0af55570" version="0.0.0" category-name="com.gvp.bp.nfs">
+  <param n="nfsName" t="string"><![CDATA[]]></param>
+  <param n="size" t="number"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[function convertGBtoBytes(gb) {
+  if (typeof gb !== 'number' || isNaN(gb) || gb < 0) {
+    parseFloat(gb);
+  }
+
+  var bytesPerGB = 1024 * 1024 * 1024; // 1GB = 1024^3 bytes
+  return gb * bytesPerGB;
+}
+
+var cephVersionA = System.getModule("com.gvp").CephManager("ceph.gooddi.lab","0.1");
+var cephVersionB = System.getModule("com.gvp").CephManager("ceph.gooddi.lab","1.0");
+var cephVersionC = System.getModule("com.gvp").CephManager("ceph.gooddi.lab","2.0");
+var cephfsName = cephVersionB.get("/api/cephfs")[0].mdsmap.fs_name;
+var nfsClusterName = cephVersionA.get("/api/nfs-ganesha/cluster")[0];
+cephVersionB.post("/api/cephfs/subvolume",{"vol_name": cephfsName, "subvol_name": nfsName, "size": convertGBtoBytes(size), "mode": "757" })
+//cephVersionB.put("/api/cephfs/subvolume/" + cephfsName,{ "subvol_name": nfsName, "size": convertGBtoBytes(size), })
+var subvolumes = cephVersionB.get("/api/cephfs/subvolume/" + cephfsName);
+for (var i = 0; i < subvolumes.length; i++) {
+  var subvolume = subvolumes[i];
+  if (subvolume.name == nfsName) {
+    subvolumePath = subvolume.info.path;
+    break;
+  }
+}
+if (!subvolumePath) {
+  throw "Subvolume path not found for name: " + nfsName;
+}
+var nfsResult = cephVersionC.post("/api/nfs-ganesha/export",{
+    "path": subvolumePath,
+    "cluster_id": nfsClusterName,
+    "pseudo": "/" + nfsName,
+    "access_type": "RW",
+    "squash": "root_squash",
+    "security_label": false,
+    "protocols": [
+        3,
+        4
+    ],
+    "transports": [
+        "TCP",
+        "UDP"
+    ],
+    "fsal": {
+        "name": "CEPH",
+        "fs_name": cephfsName
+    },
+    "clients": []
+})
+
+return {
+    "volumeName": cephfsName,
+    "subvolumeName": nfsName,
+    "pusedo": nfsResult.pseudo,
+    "accessType": nfsResult.access_type,
+    "squash": nfsResult.squash,
+    "clients": nfsResult.clients,
+    "exportId": nfsResult.export_id,
+    "nfsClusterId": nfsClusterName,
+    "usage": "0"
+};]]></script>
+</dunes-script-module>

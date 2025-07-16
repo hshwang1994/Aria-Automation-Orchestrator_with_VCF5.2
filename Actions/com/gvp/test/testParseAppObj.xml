@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="testParseAppObj" result-type="Array/CompositeType(package:string,parameters:Array/Properties):APP" api-version="6.0.0" id="dabffd35-92d0-4b46-8dfe-476d66416b05" version="0.0.0" category-name="com.gvp.test">
+  <script encoded="false"><![CDATA[var array = [];
+array.push({
+    package: "",
+    parameters: []
+})
+return array]]></script>
+</dunes-script-module>

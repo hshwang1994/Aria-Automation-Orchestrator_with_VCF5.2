@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getPlacementZoneLinksBytVpcProfileLinks" result-type="string" api-version="6.0.0" id="c5a304b0-a25c-4c94-a7b4-236ef0764bfe" version="0.1.1" category-name="com.gvp.bp.gpuvm">
+  <description><![CDATA[BP:Virtual Private Cloud
+BP:Virtual Machine]]></description>
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <param n="profileLink" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!projectId) { return null; }
+if (!profileLink) { return null; }
+
+var aa = System.getModule("com.bvp").AaManager(true);
+
+var profileDetails = aa.getUerp(profileLink);
+var targetRegionLink = profileDetails.provisioningRegionLink;
+
+var project = aa.get("/iaas/api/projects/" + projectId);
+
+for each (var zone in project.zones) {
+    var placementZoneLink = "/provisioning/resources/placement-zones/" + zone.zoneId;
+    var placementZone = aa.getUerp(placementZoneLink);
+    if (placementZone.provisioningRegionLink === targetRegionLink) {
+        return placementZoneLink;
+    }
+}
+
+return "";
+]]></script>
+</dunes-script-module>

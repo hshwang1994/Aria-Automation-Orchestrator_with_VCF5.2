@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getSegmentTagValueByTagCategoryAndSubnetLink" result-type="string" api-version="6.0.0" id="d3c11125-61dc-4ed5-822f-7209e23a6ee6" version="0.0.0" category-name="com.gvp.bp.gpuvm">
+  <param n="subnetLink" t="string"/>
+  <param n="category" t="string"/>
+  <script encoded="false"><![CDATA[if (!category) { return null; }
+if (!subnetLink) { return null; }
+
+var checker = category + "\n";
+var aa = System.getModule("com.bvp").AaManager();
+for each(var tagObj in aa.getUerp(subnetLink).expandedTags) {
+    if (tagObj.tag.indexOf(checker) > -1) { return tagObj.tag.split("\n")[1]; }
+}
+throw "could not find tag";]]></script>
+</dunes-script-module>

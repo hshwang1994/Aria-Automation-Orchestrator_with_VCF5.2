@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="nfsRemoval" result-type="string" api-version="6.0.0" id="556c21f9-1f37-4e22-82d8-8dcd0a8fb6cf" version="0.0.0" category-name="com.gvp.bp.nfs">
+  <param n="exportId" t="number"><![CDATA[]]></param>
+  <param n="subvolumeName" t="string"><![CDATA[]]></param>
+  <param n="nfsClusterId" t="string"><![CDATA[]]></param>
+  <param n="volumeName" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var cephVersionA = System.getModule("com.gvp").CephManager("ceph.gooddi.lab","0.1");
+var cephVersionB = System.getModule("com.gvp").CephManager("ceph.gooddi.lab","1.0");
+var cephVersionC = System.getModule("com.gvp").CephManager("ceph.gooddi.lab","2.0");
+
+cephVersionC.delete("/api/nfs-ganesha/export/" + nfsClusterId + "/" + exportId.toString());
+System.sleep(1000);
+cephVersionB.delete("/api/cephfs/subvolume/" + volumeName + "?subvol_name=" + subvolumeName + "&retain_snapshots=false");
+
+return ""]]></script>
+</dunes-script-module>

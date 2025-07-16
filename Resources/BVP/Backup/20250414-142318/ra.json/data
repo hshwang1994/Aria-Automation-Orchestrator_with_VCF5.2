@@ -1,0 +1,360 @@
+{
+  "Cloud.vSphere.Machine.custom.attachblockdisk": {
+    "id": "Cloud.vSphere.Machine.custom.attachblockdisk",
+    "name": "attachBlockDisk",
+    "displayName": "Attach Disk",
+    "description": "install by value pack at 20250324-191120",
+    "providerName": "xaas",
+    "resourceType": "Cloud.vSphere.Machine",
+    "status": "RELEASED",
+    "orgId": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+    "runnableItem": {
+      "id": "8a74812a9298740f019361dd54f128f6",
+      "name": "Cloud.vSphere.Machine.attachBlockDisk",
+      "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+      "type": "abx.action",
+      "inputParameters": [
+        {
+          "type": "string",
+          "name": "busNumber"
+        },
+        {
+          "type": "string",
+          "name": "blockDiskId"
+        }
+      ]
+    },
+    "formDefinition": {
+      "tenant": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+      "id": "3e13b3ee-dabd-4fca-b96a-2fdfc80c782e",
+      "name": "attachBlockDisk",
+      "form": "{\"layout\":{\"pages\":[{\"id\":\"page_1\",\"title\":\"Page 1\",\"sections\":[{\"id\":\"section_2d2688b8\",\"fields\":[{\"id\":\"blockDiskId\",\"display\":\"dropDown\",\"state\":{\"visible\":true,\"read-only\":false},\"signpostPosition\":\"right-middle\"}]},{\"id\":\"section_e09deb6f\",\"fields\":[{\"id\":\"busNumber\",\"display\":\"dropDown\",\"state\":{\"visible\":true,\"read-only\":false},\"signpostPosition\":\"right-middle\"}]}],\"state\":{}}]},\"schema\":{\"blockDiskId\":{\"label\":\"Block Disk\",\"type\":{\"dataType\":\"string\",\"isMultiple\":false},\"default\":\"\",\"valueList\":{\"id\":\"com.bvp.bp.vm/getBlockDiskIdsByProjectIdAndVmName\",\"type\":\"scriptAction\",\"parameters\":[{\"$type\":{\"dataType\":\"string\",\"isMultiple\":false},\"vmName\":\"_resource.resourceName\"},{\"$type\":{\"dataType\":\"string\",\"isMultiple\":false},\"projectId\":\"_projectId\"}]},\"constraints\":{\"required\":true}},\"busNumber\":{\"label\":\"SCSI Controller\",\"type\":{\"dataType\":\"string\",\"isMultiple\":false},\"default\":\"0\",\"valueList\":[{\"value\":\"0\",\"label\":\"SCSI_Controller_0\"},{\"value\":\"1\",\"label\":\"SCSI_Controller_1\"},{\"value\":\"2\",\"label\":\"SCSI_Controller_2\"},{\"value\":\"3\",\"label\":\"SCSI_Controller_3\"}],\"constraints\":{\"required\":true}}},\"options\":{\"externalValidations\":[]}}",
+      "sourceType": "resource.action",
+      "sourceId": "Cloud.vSphere.Machine.custom.attachblockdisk",
+      "type": "requestForm",
+      "status": "ON",
+      "formFormat": "JSON",
+      "externalSourceFormSchemas": []
+    }
+  },
+  "Cloud.vSphere.Machine.custom.changemachinedisplayname": {
+    "id": "Cloud.vSphere.Machine.custom.changemachinedisplayname",
+    "name": "changeMachineDisplayName",
+    "displayName": "Change Display Name",
+    "description": "install by value pack at 20250324-191120",
+    "providerName": "xaas",
+    "resourceType": "Cloud.vSphere.Machine",
+    "status": "RELEASED",
+    "orgId": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+    "runnableItem": {
+      "id": "8a7480e9926c0b1f0192887bc55300e8",
+      "name": "Cloud.vSphere.Machine.changeDisplayName",
+      "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+      "type": "abx.action",
+      "inputParameters": [
+        {
+          "type": "string",
+          "name": "newDisplayName"
+        }
+      ]
+    },
+    "formDefinition": {
+      "tenant": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+      "id": "f18b494d-ab50-4bee-8e53-814ba798f845",
+      "name": "changeMachineDisplayName",
+      "form": "{\"layout\":{\"pages\":[{\"id\":\"page_1\",\"title\":\"Page 1\",\"sections\":[{\"id\":\"Section-newDisplayName\",\"fields\":[{\"id\":\"newDisplayName\",\"display\":\"textField\",\"state\":{\"visible\":true,\"read-only\":false},\"signpostPosition\":\"right-middle\"}]}]}]},\"schema\":{\"newDisplayName\":{\"label\":\"New VM Name\",\"type\":{\"dataType\":\"string\",\"isMultiple\":false},\"default\":{\"type\":\"scriptAction\",\"id\":\"com.bvp.bp.vm/getComputeDisplayNameByComputeName\",\"parameters\":[{\"computeName\":\"_resource.resourceName\",\"$type\":{\"dataType\":\"string\",\"isMultiple\":false}}]},\"constraints\":{\"required\":true}}},\"options\":{\"externalValidations\":[]}}",
+      "sourceType": "resource.action",
+      "sourceId": "Cloud.vSphere.Machine.custom.changemachinedisplayname",
+      "type": "requestForm",
+      "status": "ON",
+      "formFormat": "JSON",
+      "externalSourceFormSchemas": []
+    }
+  },
+  "Cloud.vSphere.Machine.custom.detachblockdisk": {
+    "id": "Cloud.vSphere.Machine.custom.detachblockdisk",
+    "name": "detachBlockDisk",
+    "displayName": "Detach Disk",
+    "description": "install by value pack at 20250324-191120",
+    "providerName": "xaas",
+    "resourceType": "Cloud.vSphere.Machine",
+    "status": "RELEASED",
+    "orgId": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+    "runnableItem": {
+      "id": "8a74812a9298740f0193622cf1c828ff",
+      "name": "Cloud.vSphere.Machine.detachBlockDisk",
+      "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+      "type": "abx.action",
+      "inputParameters": [
+        {
+          "type": "string",
+          "name": "diskName"
+        }
+      ]
+    },
+    "formDefinition": {
+      "tenant": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+      "id": "4190f7fa-7519-41a1-a766-328957712f27",
+      "name": "detachBlockDisk",
+      "form": "{\"layout\":{\"pages\":[{\"id\":\"page_1\",\"title\":\"Page 1\",\"sections\":[{\"id\":\"Section-diskName\",\"fields\":[{\"id\":\"diskName\",\"display\":\"dropDown\",\"state\":{\"visible\":true,\"read-only\":false},\"signpostPosition\":\"right-middle\"}]}]}]},\"schema\":{\"diskName\":{\"label\":\"Block Disk\",\"type\":{\"dataType\":\"string\",\"isMultiple\":false},\"default\":\"\",\"valueList\":{\"id\":\"com.bvp.bp.vm/getBlockDiskNamesByComputeName\",\"type\":\"scriptAction\",\"parameters\":[{\"$type\":{\"dataType\":\"string\",\"isMultiple\":false},\"computeName\":\"_resource.resourceName\"}]},\"constraints\":{\"required\":true}}},\"options\":{\"externalValidations\":[]}}",
+      "sourceType": "resource.action",
+      "sourceId": "Cloud.vSphere.Machine.custom.detachblockdisk",
+      "type": "requestForm",
+      "status": "ON",
+      "formFormat": "JSON",
+      "externalSourceFormSchemas": []
+    }
+  },
+  "Cloud.vSphere.Machine.custom.changeipaddress": {
+    "id": "Cloud.vSphere.Machine.custom.changeipaddress",
+    "name": "changeIpAddress",
+    "displayName": "Change IP Address",
+    "description": "install by value pack at 20250324-191120",
+    "providerName": "xaas",
+    "resourceType": "Cloud.vSphere.Machine",
+    "status": "RELEASED",
+    "orgId": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+    "runnableItem": {
+      "id": "8a7480e9926c0b1f01928fbe16be0105",
+      "name": "Cloud.vSphere.Machine.changeIpAddress",
+      "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+      "type": "abx.action",
+      "inputParameters": [
+        {
+          "type": "string",
+          "name": "releaseMode"
+        },
+        {
+          "type": "string",
+          "name": "newIpAddress"
+        },
+        {
+          "type": "string",
+          "name": "interfaceLink"
+        }
+      ]
+    },
+    "formDefinition": {
+      "tenant": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+      "id": "1e3a725f-62d1-44ce-8bfc-3977f7b4fc59",
+      "name": "changeIpAddress",
+      "form": "{\"layout\":{\"pages\":[{\"id\":\"page_1\",\"title\":\"Page 1\",\"sections\":[{\"id\":\"section_c01a5bf2\",\"fields\":[{\"id\":\"interfaceLink\",\"display\":\"dropDown\",\"state\":{\"visible\":true,\"read-only\":false},\"signpostPosition\":\"right-middle\"}]},{\"id\":\"Section-newIpAddress\",\"fields\":[{\"id\":\"newIpAddress\",\"display\":\"dropDown\",\"state\":{\"visible\":true,\"read-only\":false},\"signpostPosition\":\"right-middle\"}]},{\"id\":\"section_61d3cdf4\",\"fields\":[{\"id\":\"releaseMode\",\"display\":\"dropDown\",\"state\":{\"visible\":true,\"read-only\":false},\"signpostPosition\":\"right-middle\"}]}]}]},\"schema\":{\"interfaceLink\":{\"label\":\"Network Interface\",\"type\":{\"dataType\":\"string\",\"isMultiple\":false},\"default\":\"\",\"valueList\":{\"id\":\"com.bvp.bp.vm/getInterfacesByComputeNameForChangeIpAddress\",\"type\":\"scriptAction\",\"parameters\":[{\"$type\":{\"dataType\":\"string\",\"isMultiple\":false},\"computeName\":\"_resource.resourceName\"}]},\"constraints\":{\"required\":true}},\"newIpAddress\":{\"label\":\"New IP Address\",\"type\":{\"dataType\":\"string\",\"isMultiple\":false},\"default\":\"\",\"valueList\":{\"id\":\"com.bvp.bp.vm/getAvailableAddressesByInterfaceLink\",\"type\":\"scriptAction\",\"parameters\":[{\"$type\":{\"dataType\":\"string\",\"isMultiple\":false},\"interfaceLink\":\"interfaceLink\"}]},\"constraints\":{\"required\":true}},\"releaseMode\":{\"label\":\"Existing IP Release Mode\",\"type\":{\"dataType\":\"string\",\"isMultiple\":false},\"default\":\"released\",\"valueList\":[{\"value\":\"released\",\"label\":\"기본 정책\"},{\"value\":\"available\",\"label\":\"즉시 해지\"},{\"value\":\"allocated\",\"label\":\"영구 보존\"}],\"constraints\":{\"required\":true}}},\"options\":{\"externalValidations\":[]}}",
+      "sourceType": "resource.action",
+      "sourceId": "Cloud.vSphere.Machine.custom.changeipaddress",
+      "type": "requestForm",
+      "status": "ON",
+      "formFormat": "JSON",
+      "externalSourceFormSchemas": [
+        {
+          "externalSourceId": "com.bvp.bp.vm/getAvailableAddressesByInterfaceLink",
+          "elementId": "newIpAddress",
+          "elementType": "CANVAS_FIELD",
+          "facet": "valueList",
+          "parameters": [
+            {
+              "name": "interfaceLink",
+              "isValidatable": false
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "Cloud.vSphere.Machine.custom.runrootscripts": {
+    "id": "Cloud.vSphere.Machine.custom.runrootscripts",
+    "name": "runRootScripts",
+    "displayName": "Run Root Scripts",
+    "description": "install by value pack at 20250324-191120",
+    "providerName": "vro-workflow",
+    "resourceType": "Cloud.vSphere.Machine",
+    "status": "RELEASED",
+    "orgId": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+    "runnableItem": {
+      "id": "218f3694-f6df-4d8d-96df-5be69c4f3a39",
+      "name": "Run Root Scripts",
+      "type": "vro.workflow",
+      "inputParameters": [
+        {
+          "type": "string",
+          "name": "scripts"
+        }
+      ],
+      "outputParameters": [
+        {
+          "type": "string",
+          "name": "stdout"
+        },
+        {
+          "type": "string",
+          "name": "stderr"
+        }
+      ],
+      "endpointLink": "/resources/endpoints/499b0005-9497-47c9-9e3b-ec712897b455"
+    },
+    "formDefinition": {
+      "tenant": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+      "id": "16062cf6-eb66-49aa-a7e0-94a943490f25",
+      "name": "runRootScripts",
+      "form": "{\"layout\":{\"pages\":[{\"id\":\"page_txdswdjc\",\"title\":\"General\",\"sections\":[{\"id\":\"section_q5i5g0cw\",\"fields\":[{\"id\":\"scripts\",\"display\":\"textArea\",\"state\":{\"visible\":true,\"read-only\":false},\"signpostPosition\":\"right-middle\"}]}]}]},\"schema\":{\"scripts\":{\"label\":\"Root Scripts \",\"type\":{\"dataType\":\"string\"},\"constraints\":{\"required\":true}}},\"options\":{\"externalValidations\":[]}}",
+      "sourceType": "resource.action",
+      "sourceId": "Cloud.vSphere.Machine.custom.runrootscripts",
+      "type": "requestForm",
+      "status": "ON",
+      "formFormat": "JSON",
+      "externalSourceFormSchemas": []
+    }
+  },
+  "Cloud.vSphere.Machine.custom.changemachinesecuritygroup": {
+    "id": "Cloud.vSphere.Machine.custom.changemachinesecuritygroup",
+    "name": "changeMachineSecurityGroup",
+    "displayName": "Change Security Group",
+    "description": "install by value pack at 20250324-191120",
+    "providerName": "xaas",
+    "resourceType": "Cloud.vSphere.Machine",
+    "status": "RELEASED",
+    "orgId": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+    "runnableItem": {
+      "id": "8a74818f94779d770194fd01f3004143",
+      "name": "Cloud.vSphere.Machine.changeSecurityGroup",
+      "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+      "type": "abx.action",
+      "inputParameters": [
+        {
+          "type": "string",
+          "name": "_dfw_tag_category"
+        },
+        {
+          "type": "string",
+          "name": "newSecurityGroupCodeName"
+        }
+      ]
+    },
+    "formDefinition": {
+      "tenant": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+      "id": "9b6a2cc1-316d-4544-a6d5-bb971048689e",
+      "name": "changeMachineSecurityGroup",
+      "form": "{\"layout\":{\"pages\":[{\"id\":\"page_1\",\"title\":\"Page 1\",\"sections\":[{\"id\":\"Section-newSecurityGroupCodeName\",\"fields\":[{\"id\":\"newSecurityGroupCodeName\",\"display\":\"dropDown\",\"state\":{\"visible\":true,\"read-only\":false},\"signpostPosition\":\"right-middle\"}]},{\"id\":\"section_e18da19f\",\"fields\":[{\"id\":\"_dfw_tag_category\",\"display\":\"textField\",\"state\":{\"visible\":false,\"read-only\":false},\"signpostPosition\":\"right-middle\"}]}]}]},\"schema\":{\"newSecurityGroupCodeName\":{\"label\":\"New Security Group\",\"type\":{\"dataType\":\"string\",\"isMultiple\":false},\"valueList\":{\"id\":\"com.bvp.bp.vm/getFirewallTagValuesByTagCategoryAndProjectId\",\"type\":\"scriptAction\",\"parameters\":[{\"$type\":{\"dataType\":\"string\",\"isMultiple\":false},\"category\":\"`dfwId`\"},{\"$type\":{\"dataType\":\"string\",\"isMultiple\":false},\"projectId\":\"_projectId\"}]}},\"_dfw_tag_category\":{\"label\":\"_dfw_tag_category\",\"type\":{\"dataType\":\"string\",\"isMultiple\":false},\"default\":\"dfwId\"}},\"options\":{\"externalValidations\":[]}}",
+      "sourceType": "resource.action",
+      "sourceId": "Cloud.vSphere.Machine.custom.changemachinesecuritygroup",
+      "type": "requestForm",
+      "status": "ON",
+      "formFormat": "JSON",
+      "externalSourceFormSchemas": []
+    }
+  },
+  "Cloud.NSX.LoadBalancer.custom.changeserverpool": {
+    "id": "Cloud.NSX.LoadBalancer.custom.changeserverpool",
+    "name": "changeServerPool",
+    "displayName": "Change Server Pool",
+    "description": "install by value pack at 20250324-191120",
+    "providerName": "xaas",
+    "resourceType": "Cloud.NSX.LoadBalancer",
+    "status": "RELEASED",
+    "orgId": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+    "runnableItem": {
+      "id": "8a74809294779ca30194f3f244e75b3d",
+      "name": "Cloud.NSX.LoadBalancer.changeServerPool",
+      "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+      "type": "abx.action",
+      "inputParameters": [
+        {
+          "type": "string",
+          "name": "targetLinks"
+        }
+      ]
+    },
+    "formDefinition": {
+      "tenant": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+      "id": "b81284fe-64fc-4033-b6c8-9721ae83891c",
+      "name": "changeServerPool",
+      "form": "{\"layout\":{\"pages\":[{\"id\":\"page_1\",\"title\":\"Page 1\",\"sections\":[{\"id\":\"Section-targetLinks\",\"fields\":[{\"id\":\"targetLinks\",\"display\":\"textField\",\"state\":{\"visible\":false,\"read-only\":false},\"signpostPosition\":\"right-middle\"}]},{\"id\":\"section_5ebaf18b\",\"fields\":[{\"id\":\"multiSelect_d80c39ff\",\"display\":\"multiSelect\",\"state\":{\"visible\":true,\"read-only\":false},\"signpostPosition\":\"right-middle\"}]}]}]},\"schema\":{\"targetLinks\":{\"label\":\"Target Links\",\"type\":{\"dataType\":\"string\",\"isMultiple\":false},\"default\":{\"type\":\"scriptAction\",\"id\":\"com.bvp.bp.nlb/changeArrayToCommaString\",\"parameters\":[{\"arrayString\":\"multiSelect_d80c39ff\",\"$type\":{\"dataType\":\"string\",\"isMultiple\":true}}]},\"constraints\":{}},\"multiSelect_d80c39ff\":{\"label\":\"Virtual Machines\",\"type\":{\"dataType\":\"string\",\"isMultiple\":true},\"default\":{\"type\":\"scriptAction\",\"id\":\"com.bvp.bp.nlb/getCurrentMachinesByLbName\",\"parameters\":[{\"lbName\":\"_resource.resourceName\",\"$type\":{\"dataType\":\"string\",\"isMultiple\":false}}]},\"valueList\":{\"id\":\"com.bvp.bp.nlb/getAvailableMachinesByLbName\",\"type\":\"scriptAction\",\"parameters\":[{\"$type\":{\"dataType\":\"string\",\"isMultiple\":false},\"lbName\":\"_resource.resourceName\"}]},\"constraints\":{}}},\"options\":{\"externalValidations\":[]}}",
+      "sourceType": "resource.action",
+      "sourceId": "Cloud.NSX.LoadBalancer.custom.changeserverpool",
+      "type": "requestForm",
+      "status": "ON",
+      "formFormat": "JSON",
+      "externalSourceFormSchemas": [
+        {
+          "externalSourceId": "com.bvp.bp.nlb/changeArrayToCommaString",
+          "elementId": "targetLinks",
+          "elementType": "CANVAS_FIELD",
+          "facet": "default",
+          "parameters": [
+            {
+              "name": "arrayString",
+              "isValidatable": false
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "Cloud.NSX.Network.custom.changesegmentdisplayname": {
+    "id": "Cloud.NSX.Network.custom.changesegmentdisplayname",
+    "name": "changeSegmentDisplayName",
+    "displayName": "Change Display Name",
+    "description": "install by value pack at 20250324-191120",
+    "providerName": "xaas",
+    "resourceType": "Cloud.NSX.Network",
+    "status": "RELEASED",
+    "orgId": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+    "runnableItem": {
+      "id": "8a7481dd926c0ab601927fc2096401b0",
+      "name": "Cloud.NSX.Network.changeDisplayName",
+      "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+      "type": "abx.action",
+      "inputParameters": [
+        {
+          "type": "string",
+          "name": "newDisplayName"
+        }
+      ]
+    },
+    "formDefinition": {
+      "tenant": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+      "id": "0acfbe03-eb8e-43c8-9fef-a7fbc3b94fe6",
+      "name": "changeSegmentDisplayName",
+      "form": "{\"layout\":{\"pages\":[{\"id\":\"page_1\",\"title\":\"Page 1\",\"sections\":[{\"id\":\"Section-newDisplayName\",\"fields\":[{\"id\":\"newDisplayName\",\"display\":\"textField\",\"state\":{\"visible\":true,\"read-only\":false},\"signpostPosition\":\"right-middle\"}]}]}]},\"schema\":{\"newDisplayName\":{\"label\":\"New Display Name\",\"type\":{\"dataType\":\"string\",\"isMultiple\":false},\"default\":{\"type\":\"scriptAction\",\"id\":\"com.bvp.bp.seg/getSegmentDisplayNameBySegmentName\",\"parameters\":[{\"segmentName\":\"_resource.resourceName\",\"$type\":{\"dataType\":\"string\",\"isMultiple\":false}},{\"deploymentId\":\"_deploymentId\",\"$type\":{\"dataType\":\"string\",\"isMultiple\":false}}]},\"constraints\":{\"required\":true}}},\"options\":{\"externalValidations\":[]}}",
+      "sourceType": "resource.action",
+      "sourceId": "Cloud.NSX.Network.custom.changesegmentdisplayname",
+      "type": "requestForm",
+      "status": "ON",
+      "formFormat": "JSON",
+      "externalSourceFormSchemas": []
+    }
+  },
+  "Cloud.SecurityGroup.custom.changedistributedfirewalldisplayname": {
+    "id": "Cloud.SecurityGroup.custom.changedistributedfirewalldisplayname",
+    "name": "changeDistributedFirewallDisplayname",
+    "displayName": "Change Display Name",
+    "description": "install by value pack at 20250324-191120",
+    "providerName": "xaas",
+    "resourceType": "Cloud.SecurityGroup",
+    "status": "RELEASED",
+    "orgId": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+    "runnableItem": {
+      "id": "8a74829294779cae0194fe99520d014a",
+      "name": "Cloud.SecurityGroup.changeDisplayName",
+      "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+      "type": "abx.action",
+      "inputParameters": [
+        {
+          "type": "string",
+          "name": "newDisplayName"
+        }
+      ]
+    },
+    "formDefinition": {
+      "tenant": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+      "id": "e77a8fcf-a68b-4cd9-9511-9b0929838ec2",
+      "name": "changeDistributedFirewallDisplayname",
+      "form": "{\"layout\":{\"pages\":[{\"id\":\"page_1\",\"title\":\"Page 1\",\"sections\":[{\"id\":\"Section-newDisplayName\",\"fields\":[{\"id\":\"newDisplayName\",\"display\":\"textField\",\"state\":{\"visible\":true,\"read-only\":false},\"signpostPosition\":\"right-middle\"}]}]}]},\"schema\":{\"newDisplayName\":{\"label\":\"New Display Name\",\"type\":{\"dataType\":\"string\",\"isMultiple\":false},\"default\":{\"type\":\"scriptAction\",\"id\":\"com.bvp.bp.dfw/getDfwDisplayNameByDfwName\",\"parameters\":[{\"deploymentId\":\"_deploymentId\",\"$type\":{\"dataType\":\"string\",\"isMultiple\":false}},{\"dfwName\":\"_resource.resourceName\",\"$type\":{\"dataType\":\"string\",\"isMultiple\":false}}]},\"constraints\":{\"required\":true}}},\"options\":{\"externalValidations\":[]}}",
+      "sourceType": "resource.action",
+      "sourceId": "Cloud.SecurityGroup.custom.changedistributedfirewalldisplayname",
+      "type": "requestForm",
+      "status": "ON",
+      "formFormat": "JSON",
+      "externalSourceFormSchemas": []
+    }
+  }
+}

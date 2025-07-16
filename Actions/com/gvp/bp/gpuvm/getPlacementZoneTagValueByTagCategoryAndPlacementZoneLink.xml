@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getPlacementZoneTagValueByTagCategoryAndPlacementZoneLink" result-type="string" api-version="6.0.0" id="ea6aa1a1-9637-4df8-8d8f-e077568bf839" version="0.0.0" category-name="com.gvp.bp.gpuvm">
+  <param n="category" t="string"><![CDATA[]]></param>
+  <param n="zoneId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!category) { return null; }
+if (!placementZoneLink) { return null; }
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var zone = aa.getUerp(placementZoneLink);
+var checker = category + "\n";
+
+for each (var tagObj in zone.expandedTags) {
+    if (tagObj.tag.indexOf(checker) > -1) {
+        return tagObj.tag.split("\n", 2)[1];
+    }
+}
+
+return "";]]></script>
+</dunes-script-module>

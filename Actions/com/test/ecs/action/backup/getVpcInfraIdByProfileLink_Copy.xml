@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getVpcInfraIdByProfileLink_Copy" result-type="string" api-version="6.0.0" id="17a0ca6e-6215-4ba1-b3af-96e49f67c203" version="0.1.0" allowed-operations="vfe" category-name="com.test.ecs.action.backup">
+  <description><![CDATA[BP:Virtual Private Cloud]]></description>
+  <param n="profileLink" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.ecs").AaManager(true);
+for each(var tagObj in aa.getUerp(profileLink).expandedTags) {
+    if (tagObj.tag.indexOf("vpcInfraId") > -1) { return tagObj.tag.split("\n")[1]; }
+}
+throw 'could not find "vpcInfraId" tag';]]></script>
+</dunes-script-module>

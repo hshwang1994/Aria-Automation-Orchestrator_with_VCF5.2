@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getDummyInterfaceByProfileLink" result-type="string" api-version="6.0.0" id="f365b904-6d49-4d18-8f38-1ffeb53a4aae" version="0.0.1" allowed-operations="vfe" category-name="com.bvp.bp.nlb">
+  <param n="profileLink" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!profileLink) { throw "profileLink cannot be null"; }
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var vpc = aa.getUerp(profileLink);
+for each(var interface in aa.getUerp("/resources/network-interfaces?expand&$filter=subnetLink eq '" + vpc.customProperties.vpcTransitSubnetLink + "'").documents) {
+    return interface.documentSelfLink;
+}
+throw "could not find dummy interface";
+]]></script>
+</dunes-script-module>

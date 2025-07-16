@@ -1,0 +1,365 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item5" object-name="workflow:name=generic" id="f93f1fba-13c2-4cb2-a3dd-1fd06bc3aac3" version="0.0.0" api-version="6.0.0" allowed-operations="vfe" editor-version="2.0" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[Compute Post Provision with SW install(ClovirOne)]]></display-name>
+  <position y="136.84054283596654" x="0.0"/>
+  <input>
+    <param name="inputProperties" type="Properties"/>
+  </input>
+  <attrib name="vcHostname" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="vcUsername" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="vcPassword" type="SecureString" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="vmName" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="vmUsername" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="vmPassword" type="SecureString" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="packagesName" type="Array/string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="version" type="Array/string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="options" type="Array/string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="packageCounter" type="number" read-only="false">
+    <value encoded="n"><![CDATA[0.0]]></value>
+  </attrib>
+  <attrib name="packageLength" type="number" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="_vm_object" type="VC:VirtualMachine" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="pollingRate" type="number" read-only="false">
+    <value encoded="n"><![CDATA[1.0]]></value>
+  </attrib>
+  <attrib name="timeout" type="number" read-only="false">
+    <value encoded="n"><![CDATA[30.0]]></value>
+  </attrib>
+  <workflow-item name="item0" type="end" end-mode="0">
+    <in-binding/>
+    <position y="60.0" x="1262.6391780495633"/>
+  </workflow-item>
+  <workflow-item name="item1" type="end" end-mode="0">
+    <in-binding/>
+    <position y="-3.159457164033462" x="500.0"/>
+  </workflow-item>
+  <workflow-item name="item2" out-name="item17" type="custom-condition" alt-out-name="item1">
+    <display-name><![CDATA[install Package Exsist]]></display-name>
+    <script encoded="false"><![CDATA[var customProperties = inputProperties.customProperties;
+if (customProperties.packages == "[]" || customProperties.packages == null || customProperties.packages == undefined){
+    return false;
+} else {
+    return true;
+}]]></script>
+    <in-binding>
+      <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Custom decision based on a custom script.]]></description>
+    <position y="56.84054283596653" x="480.0"/>
+  </workflow-item>
+  <workflow-item name="item5" out-name="item19" type="task">
+    <display-name><![CDATA[Set Var Output]]></display-name>
+    <script encoded="false"><![CDATA[var computeId = inputProperties.resourceIds[0];
+if (computeId && computeId != "N/A") {
+    var aa = System.getModule("com.ecs").AaManager(true);
+    var endpointId = inputProperties.endpointId;
+    var endpointLink = "/resources/endpoints/" + endpointId;
+    var endpointName = aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0];
+    var customProperties = inputProperties.customProperties;
+    var rootPassword = customProperties.rootPassword ? customProperties.rootPassword : null;
+    var rootPasswordNew = customProperties.rootPasswordNew ? customProperties.rootPasswordNew : null;
+    var adminUsername = customProperties.adminUsername ? customProperties.adminUsername : null;
+    var adminPassword = customProperties.adminPassword ? customProperties.adminPassword : null;
+    var computeLink = "/resources/compute/" + computeId;
+    var compute = aa.getUerp(computeLink);
+    var computeName = compute.name;
+    var addressType = compute.customProperties.vpc ? (compute.customProperties.addressType ? compute.customProperties.addressType : "permanent") : "permanent";
+    var nsx = null;
+
+    var vcConf = System.getModule("com.ecs").ConfManager().load("/Endpoint/" + endpointName);
+    var parse = System.getModule("com.goodmit.clovir").parseStringToArray;
+    var pack = customProperties.packages;
+    var ver = customProperties.packagesVersion;
+    var param = customProperties.packagesParameter;
+    vcHostname = vcConf.hostname;
+    vcUsername = vcConf.username;
+    vcPassword = vcConf.password;
+    vmName = computeName;
+    vmUsername = adminUsername;
+    vmPassword = adminPassword;
+    packagesName = pack ? parse(pack) : null;
+    packageLength = pack ? packagesName.length : null;
+    _vm_object = VcPlugin.getAllVirtualMachines(null, "xpath:name=\'"+ inputProperties.resourceNames[0] + "\'")[0];
+}]]></script>
+    <in-binding>
+      <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+    </in-binding>
+    <out-binding>
+      <bind name="vcHostname" type="string" export-name="vcHostname"/>
+      <bind name="vcUsername" type="string" export-name="vcUsername"/>
+      <bind name="vcPassword" type="SecureString" export-name="vcPassword"/>
+      <bind name="vmName" type="string" export-name="vmName"/>
+      <bind name="vmUsername" type="string" export-name="vmUsername"/>
+      <bind name="vmPassword" type="SecureString" export-name="vmPassword"/>
+      <bind name="packagesName" type="Array/string" export-name="packagesName"/>
+      <bind name="version" type="Array/string" export-name="version"/>
+      <bind name="options" type="Array/string" export-name="options"/>
+      <bind name="packageLength" type="number" export-name="packageLength"/>
+      <bind name="_vm_object" type="VC:VirtualMachine" export-name="_vm_object"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="146.84054283596654" x="80.0"/>
+  </workflow-item>
+  <workflow-item name="item10" out-name="item11" type="custom-condition" alt-out-name="item0">
+    <display-name><![CDATA[Check Package Length]]></display-name>
+    <script encoded="false"><![CDATA[if (packageLength < 1){
+    return false;
+} else{
+    return true;
+}]]></script>
+    <in-binding>
+      <bind name="packageLength" type="number" export-name="packageLength"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Custom decision based on a custom script.]]></description>
+    <position y="70.0" x="942.6391780495633"/>
+  </workflow-item>
+  <workflow-item name="item11" out-name="item14" type="task">
+    <display-name><![CDATA[Call Module for Install Package]]></display-name>
+    <script encoded="false"><![CDATA[var moduleName = packagesName[packageCounter];
+var moduleBase = System.getModule("com.goodmit.library.app.linux");
+var installPackage = moduleBase[moduleName];
+var ver = version  ? version[packageCounter] : "";
+var op = options ? options[packageCounter] : "";
+installPackage(vcHostname, vcUsername, vcPassword, vmName, vmUsername, vmPassword, packagesName[packageCounter], ver, op);]]></script>
+    <in-binding>
+      <bind name="packagesName" type="Array/string" export-name="packagesName"/>
+      <bind name="packageCounter" type="number" export-name="packageCounter"/>
+      <bind name="vcHostname" type="string" export-name="vcHostname"/>
+      <bind name="vcUsername" type="string" export-name="vcUsername"/>
+      <bind name="vcPassword" type="SecureString" export-name="vcPassword"/>
+      <bind name="vmName" type="string" export-name="vmName"/>
+      <bind name="vmUsername" type="string" export-name="vmUsername"/>
+      <bind name="vmPassword" type="SecureString" export-name="vmPassword"/>
+      <bind name="version" type="Array/string" export-name="version"/>
+      <bind name="options" type="Array/string" export-name="options"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="120.0" x="1040.0"/>
+  </workflow-item>
+  <workflow-item name="item14" prototype-id="increase-counter" out-name="item15" content-mode="x" type="task">
+    <display-name><![CDATA[Increase packageCounter]]></display-name>
+    <script encoded="false"><![CDATA[//Auto-generated script
+counter = counter + 1;]]></script>
+    <in-binding>
+      <bind name="counter" type="number" export-name="packageCounter">
+        <description><![CDATA[Item to increase]]></description>
+      </bind>
+    </in-binding>
+    <out-binding>
+      <bind name="counter" type="number" export-name="packageCounter">
+        <description><![CDATA[Increased item]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[Increment a counter by one.]]></description>
+    <position y="160.0" x="962.6391780495633"/>
+  </workflow-item>
+  <workflow-item name="item15" prototype-id="decrease-counter" out-name="item10" content-mode="x" type="task">
+    <display-name><![CDATA[Decrease packageLength]]></display-name>
+    <script encoded="false"><![CDATA[//Auto-generated script
+counter = counter - 1;]]></script>
+    <in-binding>
+      <bind name="counter" type="number" export-name="packageLength">
+        <description><![CDATA[Item to decrease]]></description>
+      </bind>
+    </in-binding>
+    <out-binding>
+      <bind name="counter" type="number" export-name="packageLength">
+        <description><![CDATA[Decreased item]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[Decrement a counter by one.]]></description>
+    <position y="116.84054283596653" x="800.0"/>
+  </workflow-item>
+  <workflow-item name="item17" out-name="item10" type="task" script-module="com.vmware.library.vc.vm.tools/vim3WaitToolsStarted">
+    <display-name><![CDATA[vim3WaitToolsStarted]]></display-name>
+    <script encoded="false"><![CDATA[//Auto generated script, cannot be modified !
+System.getModule("com.vmware.library.vc.vm.tools").vim3WaitToolsStarted(vm,pollingRate,timeout);
+]]></script>
+    <in-binding>
+      <bind name="vm" type="VC:VirtualMachine" export-name="_vm_object">
+        <description><![CDATA[VM in which the action look to get the new DNS Name]]></description>
+      </bind>
+      <bind name="pollingRate" type="number" export-name="pollingRate">
+        <description><![CDATA[Time between all request information on the tools [seconds]]]></description>
+      </bind>
+      <bind name="timeout" type="number" export-name="timeout">
+        <description><![CDATA[Timeout before throwing a timeout exception [minutes]]]></description>
+      </bind>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Add a note to the workflow schema.]]></description>
+    <position y="66.84054283596653" x="640.0"/>
+  </workflow-item>
+  <workflow-item name="item19" out-name="item21" type="custom-condition" alt-out-name="item20">
+    <display-name><![CDATA[Check Linux Or Window]]></display-name>
+    <script encoded="false"><![CDATA[var customProperties = inputProperties.customProperties;
+if (customProperties.isLinux == "true"){
+    return true;
+} else {
+    return false;
+}]]></script>
+    <in-binding>
+      <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Custom decision based on a custom script.]]></description>
+    <position y="136.84054283596654" x="200.0"/>
+  </workflow-item>
+  <workflow-item name="item20" out-name="item23" type="link" linked-workflow-id="5ccb2c71-af83-48f1-80b2-22555dff9c11">
+    <display-name><![CDATA[Compute Post Provision by Window to CustomSpec (ClovirONE)]]></display-name>
+    <in-binding>
+      <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[ ]]></description>
+    <position y="206.84054283596654" x="340.0"/>
+  </workflow-item>
+  <workflow-item name="item21" out-name="item2" type="link" linked-workflow-id="fac9aeae-ce6f-424d-95cd-ccc6fdce801f">
+    <display-name><![CDATA[Compute Post Provision by Linux(ClovirONE)]]></display-name>
+    <in-binding>
+      <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[ ]]></description>
+    <position y="66.84054283596653" x="360.0"/>
+  </workflow-item>
+  <workflow-item name="item22" type="end" end-mode="0">
+    <in-binding/>
+    <position y="266.8405428359665" x="520.0"/>
+  </workflow-item>
+  <workflow-item name="item23" out-name="item24" type="custom-condition" alt-out-name="item22">
+    <display-name><![CDATA[install Package Exsist]]></display-name>
+    <script encoded="false"><![CDATA[var customProperties = inputProperties.customProperties;
+if (customProperties.packages == "[]" || customProperties.packages == null || customProperties.packages == undefined ){
+    return false;
+} else {
+    return true;
+}]]></script>
+    <in-binding>
+      <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Custom decision based on a custom script.]]></description>
+    <position y="206.84054283596654" x="480.0"/>
+  </workflow-item>
+  <workflow-item name="item24" out-name="item26" type="task" script-module="com.vmware.library.vc.vm.tools/vim3WaitToolsStarted">
+    <display-name><![CDATA[vim3WaitToolsStarted]]></display-name>
+    <script encoded="false"><![CDATA[//Auto generated script, cannot be modified !
+System.getModule("com.vmware.library.vc.vm.tools").vim3WaitToolsStarted(vm,pollingRate,timeout);
+]]></script>
+    <in-binding>
+      <bind name="vm" type="VC:VirtualMachine" export-name="_vm_object">
+        <description><![CDATA[VM in which the action look to get the new DNS Name]]></description>
+      </bind>
+      <bind name="pollingRate" type="number" export-name="pollingRate">
+        <description><![CDATA[Time between all request information on the tools [seconds]]]></description>
+      </bind>
+      <bind name="timeout" type="number" export-name="timeout">
+        <description><![CDATA[Timeout before throwing a timeout exception [minutes]]]></description>
+      </bind>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Add a note to the workflow schema.]]></description>
+    <position y="226.84054283596654" x="640.0"/>
+  </workflow-item>
+  <workflow-item name="item25" type="end" end-mode="0">
+    <in-binding/>
+    <position y="220.0" x="1222.6391780495633"/>
+  </workflow-item>
+  <workflow-item name="item26" out-name="item27" type="custom-condition" alt-out-name="item25">
+    <display-name><![CDATA[Check Package Length]]></display-name>
+    <script encoded="false"><![CDATA[if (packageLength < 1){
+    return false;
+} else{
+    return true;
+}]]></script>
+    <in-binding/>
+    <out-binding/>
+    <description><![CDATA[Custom decision based on a custom script.]]></description>
+    <position y="216.84054283596654" x="860.0"/>
+  </workflow-item>
+  <workflow-item name="item27" out-name="item28" type="task">
+    <display-name><![CDATA[Call Module for Install Package]]></display-name>
+    <script encoded="false"><![CDATA[var moduleName = packagesName[packageCounter];
+var moduleBase = System.getModule("com.goodmit.library.app.window");
+var installPackage = moduleBase[moduleName];
+var ver = version  ? version[packageCounter] : "";
+var op = options ? options[packageCounter] : "";
+installPackage(vcHostname, vcUsername, vcPassword, vmName, vmUsername, vmPassword, packagesName[packageCounter], ver, op);]]></script>
+    <in-binding>
+      <bind name="vcHostname" type="string" export-name="vcHostname"/>
+      <bind name="vcUsername" type="string" export-name="vcUsername"/>
+      <bind name="vcPassword" type="SecureString" export-name="vcPassword"/>
+      <bind name="vmName" type="string" export-name="vmName"/>
+      <bind name="vmUsername" type="string" export-name="vmUsername"/>
+      <bind name="vmPassword" type="SecureString" export-name="vmPassword"/>
+      <bind name="packageCounter" type="number" export-name="packageCounter"/>
+      <bind name="packagesName" type="Array/string" export-name="packagesName"/>
+      <bind name="version" type="Array/string" export-name="version"/>
+      <bind name="options" type="Array/string" export-name="options"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="270.0" x="1020.0"/>
+  </workflow-item>
+  <workflow-item name="item28" prototype-id="increase-counter" out-name="item29" content-mode="x" type="task">
+    <display-name><![CDATA[Increase packageCounter]]></display-name>
+    <script encoded="false"><![CDATA[//Auto-generated script
+counter = counter + 1;]]></script>
+    <in-binding>
+      <bind name="counter" type="number" export-name="packageCounter">
+        <description><![CDATA[Item to increase]]></description>
+      </bind>
+    </in-binding>
+    <out-binding>
+      <bind name="counter" type="number" export-name="packageCounter">
+        <description><![CDATA[Increased item]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[Increment a counter by one.]]></description>
+    <position y="320.0" x="880.0"/>
+  </workflow-item>
+  <workflow-item name="item29" prototype-id="decrease-counter" out-name="item26" content-mode="x" type="task">
+    <display-name><![CDATA[Decrease packageLength]]></display-name>
+    <script encoded="false"><![CDATA[//Auto-generated script
+counter = counter - 1;]]></script>
+    <in-binding>
+      <bind name="counter" type="number" export-name="packageLength">
+        <description><![CDATA[Item to decrease]]></description>
+      </bind>
+    </in-binding>
+    <out-binding>
+      <bind name="counter" type="number" export-name="packageLength">
+        <description><![CDATA[Decreased item]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[Decrement a counter by one.]]></description>
+    <position y="280.0" x="760.0"/>
+  </workflow-item>
+  <presentation/>
+</workflow>

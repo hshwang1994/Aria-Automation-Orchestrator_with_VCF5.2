@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getGpuModelNameThroughTagByGpuTagCategory" result-type="Array/Properties" api-version="6.0.0" id="1c48089e-cd60-46fa-9833-efe88fb7e088" version="0.0.0" category-name="com.gvp.bp.gpuvm">
+  <param n="category" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if(!category){return null;};
+var aa = System.getModule("com.bvp").AaManager(true);
+
+var tags = aa.get("/iaas/api/tags?$filter= key eq '"+category+"'").content
+
+var result = [];
+for each (var tag in tags) {
+    result.push({
+        label: tag.value.toUpperCase(),
+        value: tag.value
+    });
+}
+
+result.sort(function(a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});
+
+return result;
+]]></script>
+</dunes-script-module>

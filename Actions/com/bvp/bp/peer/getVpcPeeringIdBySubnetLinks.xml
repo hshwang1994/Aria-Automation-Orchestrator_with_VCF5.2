@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getVpcPeeringIdBySubnetLinks" result-type="string" api-version="6.0.0" id="2485443e-7fdc-49b3-a253-1d4ba8ecb5f4" version="0.0.1" allowed-operations="vfe" category-name="com.bvp.bp.peer">
+  <param n="subnetLink1" t="string"><![CDATA[]]></param>
+  <param n="subnetLink2" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if(!subnetLink1) { throw "subnetLink1 cannot be null"; }
+if(!subnetLink2) { throw "subnetLink2 cannot be null"; }
+
+var result = "";
+if (subnetLink1 && subnetLink2) {
+    var subnetId1 = subnetLink1.split("/sub-networks/")[1];
+    var subnetId2 = subnetLink2.split("/sub-networks/")[1];
+    var chars = "0123456789abcdef";
+    for (var i = 0; i < 36; i++) {
+        var sc = subnetId1[i];
+        var tc = subnetId2[i];
+        if (sc != "-" && tc != "-") {
+            var sci = chars.indexOf(sc);
+            var tci = chars.indexOf(tc);
+            var mci = sci != 0 || tci != 0 ? (sci + tci) % 16 : 0;
+            result += chars[mci];
+        } else {
+            result += "-";
+        }
+    }
+}
+return result;
+]]></script>
+</dunes-script-module>

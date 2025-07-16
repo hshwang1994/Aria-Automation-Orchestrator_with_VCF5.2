@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getImagesByPlacementZoneLink_Copy" result-type="Array/string" api-version="6.0.0" id="611bf333-af1a-4a97-bf36-2b94bca9ce78" version="0.1.0" allowed-operations="vfe" category-name="com.test.ecs.action.backup">
+  <description><![CDATA[BP:Virtual Machine]]></description>
+  <param n="placementZoneLink" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.ecs").AaManager(true);
+var zone = aa.getUerp(placementZoneLink);
+var regionId = zone.regionId;
+var imagesContent = aa.get("/iaas/api/images?$filter=externalRegionId eq '" + regionId + "'").content;
+var result = [];
+for each(var images in imagesContent) {
+    for (var imageName in images.mapping) {
+        result.push(imageName);
+    }
+}
+return result.sort(function (a, b) {
+    return a.toUpperCase() < b.toUpperCase() ? -1 : 1;
+});]]></script>
+</dunes-script-module>

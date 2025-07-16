@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getBlockDiskIdsByProjectIdAndVmName" result-type="Array/Properties" api-version="6.0.0" id="04b4e685-9bb2-43c7-aa7c-691639023d85" version="0.0.1" allowed-operations="vfe" category-name="com.bvp.bp.vm">
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <param n="vmName" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if(!projectId){ throw "projectId cannot be null"; }
+if(!vmName){ throw "vmName cannot be null"; }
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var vm = aa.get("/deployment/api/resources?resourceTypes=Cloud.vSphere.Machine&search=" + vmName).content;
+var result = [];
+for each(var vm in aa.get("/deployment/api/resources?resourceTypes=Cloud.vSphere.Machine&search=" + vmName).content) {
+    var diskNames = [];
+    for each(var disk in vm.properties.storage.disks) {
+        if(disk.diskFile){diskNames.push(disk.diskFile.split("/")[1].replace(".vmdk", ""));}
+    }
+    System.log(JSON.stringify(diskNames, null, 2));    
+    for each(var disk in aa.get("/deployment/api/resources?resourceTypes=Cloud.vSphere.Disk&projects=" + projectId).content) {
+        var properties = disk.properties;
+        System.log(JSON.stringify(properties, null, 2));
+        if (properties.type == "HDD" && properties.onDemand == "true") {
+            if (diskNames.indexOf(properties.providerId) < 0) {
+                result.push({
+                    label: properties.displayName ? properties.displayName : disk.name,
+                    value: disk.id,
+                });
+            }
+        }
+    }
+    return result.sort(function (a, b) {
+        return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+    });
+
+}
+return result;
+]]></script>
+</dunes-script-module>

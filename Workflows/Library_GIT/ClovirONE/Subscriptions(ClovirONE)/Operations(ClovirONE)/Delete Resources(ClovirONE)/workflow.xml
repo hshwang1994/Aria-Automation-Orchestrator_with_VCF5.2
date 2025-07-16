@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item1" object-name="workflow:name=generic" id="0ef78279-9b56-4e0b-84e7-846147d7f71e" version="0.0.0" api-version="6.0.0" allowed-operations="vfe" editor-version="2.0" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[Delete Resources(ClovirONE)]]></display-name>
+  <position y="50.0" x="100.0"/>
+  <input>
+    <param name="_metadata_category" type="string"/>
+    <param name="_metadata_catalog" type="string"/>
+    <param name="deploymentId" type="string"/>
+    <param name="resourceId" type="string"/>
+    <param name="resourceName" type="string"/>
+    <param name="resourceType" type="string"/>
+  </input>
+  <workflow-item name="item0" type="end" end-mode="0">
+    <in-binding/>
+    <position y="50.0" x="400.0"/>
+  </workflow-item>
+  <workflow-item name="item1" out-name="item0" type="task">
+    <display-name><![CDATA[Scriptable task]]></display-name>
+    <script encoded="false"><![CDATA[var aa = System.getModule("com.ecs").AaManager(true);
+var resourcesUrl = "/iaas/api/machines/" + computeId;
+try {
+    aa.delete(resourcesUrl);
+    while (true) {
+        System.sleep(5000);
+        try {
+            var resources = aa.get(resourcesUrl);
+            computeStatus = resources.status;
+            if (computeStatus == "DELETE_SUCCESSFUL") { break; }
+            else if (computeStatus.indexOf("FAILED") > -1) { break; }
+        } catch (e) {
+            computeStatus = "DELETE_SUCCESSFUL";
+            break;
+        }
+    }
+} catch (e) {
+    computeStatus = "DELETE_SUCCESSFUL";
+}]]></script>
+    <in-binding>
+      <bind name="computeId" type="string"/>
+    </in-binding>
+    <out-binding>
+      <bind name="computeStatus" type="string"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.0" x="200.0"/>
+  </workflow-item>
+  <presentation/>
+</workflow>

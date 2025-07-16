@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getKubeAuth" result-type="Properties" api-version="6.0.0" id="0467425d-7994-4025-8ff7-7ee2e0aa6d36" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <param n="clusterId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[function getKubeAuth(input) {
+    System.log("Fetching KubeConfig for cluster ID: " + input);
+
+    var aa = System.getModule("com.ecs").AaManager(true);
+    var uri = "/cmx/api/resources/k8s/clusters/" + input + "/kube-config";
+    var kubeConfig = aa.getAsString(uri);
+
+    if (!kubeConfig) {
+        throw "Error: Failed to retrieve KubeConfig for cluster ID: " + input;
+    }
+
+    function extractValue(text, key) {
+        var regex = new RegExp(key + ":\\s*\"?([^\"\\n]+)\"?");
+        var match = regex.exec(text);
+        return match ? match[1].trim() : null;
+    }
+
+    // 수정된 Base64 디코딩 함수
+    function base64Decode(input) {
+        if (!input || typeof input !== 'string') {
+            return '';
+        }
+
+        input = input.replace(/-/g, '+').replace(/_/g, '/').replace(/\s/g, '');
+        while (input.length % 4 !== 0) {
+            input += '=';
+        }
+
+        var base64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+        var output = [];
+        var i = 0;
+
+        while (i < input.length) {
+            var c1 = input.charAt(i++);
+            var c2 = input.charAt(i++);
+            var c3 = input.charAt(i++);
+            var c4 = input.charAt(i++);
+
+            var enc1 = base64chars.indexOf(c1);
+            var enc2 = base64chars.indexOf(c2);
+            var enc3 = (c3 === '=') ? 0 : base64chars.indexOf(c3);
+            var enc4 = (c4 === '=') ? 0 : base64chars.indexOf(c4);
+
+            var chr1 = (enc1 << 2) | (enc2 >> 4);
+            var chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+            var chr3 = ((enc3 & 3) << 6) | enc4;
+
+            output.push(chr1);
+            if (c3 !== '=') output.push(chr2);
+            if (c4 !== '=') output.push(chr3);
+        }
+
+        var utf8String = "";
+        for (var j = 0; j < output.length; j++) {
+            utf8String += String.fromCharCode(output[j]);
+        }
+
+        return utf8String.replace(/\r?\n/g, '\n').replace(/(.{64})/g, "$1\n").trim();
+    }
+
+    function cleanUpPem(certData) {
+        return certData.replace(/[^\x20-\x7E\n]/g, '').replace(/\n+/g, '\n').trim();
+    }
+
+    var serverUrl = extractValue(kubeConfig, "server");
+    if (!serverUrl) {
+        throw "Error: Unable to extract Kubernetes API server URL.";
+    }
+
+    var clientCert = cleanUpPem(base64Decode(extractValue(kubeConfig, "client-certificate-data")));
+    var clientKey = cleanUpPem(base64Decode(extractValue(kubeConfig, "client-key-data")));
+    var caCert = cleanUpPem(base64Decode(extractValue(kubeConfig, "certificate-authority-data")));
+
+    return {
+        serverUrl: serverUrl,
+        clientCertificate: clientCert,
+        clientKey: clientKey,
+        caCertificate: caCert
+    };
+}
+
+var kubeAuth = getKubeAuth(clusterId);
+return kubeAuth;
+]]></script>
+</dunes-script-module>

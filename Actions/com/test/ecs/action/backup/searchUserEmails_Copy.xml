@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="searchUserEmails_Copy" result-type="Array/Properties" api-version="6.0.0" id="989ff9d3-44f5-4fdf-8395-2d59cca65125" version="0.0.0" allowed-operations="vfe" category-name="com.test.ecs.action.backup">
+  <param n="search" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!search || search.length < 2) { return []; }
+var aa = System.getModule("com.ecs").AaManager(true);
+var users = aa.post("/csp/gateway/am/api/v2/users/search", {
+    searchTerm: search
+}).results;
+var result = [];
+for each(var user in users) {
+    result.push({
+        label: user.firstName + " " + user.lastName,
+        value: user.email
+    })
+}
+return result;]]></script>
+</dunes-script-module>

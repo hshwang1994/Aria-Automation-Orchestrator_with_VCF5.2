@@ -1,0 +1,171 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item4" object-name="workflow:name=generic" id="1b4c416b-d1c2-4a39-aaa8-ff9a2459f102" version="0.0.0" api-version="6.0.0" allowed-operations="vfe" editor-version="2.0" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[SupervisorControlPlane and Deploy vSpherepods(ClovirONE)]]></display-name>
+  <description><![CDATA[SupervisorControlPlane에 접속후 vSpherepod 배포]]></description>
+  <position y="50.0" x="100.0"/>
+  <input>
+    <param name="inputProperties" type="Properties"/>
+    <param name="yamlContent" type="string"/>
+  </input>
+  <attrib name="supervisorIP" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="supervisorPwd" type="SecureString" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="vcsaHost" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="vcsaPassword" type="SecureString" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="cmdContent" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="message" type="string" read-only="false">
+    <value encoded="n"><![CDATA[pod가 정상 동작하지 않습니다]]></value>
+  </attrib>
+  <workflow-item name="item0" type="end" end-mode="0">
+    <in-binding/>
+    <position y="180.0" x="840.0"/>
+  </workflow-item>
+  <workflow-item name="item2" out-name="item0" catch-name="item5" throw-bind-name="message" type="task">
+    <display-name><![CDATA[SupervisorControlPlane_Login ]]></display-name>
+    <script encoded="false"><![CDATA[//
+// Action Name: DeployVspherePodOnSupervisor
+// Description: SupervisorControlPlane에 접속해 YAML 배포 후 파일 삭제 및 pod 상태 확인 (최대 20분)
+// 
+
+var sshSession = new SSHSession(supervisorIP, "root", 22);
+var customProperties = inputProperties.customProperties;
+var namespaceName = customProperties.namespaceName;
+
+
+try {
+    sshSession.connectWithPassword(supervisorPwd);
+
+    // here-document를 사용하여 원격에 YAML 파일 생성
+    var remoteFilePath = "/root/bootstrap.yaml";
+    var createFileCmd = "cat <<'EOF' > " + remoteFilePath + "\n" + yamlContent + "\nEOF";
+    var createFileOutput = sshSession.executeCommand(createFileCmd, true);
+
+    // kubectl apply를 통해 Deployment 생성/업데이트
+    var applyCmd = "kubectl apply -f " + remoteFilePath;
+    var applyOutput = sshSession.executeCommand(applyCmd, true);
+
+    // Pod 상태 확인 (최대 20분, 30초 간격)
+    var waitTimeSeconds = 20 * 60; // 1200초
+    var pollInterval = 30;         // 30초 간격
+    var elapsed = 0;
+    var podState = "";
+    
+    while (elapsed < waitTimeSeconds) {
+        var getPodCmd = "kubectl get pods -n " + namespaceName + " -l app=bootstrap -o jsonpath='{.items[0].status.phase}'";
+        podState = sshSession.executeCommand(getPodCmd, true).trim();
+        System.log("현재 pod 상태: " + podState);
+        
+        if (podState === "Running") {
+            break;
+        }
+        
+        // 30초 대기 (busy-wait)
+        var startTime = new Date().getTime();
+        while (new Date().getTime() < startTime + pollInterval * 1000) {
+            // 대기
+        }
+        elapsed += pollInterval;
+    }
+    
+    if (podState !== "Running") {
+        throw "20분 동안 pod가 Running 상태가 되지 않았습니다. 최종 상태: " + podState;
+    }
+    
+    // pod 상태가 Running임을 확인한 후 원격에서 YAML 파일 삭제
+    var rmCmd = "rm -f " + remoteFilePath;
+    var rmOutput = sshSession.executeCommand(rmCmd, true);
+
+    sshSession.disconnect();
+    
+    applyOutput;
+} catch (e) {
+    System.error("오류 발생: " + e);
+    try {
+        sshSession.disconnect();
+    } catch (ignore) {}
+    throw e;
+}]]></script>
+    <in-binding>
+      <bind name="supervisorIP" type="string" export-name="supervisorIP"/>
+      <bind name="supervisorPwd" type="SecureString" export-name="supervisorPwd"/>
+      <bind name="yamlContent" type="string" export-name="yamlContent"/>
+      <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="190.0" x="540.0"/>
+  </workflow-item>
+  <workflow-item name="item3" out-name="item2" type="task">
+    <display-name><![CDATA[SupervisorControlPlane_info]]></display-name>
+    <script encoded="false"><![CDATA[var vcsaUser = "root";
+var vcsaPort = 22;
+
+try {
+    var sshSession = new SSHSession(vcsaHost, vcsaUser, vcsaPort);
+    sshSession.connectWithPassword(vcsaPassword);
+    
+    var command = "shell /usr/lib/vmware-wcp/decryptK8Pwd.py";
+    var output = sshSession.executeCommand(command, true);
+    
+
+    var ipMatch = output.match(/IP:\s*(\S+)/);
+    var pwdMatch = output.match(/PWD:\s*(\S+)/);
+    if (ipMatch && pwdMatch) {
+        supervisorIP = ipMatch[1];
+        supervisorPwd = pwdMatch[1];
+    } else {
+        System.log("자격 증명을 추출하지 못했습니다. 출력 결과를 확인하세요.");
+    }
+    
+    sshSession.disconnect();
+} catch (e) {
+    System.log("오류 발생: " + e);
+}
+]]></script>
+    <in-binding>
+      <bind name="vcsaPassword" type="SecureString" export-name="vcsaPassword"/>
+      <bind name="vcsaHost" type="string" export-name="vcsaHost"/>
+    </in-binding>
+    <out-binding>
+      <bind name="supervisorIP" type="string" export-name="supervisorIP"/>
+      <bind name="supervisorPwd" type="SecureString" export-name="supervisorPwd"/>
+    </out-binding>
+    <description><![CDATA[Tanzu_SupervisorControlPlane_info_from_VCSA]]></description>
+    <position y="60.0" x="540.0"/>
+  </workflow-item>
+  <workflow-item name="item4" out-name="item3" type="task">
+    <display-name><![CDATA[VCSA_info]]></display-name>
+    <script encoded="false"><![CDATA[var customProperties = inputProperties.customProperties;
+var clusterid = customProperties.clusterid;
+var aa = System.getModule("com.ecs").AaManager(true);
+var endpointLink = aa.get("/cmx/api/resources/supervisor-clusters?$filter=id eq '" + clusterid + "'").content[0].endpointLink
+var endpointName = aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0];
+var vcConf = System.getModule("com.ecs").ConfManager().load("/Endpoint/" + endpointName);
+
+vcsaHost = vcConf.hostname;
+vcsaPassword = vcConf.password;]]></script>
+    <in-binding>
+      <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+    </in-binding>
+    <out-binding>
+      <bind name="vcsaHost" type="string" export-name="vcsaHost"/>
+      <bind name="vcsaPassword" type="SecureString" export-name="vcsaPassword"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.0" x="320.0"/>
+  </workflow-item>
+  <workflow-item name="item5" throw-bind-name="message" type="end" end-mode="1">
+    <in-binding/>
+    <position y="180.0" x="360.0"/>
+  </workflow-item>
+  <presentation/>
+</workflow>

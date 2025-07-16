@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:workflow xmlns:ns2="http://vmware.com/vco/workflow" root-name="item1" object-name="workflow:name=generic" id="6ce35348-0d51-4701-b2e2-96b188a9f933" editor-version="2.0" version="0.0.0" api-version="6.0.0" restartMode="1" resumeFromFailedMode="0">
+    <display-name>VM.PowerOn</display-name>
+    <position y="50.0" x="100.0"/>
+    <input>
+        <param name="_metadata_main_catalog" type="string"/>
+        <param name="_metadata_catalog" type="string"/>
+        <param name="resourceId" type="Array/string"/>
+        <param name="requestMessage" type="string"/>
+    </input>
+    <output/>
+    <workflow-item name="item0" type="end" end-mode="0" comparator="0">
+        <in-binding/>
+        <out-binding/>
+        <position y="70.0" x="340.0"/>
+    </workflow-item>
+    <workflow-item name="item1" out-name="item0" type="task" comparator="0">
+        <display-name>Scriptable task</display-name>
+        <script encoded="false">var aa = System.getModule("com.bvp").AaManager(true);
+
+var requestIds = [];
+for each(var id in resourceId){
+    var result = aa.post("/deployment/api/resources/"+id+"/requests",{
+        "actionId": "Cloud.vSphere.Machine.PowerOn",
+    });
+    requestIds.push(result.id);
+};
+
+var allSuccessful = false;
+var count = 0;
+while (!allSuccessful) {
+    allSuccessful = true; // 매 루프마다 초기화
+    var statuses = [];
+
+    for (var i = 0; i &lt; requestIds.length; i++) {
+        var requestId = requestIds[i];
+        var result = aa.get("/deployment/api/requests/" + requestId);
+        statuses.push(result.status);
+
+        if (result.status !== "SUCCESSFUL") {
+            allSuccessful = false;
+        }
+        if (result.status == "FAILED"){
+            throw "FAILED : " + result.details
+        }
+    }
+
+    count++;
+    if (count &gt; 10) {
+        throw "Waiting Time out"
+    }
+    // Optional: 너무 빠른 루프 방지
+    System.sleep(5000); // 5초 대기 (아래에 sleep 함수 있음)
+    
+}
+</script>
+        <in-binding>
+            <bind name="resourceId" type="Array/string" export-name="resourceId"/>
+        </in-binding>
+        <out-binding/>
+        <description>Simple task with custom script capability.</description>
+        <position y="70.0" x="200.0"/>
+    </workflow-item>
+</ns2:workflow>

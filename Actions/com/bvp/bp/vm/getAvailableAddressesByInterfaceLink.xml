@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getAvailableAddressesByInterfaceLink" result-type="Array/string" api-version="6.0.0" id="e5e9ea0e-4be0-41c6-9295-8048a3e34c0a" version="0.1.1" allowed-operations="vfe" category-name="com.bvp.bp.vm">
+  <description><![CDATA[Act:Change IP Address]]></description>
+  <param n="interfaceLink" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!interfaceLink) { throw "interfaceLink cannot be null"; }
+
+if (interfaceLink == "permanent") { return []; }
+var conv = System.getModule("com.bvp").Converter();
+var aa = System.getModule("com.bvp").AaManager(true);
+var subnetRanges = aa.getUerp("/provisioning/mgmt/subnet-range?$filter=subnetLink eq '" + aa.getUerp(interfaceLink).subnetLink + "'")
+var result = [];
+for each(var subnetRangeLink in subnetRanges.documentLinks) {
+    var subnetRange = subnetRanges.documents[subnetRangeLink];
+    var startIpNumeric = conv.ip.getNumeric(subnetRange.startIPAddress);
+    var endIpNumeric = conv.ip.getNumeric(subnetRange.endIPAddress);
+    var usedIpAddresses = aa.getUerp("/resources/ip-addresses?expand&$filter=(subnetRangeLink eq '" + subnetRangeLink + "') and (ipAddressStatus ne 'AVAILABLE')");
+    var used = [];
+    for each(var usedIpAddressLink in usedIpAddresses.documentLinks) {
+        used.push(conv.ip.getNumeric(usedIpAddresses.documents[usedIpAddressLink].ipAddress));
+    }
+    for (var ip = startIpNumeric; ip <= endIpNumeric; ip++) {
+        if (used.indexOf(ip) < 0) { result.push(conv.ip.getString(ip)); }
+    }
+}
+return result;]]></script>
+</dunes-script-module>

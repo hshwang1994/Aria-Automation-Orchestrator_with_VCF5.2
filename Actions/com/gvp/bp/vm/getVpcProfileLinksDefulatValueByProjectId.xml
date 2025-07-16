@@ -1,0 +1,34 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getVpcProfileLinksDefulatValueByProjectId" result-type="string" api-version="6.0.0" id="1bd928aa-56aa-4142-9e33-4f5d9dd1e35f" version="0.1.1" category-name="com.gvp.bp.vm">
+  <description><![CDATA[BP:Virtual Machine]]></description>
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!projectId) {
+    return null;
+    throw "projectId cannot be null";
+}
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var profiles = aa.getUerp(
+    "/provisioning/mgmt/network-profile?$filter="
+  + "(customProperties.vpcProjectId eq '" + projectId + "')"
+);
+
+var result = [];
+for each (var profileLink in profiles.documentLinks) {
+    var profile = profiles.documents[profileLink];
+    result.push({
+        label: profile.desc ? profile.desc : profile.name,
+        value: profileLink,
+    });
+}
+
+result.sort(function(a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});
+
+System.log("Network profiles for project " + projectId + ":\n" 
+    + JSON.stringify(result, null, 2));
+
+return result[1].value;
+]]></script>
+</dunes-script-module>

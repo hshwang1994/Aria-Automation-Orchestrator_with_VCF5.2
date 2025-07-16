@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getAvailableMachinesByLbName" result-type="Array/Properties" api-version="6.0.0" id="24253900-b371-48db-b58d-a1b60a5736c1" version="0.0.1" allowed-operations="vfe" category-name="com.bvp.bp.nlb">
+  <param n="lbName" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if(!lbName) { throw "lbName cannot be null"; }
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var result = [];
+for each(var lb in aa.get("/iaas/api/load-balancers?$filter=name eq '" + lbName + "'").content) {
+    if (lb.name == lbName && lb.customProperties.vpc !== undefined) {
+        for each(var vm in aa.get("/iaas/machines?$filter=customProperties.vpc eq '" + lb.customProperties.vpc + "'").content) {
+            result.push({
+                label: vm.name,
+                value: vm._links.self.href
+            });
+        }
+        break;
+    }
+}
+return result.sort(function (a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});]]></script>
+</dunes-script-module>

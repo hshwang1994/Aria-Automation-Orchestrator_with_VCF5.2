@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getVcsaHostnameByVpcProfileLink" result-type="string" api-version="6.0.0" id="1dd18461-67a1-4e74-a7e7-20172b465b50" version="0.0.0" category-name="com.gvp.bp.vm">
+  <param n="vpcProfileLink" t="string"/>
+  <script encoded="false"><![CDATA[if(!vpcProfileLink) { return null;}
+var aa = System.getModule("com.bvp").AaManager(true);
+
+// vpc가 위치한 region 링크 정보 가져오기 (UERP)
+var regionLink = aa.getUerp(vpcProfileLink).provisioningRegionLink;
+
+// region 이름 정보 가져오기 (UERP)
+var regionName = aa.getUerp(regionLink).regionName;
+
+// region ID 가져오기 (IAAS)
+var region = aa.get("/iaas/api/regions?$filter=name eq '" + regionName + "'").content[0];
+
+// vCenter 호스트 네임 가져오기
+var cloudAccountId = region.cloudAccountId;
+var vcsaHostName = aa.get("/iaas/api/cloud-accounts/" + cloudAccountId).cloudAccountProperties.hostName;
+
+return vcsaHostName;]]></script>
+</dunes-script-module>

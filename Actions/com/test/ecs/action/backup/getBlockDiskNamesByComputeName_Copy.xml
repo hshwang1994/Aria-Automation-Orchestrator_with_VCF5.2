@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getBlockDiskNamesByComputeName_Copy" result-type="Array/Properties" api-version="6.0.0" id="fffbaba1-e5ff-499c-926a-a72503f94033" version="0.0.0" allowed-operations="vfe" category-name="com.test.ecs.action.backup">
+  <param n="computeName" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.ecs").AaManager(true);
+var result = [];
+for each(var vm in aa.get("/deployment/api/resources?resourceTypes=Cloud.vSphere.Machine&search=" + computeName).content) {
+    if (vm.name == computeName) {
+        for each(var disk in vm.properties.storage.disks) {
+            if (disk.type == "HDD" && disk.independent == "true" && disk.diskFile.indexOf(computeName) < 0) {
+                var diskName = disk.diskFile.split("/")[1].split("-");
+                diskName.pop();
+                diskName = diskName.join("-");
+                var resource = aa.get("/deployment/api/resources?resourceTypes=Cloud.vSphere.Disk&search=" + diskName).content;
+                if (resource.length > 0) {
+                    resource = resource[0];
+                    result.push({
+                        label: resource.properties.displayName,
+                        value: diskName
+                    });
+                }
+            }
+        }
+        break
+    }
+}
+return result.sort(function (a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});
+]]></script>
+</dunes-script-module>

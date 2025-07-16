@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:workflow xmlns:ns2="http://vmware.com/vco/workflow" root-name="item1" object-name="workflow:name=generic" id="c02aa1b3-f612-4a47-a3e0-efdf4aaad5dd" editor-version="2.0" version="0.0.0" api-version="6.0.0" restartMode="1" resumeFromFailedMode="0">
+    <display-name>VSANFS.Attach</display-name>
+    <position y="50.0" x="100.0"/>
+    <input>
+        <param name="_metadata_main_catalog" type="string"/>
+        <param name="_metadata_catalog" type="string"/>
+        <param name="vmResourceId" type="string"/>
+        <param name="vsanfsResourceId" type="string"/>
+        <param name="mountPath" type="string"/>
+        <param name="requestMessage" type="string"/>
+    </input>
+    <output/>
+    <workflow-item name="item0" type="end" end-mode="0" comparator="0">
+        <in-binding/>
+        <out-binding/>
+        <position y="50.0" x="340.0"/>
+    </workflow-item>
+    <workflow-item name="item1" out-name="item0" type="task" comparator="0">
+        <display-name>Scriptable task</display-name>
+        <script encoded="false">var aa = System.getModule("com.bvp").AaManager(true);
+
+var vm = aa.get("/deployment/api/resources/" + vmResourceId);
+var vsanfs = aa.get("/deployment/api/resources/" + vsanfsResourceId); 
+
+var endpointId = vm.properties.endpointId;
+var endpointLink = "/resources/endpoints/" + endpointId;
+var endpointName = aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0];
+var vcConf = System.getModule("com.bvp").ConfManager().load("BVP/Endpoint/" + endpointName);
+var guestConf = System.getModule("com.bvp").ConfManager().load("GVP/GuestAccount");
+var conf = System.getModule("com.bvp").ConfManager().load("GVP/Endpoint/10.11.10.59")
+var rest = System.getModule("com.bvp").RestManager("https://" + conf.hostname, {
+    "Authorization": "Basic " + System.getModule("com.bvp").Converter().base64.encode(conf.username + ":" + conf.password)
+    });
+
+var data = rest.get("/vsan/fileshare/" + vsanfs.properties.fileShareUuid + "?hostname=" + vsanfs.properties.endpoint + "&amp;cluster_name=" + vsanfs.properties.endpointCluster)
+var execScripts = System.getModule("com.bvp").execScripts;
+var fstab = "echo '" + data.runtime.address + ":" + vsanfs.properties.pusedo + " " + mountPath + " nfs4  rw  0  0'" + " | sudo tee -a /etc/fstab" 
+var scripts = "sudo mkdir -p '" + mountPath + "'\n"
+scripts +=  fstab + " \n"
+scripts += "sudo mount " + mountPath +"\n"
+execScripts(vcConf.hostname, vcConf.username, vcConf.password, vm.properties.resourceName, guestConf.guest_lin_id, guestConf.guest_lin_pwd, scripts);
+
+if("attachedVm" in vsanfs.properties){
+    if(vsanfs.properties.attachedVm == null){
+        var vmIdArray = []
+    } else{
+        var vmIdArray = vsanfs.properties.attachedVm;
+    }
+    
+} else {
+    var vmIdArray = []
+}
+vmIdArray.push(vmResourceId);
+aa.post("/deployment/api/resources/" + vsanfsResourceId + "/requests",{
+    "actionId": "Custom.VSANFS.custom.attachedvmcontrol",
+    "inputs": {
+        "vms": vmIdArray
+    }
+})
+
+var machine = aa.get("/iaas/api/machines/" + vmResourceId)
+if("nfs" in  machine.customProperties){
+    if(machine.customProperties.nfs == "" || machine.customProperties.nfs == "[]"){
+        var result = []
+    } else{
+        var result = JSON.parse(machine.customProperties.nfs);
+    }
+} else {
+    var result = []
+}
+var mountInfo = {
+    "fstab": data.runtime.address + ":" + vsanfs.properties.pusedo + " " + mountPath + " nfs4  rw  0  0",
+    "mountPath": mountPath,
+    "size": vsanfs.properties.size,
+    "id": vsanfs.properties.fileShareUuid,
+    "volumeName": vsanfs.properties.name,
+    "pusedo": vsanfs.properties.pusedo
+};
+result.push(mountInfo);
+aa.patch("/iaas/api/machines/"+ vmResourceId,{
+    "customProperties": {
+        "nfs": JSON.stringify(result)
+    }
+})</script>
+        <in-binding>
+            <bind name="mountPath" type="string" export-name="mountPath"/>
+            <bind name="vmResourceId" type="string" export-name="vmResourceId"/>
+            <bind name="vsanfsResourceId" type="string" export-name="vsanfsResourceId"/>
+        </in-binding>
+        <out-binding/>
+        <description>Simple task with custom script capability.</description>
+        <position y="60.0" x="180.0"/>
+    </workflow-item>
+</ns2:workflow>

@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<config-element id="a0065acb-8cb2-499a-9707-86a496d2fb74" version="0.0.0" allowed-operations="vfe">
+  <display-name><![CDATA[vcsa Copy]]></display-name>
+  <atts>
+    <att name="hostname" type="string" read-only="false">
+      <value encoded="n"><![CDATA[vcsa.vcf.lab]]></value>
+    </att>
+    <att name="username" type="string" read-only="false">
+      <value encoded="n"><![CDATA[administrator@vsphere.local]]></value>
+    </att>
+    <att name="password" type="SecureString" read-only="false">
+      <value encoded="n"><![CDATA[__NULL__]]></value>
+    </att>
+  </atts>
+</config-element>

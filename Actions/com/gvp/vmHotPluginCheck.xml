@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="vmHotPluginCheck" result-type="Any" api-version="6.0.0" id="73dd6dcf-0b22-4721-9de4-cb527d596a37" version="0.0.0" category-name="com.gvp" memory-limit="512000000">
+  <description><![CDATA[PowerCLI Action]]></description>
+  <runtime><![CDATA[powercli:13-powershell-7.4]]></runtime>
+  <param n="vcHostname" t="string"><![CDATA[]]></param>
+  <param n="vcUsername" t="string"><![CDATA[]]></param>
+  <param n="vcPassword" t="SecureString"><![CDATA[]]></param>
+  <param n="vmName" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[function Handler($context, $inputs) {
+    $vcHostname = $inputs.vcHostname
+    $vcUsername = $inputs.vcUsername
+    $vcPassword = $inputs.vcPassword
+    $vmName = $inputs.vmName
+
+    Set-PowerCLIConfiguration -InvalidCertificateAction Ignore -Confirm:$false | Out-Null
+    Connect-VIServer $vcHostname -User $vcUsername -Password $vcPassword | Out-Null
+
+    $vm = Get-VM -Name "$vmName"
+    $vmView = Get-View $vm.Id
+    return "cpuHotPlugin."+$vmView.Config.CpuHotAddEnabled.toString() + ", " + "memoryHotPlugin." + $vmView.Config.MemoryHotAddEnabled.toString()
+}
+]]></script>
+</dunes-script-module>

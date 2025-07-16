@@ -1,0 +1,73 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="validationResourceBeforeDelete" result-type="string" api-version="6.0.0" id="32886742-2fa3-40ee-8dcd-b2f041f4fbdb" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <param n="resourceId" t="Array/string"><![CDATA[]]></param>
+  <param n="resourceType" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[// Type definition
+if(resourceType == "VM"){
+    resourceTypes = "Cloud.vSphere.Machine";
+} else if(resourceType == "Segment"){
+    resourceTypes = "Cloud.NSX.Network";
+} else if(resourceType == "AIP") {
+    resourceTypes = "Custom.AIP";
+} else if(resourceType == "Peering"){
+    resourceTypes = "Custom.Peering";
+} else if(resourceType == "VPC"){
+    resourceTypes = "Custom.VPC";
+}
+
+var aa = System.getModule("com.ecs").AaManager(true);
+var result = "";
+if(resourceType =="Cloud.vSphere.Machine"){
+    for each(var id in resourceId){
+        var machine = aa.get("/deployment/api/resources/" + id);
+        if(machine.properties.powerState == "ON"){
+            result += machine.properties.displayName + " ";
+        } 
+    }
+    if(result != ""){
+        return "VM: " + result + "의 전원이 켜있습니다. 전원 종료 후 삭제 바랍니다."
+    }
+}
+
+if(resourceType == "Cloud.NSX.Network"){
+    for each(var id in resourceId ){
+        var network =  aa.get("/deployment/api/resources/"+id);
+        var endpointId =  network.properties.endpointId;
+        var endpointLink = "/resources/endpoints/" + endpointId;
+        var endpointName = aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0];
+        var nsx = System.getModule("com.ecs").NsxManager(endpointName);
+        var ports = nsx.get("/policy/api/v1" + network.properties.path + "/ports").results;
+        if (ports.length != 0){
+            result += network.properties.displayName + " ";
+        }
+    }
+    if(result != ""){
+        return "Segment: " + result + "가 사용중입니다. 사용중인 VM 연결 해제 후 삭제 바랍니다."
+    }
+}
+
+if(resourceType == "Custom.AIP"){
+    for each(var id in resourceId){
+        var aip = aa.get("/deployment/api/resources/" + id);
+        if(aip.properties.compute != "NONE"){
+            result += aip.properties.displayName + " ";
+        }
+    }
+    if(result != ""){
+        return "AIP: " + result + "가 사용중입니다."
+    }
+}
+
+if(resourceType == "Custom.VPC"){
+    for each(var id in resourceId){
+        var vpc = aa.get("/deployment/api/resources/" + id);
+        var networkProfile = aa.get(vpc.properties.vpcProfile);
+        if(networkProfile.subnetLinks.length > 1){
+            result += vpc.properties.displayName + " ";
+        }
+    }
+    if(result !=""){
+        return "VPC: " + result + "가 사용중입니다."
+    }
+}]]></script>
+</dunes-script-module>

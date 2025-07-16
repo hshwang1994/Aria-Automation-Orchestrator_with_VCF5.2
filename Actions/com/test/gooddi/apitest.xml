@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="apitest" result-type="string" api-version="6.0.0" id="64e2ac57-e501-4d91-b476-0fb21ad3bbeb" version="0.0.0" category-name="com.test.gooddi">
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.gvp").AaManager(true);
+//return aa.get("/provisioning/config/toggles/4fdd28f4-9fe7-414b-990e-7c03cb10720f-enable.custom.naming")
+//System.log(JSON.stringify(aa.get("/iaas/api/naming/8c7a58d6-b700-45b7-9d95-f7871a47217d?apiVersion=2025-04-04")))
+var d = new Date;
+d.setTime(System.getCurrentTime());
+return System.formatDate(d,'yyyy-MM-dd');
+//return aa.get("/provisioning/naming/8c7a58d6-b700-45b7-9d95-f7871a47217d")
+//return aa.get("/provisioning/naming");
+
+]]></script>
+</dunes-script-module>

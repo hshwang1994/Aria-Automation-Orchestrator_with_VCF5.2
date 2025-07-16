@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="vpcfwUpdate" result-type="Properties" api-version="6.0.0" id="cc28da66-8cf0-4f12-b7ae-c59bfb5c8caf" version="0.0.0" category-name="com.gvp.bp.vpcfw">
+  <param n="endpointLink" t="string"><![CDATA[]]></param>
+  <param n="securityPolicyPath" t="string"><![CDATA[]]></param>
+  <param n="rules" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var conv = System.getModule("com.bvp").Converter();
+var aa = System.getModule("com.bvp").AaManager(true);
+var nsx = System.getModule("com.bvp").NsxManager(aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0]);
+var inputRules = JSON.parse(rules);
+
+var data = nsx.patch("/policy/api/v1" + securityPolicyPath, {
+    "rules": inputRules,
+    "overridden": true
+})
+
+
+return {};]]></script>
+</dunes-script-module>

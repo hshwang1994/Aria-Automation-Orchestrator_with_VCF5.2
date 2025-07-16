@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getWorkflowExecutionOutputs_Copy" result-type="Array/Properties" api-version="6.0.0" id="4fdbd277-4712-45dd-bc64-2d5a98683138" version="0.0.0" allowed-operations="vfe" category-name="com.test.ecs.action.backup">
+  <param n="executionId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var result = [];
+if (Server.getWorkflowTokenState(executionId) == "completed") {
+    var aa = System.getModule("com.ecs").AaManager(true);
+    var catalog = aa.get("/vco/api/catalog/System/WorkflowExecution/" + executionId);
+    for each(var attribute in catalog.attributes) {
+        if (attribute.name == "workflowId") {
+            for each(var output in aa.get("/vco/api/workflows/" + attribute.value + "/executions/" + executionId)["output-parameters"]) {
+                if (output.name[0] != '_') {
+                    result.push({
+                        label: output.name,
+                        value: output.value[output.type].value
+                    });
+                }
+            }
+            break;
+        }
+    }
+}
+return result;]]></script>
+</dunes-script-module>

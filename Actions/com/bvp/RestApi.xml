@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="RestApi" result-type="Properties" api-version="6.0.0" id="b9b1bff8-afb6-4c8a-b48d-80fd11dc3889" version="0.0.1" allowed-operations="vfe" category-name="com.bvp">
+  <script encoded="false"><![CDATA[return {
+    _pyUrl: System.getModule("com.bvp").execPyUrl,
+    get: function(url, headers) {
+        if (!headers) { headers = {}; }
+        return this._pyUrl("GET", url, null, headers);
+    },
+    post: function(url, data, headers) {
+        if (!headers) { headers = {}; }
+        if (!data) { data = {}; }
+        if (data === undefined || data == null) { data = {}; }
+        return this._pyUrl("POST", url, data, headers);
+    },
+    put: function(url, data, headers) {
+        if (!headers) { headers = {}; }
+        if (!data) { data = {}; }
+        return this._pyUrl("PUT", url, data, headers);
+    },
+    patch: function(url, data, headers) {
+        if (!headers) { headers = {}; }
+        if (!data) { data = {}; }
+        return this._pyUrl("PATCH", url, data, headers);
+    },
+    delete: function(url, headers) {
+        if (!headers) { headers = {}; }
+        return this._pyUrl("DELETE", url, null, headers);
+    }
+}]]></script>
+</dunes-script-module>

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="aviControllerLogin" result-type="string" api-version="6.0.0" id="33760594-1044-49f8-8ba1-4890fa86635c" version="0.0.0" category-name="com.gvp.bp.avi">
+  <param n="endpoint" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var avi = System.getModule("com.bvp").ConfManager().load("GVP/Endpoint/" + endpoint);
+
+return System.getModule("com.gvp.bp.avi").getLoginCookiesByAccountInfo( avi.username, avi.password, avi.hostname);]]></script>
+</dunes-script-module>

@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getProfileIdByProfileLink_Copy" result-type="string" api-version="6.0.0" id="1c673002-8ed0-4f1b-9428-ba1c43dd98de" version="0.1.0" allowed-operations="vfe" category-name="com.test.ecs.action.backup">
+  <description><![CDATA[BP:Segment]]></description>
+  <param n="profileLink" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[return profileLink.split("/network-profiles/")[1];]]></script>
+</dunes-script-module>

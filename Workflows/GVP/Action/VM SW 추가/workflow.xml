@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:workflow xmlns:ns2="http://vmware.com/vco/workflow" root-name="item1" object-name="workflow:name=generic" id="3f8918fd-6bb6-4dc9-a803-8ba2fd9d89d4" editor-version="2.0" version="0.0.0" api-version="6.0.0" restartMode="1" resumeFromFailedMode="0">
+    <display-name>VM SW 추가</display-name>
+    <position y="50.0" x="100.0"/>
+    <input>
+        <param name="_metadata_main_catalog" type="string"/>
+        <param name="_metadata_catalog" type="string"/>
+        <param name="resourceId" type="string"/>
+        <param name="applications" type="Array/CompositeType(package:string,parameters:string):packages"/>
+        <param name="requestMessage" type="string"/>
+    </input>
+    <output/>
+    <workflow-item name="item0" type="end" end-mode="0" comparator="0">
+        <in-binding/>
+        <out-binding/>
+        <position y="50.0" x="340.0"/>
+    </workflow-item>
+    <workflow-item name="item1" out-name="item0" type="task" comparator="0">
+        <display-name>Scriptable task</display-name>
+        <script encoded="false">var aa = System.getModule("com.bvp").AaManager(true);
+var machine = aa.get("/iaas/api/machines/" + resourceId);
+var packages = machine.customProperties.hasOwnProperty("packages")?JSON.parse(machine.customProperties.packages):[];
+var endpointId = machine.cloudAccountIds[0];
+var endpointLink = "/resources/endpoints/" + endpointId;
+var endpointName = aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0];
+var vcConf = System.getModule("com.bvp").ConfManager().load("/BVP/Endpoint/" + endpointName);
+var guestConf = System.getModule("com.bvp").ConfManager().load("/GVP/GuestAccount");
+var repoUrl = System.getModule("com.bvp").ConfManager().load("/GVP/RepoInfo").repoServer;
+var execScripts = System.getModule("com.bvp").execScripts;
+
+var installScript = machine.customProperties.osType=="LINUX"?'export repo_server=\"' + repoUrl + '\"\n':"";
+
+for (var i in applications){
+    applications[i].parameters = JSON.parse(applications[i].parameters);
+}
+
+for each(var app in applications){
+    /*
+    if(packages.some(function(item) {return item.package === app.package})){
+        throw app.package + " is already installed";
+    }
+    */
+
+    if(machine.customProperties.osType=="LINUX"){
+        var appParamString = "";
+        if(app.parameters != null || app.parameters != []){
+            for each(var param in app.parameters){
+                System.log("Apply Parameters: " + param.key + "=" + param.value )
+                //installScript += "export " + param.key + "=\"" + param.value + "\"\n";
+                appParamString += param.key + "=" + param.value + " ";
+            }
+        }
+
+        
+        installScript += 'sudo mkdir -p /tmp/' + app.package + '\n';
+        installScript += 'sudo wget ' + repoUrl + '/app/linux/' + app.package + '/' + app.package + '.zip -P /tmp/' + app.package + '/\n';
+        installScript += 'if [ $? -ne 0 ]; then\n';
+        installScript += '  echo "Download failed for ' + app.package + '. Exiting."\n';
+        installScript += '  exit 1\n';
+        installScript += 'fi\n\n';
+
+        installScript += 'sudo unzip /tmp/' + app.package + '/' + app.package + '.zip -d /tmp/'+app.package+'\n';
+        installScript += 'sudo chmod 755 /tmp/' + app.package + '/main.sh\n';
+
+        if(appParamString != ""){
+            installScript += 'sudo env ' + appParamString + ' /tmp/' + app.package + '/main.sh  \n';
+        } else {
+            installScript += 'sudo /tmp/' + app.package + '/main.sh\n';
+        }
+
+        installScript += 'if [ $? -ne 0 ]; then\n';
+        installScript += '  echo "Installation failed for ' + app.package + '. Exiting."\n';
+        installScript += '  exit 1\n';
+        installScript += 'fi\n\n';
+
+        installScript += 'sudo rm -rf /tmp/' + app.package + '\n\n';
+    }
+}
+
+try {
+    var result = execScripts(vcConf.hostname, vcConf.username, vcConf.password, machine.name, guestConf.guest_lin_id, guestConf.guest_lin_pwd, installScript);
+} catch (e) {
+    System.log("app error : " + e);
+}
+
+
+if(packages == []) {
+    packages = applications;
+    aa.patch("/iaas/api/machines/" + resourceId, {
+        "customProperties": {
+            "packages": JSON.stringify(packages)
+        }
+    })
+} else {
+    for (var i in applications){
+        packages.push(applications[i]);
+    }
+    aa.patch("/iaas/api/machines/" + resourceId, {
+        "customProperties": {
+            "packages": JSON.stringify(packages)
+        }
+    })
+}
+
+
+
+System.log(result);</script>
+        <in-binding>
+            <bind name="resourceId" type="string" export-name="resourceId"/>
+            <bind name="applications" type="Array/CompositeType(package:string,parameters:string):packages" export-name="applications"/>
+        </in-binding>
+        <out-binding/>
+        <description>Simple task with custom script capability.</description>
+        <position y="70.0" x="160.0"/>
+    </workflow-item>
+</ns2:workflow>

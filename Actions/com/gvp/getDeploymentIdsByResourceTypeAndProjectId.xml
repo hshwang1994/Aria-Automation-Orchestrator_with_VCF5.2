@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getDeploymentIdsByResourceTypeAndProjectId" result-type="Array/Properties" api-version="6.0.0" id="8d3edaf0-bb97-4fc4-93b5-3809d4d17f3d" version="0.0.0" category-name="com.gvp">
+  <description><![CDATA[Resource.Delete Catalog]]></description>
+  <param n="resourceType" t="string"><![CDATA[]]></param>
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.bvp").AaManager(true);
+if(resourceType == null || resourceType == "" || projectId == null || projectId == ""){
+    return null;
+}
+var result = [];
+if(resourceType == "Cloud.vSphere.Machine"){
+    var resources = aa.get("/deployment/api/resources?projects=" + projectId + "&resourceTypes=" + resourceType).content;
+    for each(var resource in resources){
+        result.push({
+            label: resource.properties.displayName,
+            value: resource.deploymentId
+        })
+    }
+}
+
+if(resourceType == "Cloud.NSX.Network"){
+    var resources = aa.get("/deployment/api/resources?projects=" + projectId + "&resourceTypes=" + resourceType).content;
+}
+
+
+return result.sort(function (a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});]]></script>
+</dunes-script-module>

@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getVpcProjectDomainByProfileLink" result-type="string" api-version="6.0.0" id="d309f61e-ada0-446f-a341-072f9cf95dc7" version="0.1.1" allowed-operations="vfe" category-name="com.bvp.bp.nfs">
+  <description><![CDATA[BP:Virtual Machine]]></description>
+  <param n="profileLink" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!profileLink) { throw "profileLink cannot be null"; }
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var profile = aa.getUerp(profileLink);
+return profile.customProperties.vpcProjectDomain ? profile.customProperties.vpcProjectDomain : profile.name;]]></script>
+</dunes-script-module>

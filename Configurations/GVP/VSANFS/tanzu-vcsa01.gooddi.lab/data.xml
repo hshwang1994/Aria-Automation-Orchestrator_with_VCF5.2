@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<config-element id="c2bf4c4e-5afc-4387-9fa5-351f4f59c72c" version="0.0.0">
+  <display-name><![CDATA[data]]></display-name>
+  <atts>
+    <att name="hostname" type="string" read-only="false">
+      <value encoded="n"><![CDATA[tanzu-vcsa01.gooddi.lab]]></value>
+    </att>
+    <att name="username" type="string" read-only="false">
+      <value encoded="n"><![CDATA[administrator@vsphere.local]]></value>
+    </att>
+    <att name="password" type="SecureString" read-only="false">
+      <value encoded="n"><![CDATA[__NULL__]]></value>
+    </att>
+    <att name="cluster" type="Array/string" read-only="false">
+      <value encoded="n"><![CDATA[[15:string#tanzu-cl]]]></value>
+    </att>
+  </atts>
+</config-element>

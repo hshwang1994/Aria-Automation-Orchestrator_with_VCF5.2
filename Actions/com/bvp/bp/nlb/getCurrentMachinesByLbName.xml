@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getCurrentMachinesByLbName" result-type="Array/string" api-version="6.0.0" id="95ab71a9-d154-4115-8d64-6403cc837e95" version="0.0.1" allowed-operations="vfe" category-name="com.bvp.bp.nlb">
+  <param n="lbName" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if(!lbName) { throw "lbName cannot be null"; }
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var result = [];
+for each(var lb in aa.get("/iaas/api/load-balancers?$filter=name eq '" + lbName + "'").content) {
+    if (lb.name == lbName && lb.customProperties.vpc !== undefined && lb._links["load-balancer-targets"] !== undefined) {
+        for each(var target in lb._links["load-balancer-targets"].hrefs) {
+            result.push(target);
+        }
+        break;
+    }
+}
+return result;]]></script>
+</dunes-script-module>

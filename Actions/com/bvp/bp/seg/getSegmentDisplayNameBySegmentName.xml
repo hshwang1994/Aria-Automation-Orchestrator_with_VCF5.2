@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getSegmentDisplayNameBySegmentName" result-type="string" api-version="6.0.0" id="ef3bf8c6-44f6-4411-ab9b-03341dc4bb62" version="0.1.1" allowed-operations="vfe" category-name="com.bvp.bp.seg">
+  <description><![CDATA[Act:Change Segment Display Name]]></description>
+  <param n="deploymentId" t="string"><![CDATA[]]></param>
+  <param n="segmentName" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.bvp").AaManager(true);
+for each(var content in aa.get("/deployment/api/deployments/" + deploymentId + "/resources?resourceTypes=Cloud.NSX.Network").content) {
+    if (content.properties.name == segmentName) {
+        return content.properties.displayName;
+    }
+}
+throw "could not find name";]]></script>
+</dunes-script-module>

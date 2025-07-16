@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="attachAccessIp" result-type="string" api-version="6.0.0" id="a9acc075-ab93-44ef-a8fa-2f60e86c7167" version="0.0.1" category-name="com.gvp.bp.aip">
+  <param n="interfaceLink" t="string"><![CDATA[]]></param>
+  <param n="accessIpId" t="string"><![CDATA[]]></param>
+  <param n="destinationIp" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[
+if (!interfaceLink) throw "interfaceLink cannot be null";
+if (!accessIpId)    throw "accessIpId cannot be null";
+if (!destinationIp)    throw "resourceId cannot be null";
+
+var aa    = System.getModule("com.bvp").AaManager(true);
+var iface = aa.getUerp(interfaceLink);
+
+// subnetLink 추출 (VM vs LB 분기)
+var subnetLink = 
+      iface.subnetLink                                      // VM NIC
+   || (Array.isArray(iface.subnetLinks) && iface.subnetLinks[0]);  // LB 서브넷 배열의 첫 번째
+if (!subnetLink) throw "subnetLink not found";
+
+var subnet           = aa.getUerp(subnetLink);
+var vpcTier1Path     = subnet.customProperties.vpcManagedTier1Path;
+if (!vpcTier1Path) throw "vpcManagedTier1Path not found";
+
+//var accessIp    = aa.get("/deployment/api/resources/" + resourceId);
+//var destination = accessIp.properties.address;
+var destination = destinationIp;
+if (!destination) throw "destination IP not found";
+
+var translated = iface.address;
+if (!translated) throw "translated IP not found";
+
+var endpoint = aa.getUerp(subnet.endpointLink);
+var host     = endpoint.endpointProperties.hostName.split(".")[0];
+var nsx      = System.getModule("com.bvp").NsxManager(host);
+
+// NAT 룰 생성/업데이트
+nsx.put(
+  "/policy/api/v1" + vpcTier1Path + "/nat/USER/nat-rules/" + accessIpId,
+  {
+    display_name:        accessIpId,
+    action:              "DNAT",
+    destination_network: destination,
+    translated_network:  translated,
+    sequence_number:     10,
+    enabled:             true,
+    logging:             false,
+    firewall_match:      "MATCH_EXTERNAL_ADDRESS"
+  }
+);
+
+return translated;
+]]></script>
+</dunes-script-module>

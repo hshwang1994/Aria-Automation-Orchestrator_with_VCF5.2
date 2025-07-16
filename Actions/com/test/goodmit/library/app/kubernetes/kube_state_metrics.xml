@@ -1,0 +1,254 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="kube_state_metrics" result-type="string" api-version="6.0.0" id="6ce94e40-1f70-4edb-928b-a508c9f6b294" version="0.0.5" allowed-operations="vfe" category-name="com.test.goodmit.library.app.kubernetes">
+  <param n="namespaceName" t="string"><![CDATA[]]></param>
+  <param n="version" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[// Deployment의 이름은 bootstrap이여아먄 합니다
+// namespace는 Poropertise에서 불러옵니다
+
+//https://github.com/kubernetes/kube-state-metrics/tree/main
+// examples/standard 디렉터리 참고
+// Kubernetes Version에 따른 호환성 검토 필요
+// "app.kubernetes.io/version: 2.14.0" 부분 Version에 따라서 변경 필요 
+
+
+function generateYaml(namespaceName, version) {
+   var yamlContent =
+    "apiVersion: rbac.authorization.k8s.io/v1\n" +
+    "kind: ClusterRoleBinding\n" +
+    "metadata:\n" +
+    "  labels:\n" +
+    "    app.kubernetes.io/component: exporter\n" +
+    "    app.kubernetes.io/name: kube-state-metrics\n" +
+    "    app.kubernetes.io/version: " + version + "\n" +
+    "  name: kube-state-metrics\n" +
+    "roleRef:\n" +
+    "  apiGroup: rbac.authorization.k8s.io\n" +
+    "  kind: ClusterRole\n" +
+    "  name: kube-state-metrics\n" +
+    "subjects:\n" +
+    "- kind: ServiceAccount\n" +
+    "  name: kube-state-metrics\n" +
+    "  namespace: " + namespaceName + "\n" +
+    "---\n" +
+    "apiVersion: rbac.authorization.k8s.io/v1\n" +
+    "kind: ClusterRole\n" +
+    "metadata:\n" +
+    "  labels:\n" +
+    "    app.kubernetes.io/component: exporter\n" +
+    "    app.kubernetes.io/name: kube-state-metrics\n" +
+    "    app.kubernetes.io/version: " + version + "\n" +
+    "  name: kube-state-metrics\n" +
+    "rules:\n" +
+    "- apiGroups:\n" +
+    "  - \"\"\n" +
+    "  resources:\n" +
+    "  - configmaps\n" +
+    "  - secrets\n" +
+    "  - nodes\n" +
+    "  - pods\n" +
+    "  - services\n" +
+    "  - serviceaccounts\n" +
+    "  - resourcequotas\n" +
+    "  - replicationcontrollers\n" +
+    "  - limitranges\n" +
+    "  - persistentvolumeclaims\n" +
+    "  - persistentvolumes\n" +
+    "  - namespaces\n" +
+    "  - endpoints\n" +
+    "  verbs:\n" +
+    "  - list\n" +
+    "  - watch\n" +
+    "- apiGroups:\n" +
+    "  - apps\n" +
+    "  resources:\n" +
+    "  - statefulsets\n" +
+    "  - daemonsets\n" +
+    "  - deployments\n" +
+    "  - replicasets\n" +
+    "  verbs:\n" +
+    "  - list\n" +
+    "  - watch\n" +
+    "- apiGroups:\n" +
+    "  - batch\n" +
+    "  resources:\n" +
+    "  - cronjobs\n" +
+    "  - jobs\n" +
+    "  verbs:\n" +
+    "  - list\n" +
+    "  - watch\n" +
+    "- apiGroups:\n" +
+    "  - autoscaling\n" +
+    "  resources:\n" +
+    "  - horizontalpodautoscalers\n" +
+    "  verbs:\n" +
+    "  - list\n" +
+    "  - watch\n" +
+    "- apiGroups:\n" +
+    "  - authentication.k8s.io\n" +
+    "  resources:\n" +
+    "  - tokenreviews\n" +
+    "  verbs:\n" +
+    "  - create\n" +
+    "- apiGroups:\n" +
+    "  - authorization.k8s.io\n" +
+    "  resources:\n" +
+    "  - subjectaccessreviews\n" +
+    "  verbs:\n" +
+    "  - create\n" +
+    "- apiGroups:\n" +
+    "  - policy\n" +
+    "  resources:\n" +
+    "  - poddisruptionbudgets\n" +
+    "  verbs:\n" +
+    "  - list\n" +
+    "  - watch\n" +
+    "- apiGroups:\n" +
+    "  - certificates.k8s.io\n" +
+    "  resources:\n" +
+    "  - certificatesigningrequests\n" +
+    "  verbs:\n" +
+    "  - list\n" +
+    "  - watch\n" +
+    "- apiGroups:\n" +
+    "  - discovery.k8s.io\n" +
+    "  resources:\n" +
+    "  - endpointslices\n" +
+    "  verbs:\n" +
+    "  - list\n" +
+    "  - watch\n" +
+    "- apiGroups:\n" +
+    "  - storage.k8s.io\n" +
+    "  resources:\n" +
+    "  - storageclasses\n" +
+    "  - volumeattachments\n" +
+    "  verbs:\n" +
+    "  - list\n" +
+    "  - watch\n" +
+    "- apiGroups:\n" +
+    "  - admissionregistration.k8s.io\n" +
+    "  resources:\n" +
+    "  - mutatingwebhookconfigurations\n" +
+    "  - validatingwebhookconfigurations\n" +
+    "  verbs:\n" +
+    "  - list\n" +
+    "  - watch\n" +
+    "- apiGroups:\n" +
+    "  - networking.k8s.io\n" +
+    "  resources:\n" +
+    "  - networkpolicies\n" +
+    "  - ingressclasses\n" +
+    "  - ingresses\n" +
+    "  verbs:\n" +
+    "  - list\n" +
+    "  - watch\n" +
+    "- apiGroups:\n" +
+    "  - coordination.k8s.io\n" +
+    "  resources:\n" +
+    "  - leases\n" +
+    "  verbs:\n" +
+    "  - list\n" +
+    "  - watch\n" +
+    "- apiGroups:\n" +
+    "  - rbac.authorization.k8s.io\n" +
+    "  resources:\n" +
+    "  - clusterrolebindings\n" +
+    "  - clusterroles\n" +
+    "  - rolebindings\n" +
+    "  - roles\n" +
+    "  verbs:\n" +
+    "  - list\n" +
+    "  - watch\n";
+    "---\n" +
+    "apiVersion: v1\n" +
+    "automountServiceAccountToken: false\n" +
+    "kind: ServiceAccount\n" +
+    "metadata:\n" +
+    "  labels:\n" +
+    "    app.kubernetes.io/component: exporter\n" +
+    "    app.kubernetes.io/name: kube-state-metrics\n" +
+    "    app.kubernetes.io/version: " + version + "\n" +
+    "  name: kube-state-metrics\n" +
+    "  namespace: " + namespaceName + "\n" +
+    "---\n" +
+    "apiVersion: apps/v1\n" +
+    "kind: Deployment\n" +
+    "metadata:\n" +
+    "  labels:\n" +
+    "    app.kubernetes.io/component: exporter\n" +
+    "    app.kubernetes.io/name: kube-state-metrics\n" +
+    "    app.kubernetes.io/version: " + version + "\n" +
+    "  name: kube-state-metrics\n" +
+    "  namespace: " + namespaceName + "\n" +
+    "spec:\n" +
+    "  replicas: 1\n" +
+    "  selector:\n" +
+    "    matchLabels:\n" +
+    "      app.kubernetes.io/name: kube-state-metrics\n" +
+    "  template:\n" +
+    "    metadata:\n" +
+    "      labels:\n" +
+    "        app.kubernetes.io/component: exporter\n" +
+    "        app.kubernetes.io/name: kube-state-metrics\n" +
+    "        app.kubernetes.io/version: " + version + "\n" +
+    "    spec:\n" +
+    "      automountServiceAccountToken: true\n" +
+    "      containers:\n" +
+    "      - image: harbor.oper.cloud.vcf.lab/tanzu-package/kube-state-metrics:v" + version + "\n" +
+    "        livenessProbe:\n" +
+    "          httpGet:\n" +
+    "            path: /livez\n" +
+    "            port: http-metrics\n" +
+    "          initialDelaySeconds: 5\n" +
+    "          timeoutSeconds: 5\n" +
+    "        name: kube-state-metrics\n" +
+    "        ports:\n" +
+    "        - containerPort: 8080\n" +
+    "          name: http-metrics\n" +
+    "        - containerPort: 8081\n" +
+    "          name: telemetry\n" +
+    "        readinessProbe:\n" +
+    "          httpGet:\n" +
+    "            path: /readyz\n" +
+    "            port: telemetry\n" +
+    "          initialDelaySeconds: 5\n" +
+    "          timeoutSeconds: 5\n" +
+    "        securityContext:\n" +
+    "          allowPrivilegeEscalation: false\n" +
+    "          capabilities:\n" +
+    "            drop:\n" +
+    "            - ALL\n" +
+    "          readOnlyRootFilesystem: true\n" +
+    "          runAsNonRoot: true\n" +
+    "          runAsUser: 65534\n" +
+    "          seccompProfile:\n" +
+    "            type: RuntimeDefault\n" +
+    "      nodeSelector:\n" +
+    "        kubernetes.io/os: linux\n" +
+    "      serviceAccountName: kube-state-metrics\n" +
+    "---\n" +
+    "apiVersion: v1\n" +
+    "kind: Service\n" +
+    "metadata:\n" +
+    "  labels:\n" +
+    "    app.kubernetes.io/component: exporter\n" +
+    "    app.kubernetes.io/name: kube-state-metrics\n" +
+    "    app.kubernetes.io/version: " + version + "\n" +
+    "  name: kube-state-metrics\n" +
+    "  namespace: " + namespaceName + "\n" +
+    "spec:\n" +
+    "  clusterIP: None\n" +
+    "  ports:\n" +
+    "  - name: http-metrics\n" +
+    "    port: 8080\n" +
+    "    targetPort: http-metrics\n" +
+    "  - name: telemetry\n" +
+    "    port: 8081\n" +
+    "    targetPort: telemetry\n" +
+    "  selector:\n" +
+    "    app.kubernetes.io/name: kube-state-metrics\n" +
+
+    return yamlContent;
+}
+
+return generateYaml(namespaceName, version)]]></script>
+</dunes-script-module>

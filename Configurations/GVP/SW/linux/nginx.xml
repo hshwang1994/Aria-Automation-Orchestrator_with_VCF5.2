@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<config-element id="ee26ba53-046f-4552-8532-9b77b432f851" version="0.1.8">
+  <display-name><![CDATA[nginx]]></display-name>
+  <atts>
+    <att name="web_ip" type="string" read-only="false">
+      <value encoded="n"><![CDATA[]]></value>
+    </att>
+  </atts>
+</config-element>

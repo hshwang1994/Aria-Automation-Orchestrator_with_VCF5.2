@@ -1,0 +1,72 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getClusterTotalMemByProviderIdAndClusterPlaneName" result-type="string" api-version="6.0.0" id="9ef148db-01ee-4567-a181-92751b035d2e" version="0.0.0" category-name="com.gvp.bp.tkgs">
+  <param n="providerId" t="string"><![CDATA[]]></param>
+  <param n="clusterplan" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!providerId || !clusterplan) {
+    return "";
+}
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var resp = aa.get("/cmx/api/resources/cluster-plans");
+var plans = resp.content || [];
+var controlPlaneCount, controlPlaneClass, workerCount, workerClass;
+
+for (var i = 0; i < plans.length; i++) {
+    var plan = plans[i];
+    if (plan.cloudAccountSelfLinkId === providerId && plan.name === clusterplan) {
+        var topo = plan.definition.spec.topology;
+        controlPlaneCount = topo.controlPlane.count;
+        controlPlaneClass = topo.controlPlane["class"];
+        workerCount = topo.workers.count;
+        workerClass = topo.workers["class"];
+        break;
+    }
+}
+
+// vCenter API (vCenter API 통신을 할때 Seesion ID로 하기 때문에 한번 변환 해야하 함)
+var endpointLink = "/resources/endpoints/" + providerId;
+var endpointName = aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0];
+var vcConf = System.getModule("com.bvp").ConfManager().load("BVP/Endpoint/" + endpointName);
+var credentials = vcConf.username + ":" + vcConf.password;
+var encodedCredentials = System.getModule("com.gvp").base64Encode(credentials);
+
+try {
+    var rest = System.getModule("com.bvp").RestManager("https://" + vcConf.hostname, {
+        "Authorization": "Basic " + encodedCredentials
+    });
+    var sessionToken = rest.post("/api/session").trim();
+} catch (e) {
+    System.error("Failed to create session: " + e);
+    return "";
+}
+
+try {
+    var restWithToken = System.getModule("com.bvp").RestManager("https://" + vcConf.hostname, {
+        "vmware-api-session-id": sessionToken
+    });
+
+    // Control Plane VM Class
+    var cpvmclass = restWithToken.get("/api/vcenter/namespace-management/virtual-machine-classes/" + controlPlaneClass);
+    var cpnumCPUs = cpvmclass.config_spec.numCPUs;
+    var cpmemoryMB = cpvmclass.config_spec.memoryMB;
+    var cpmemoryGB = cpmemoryMB / 1024;
+    var cproundedMemoryGB = Math.round(cpmemoryGB * 10) / 10;
+
+    // Worker VM Class
+    var wkvmclass = restWithToken.get("/api/vcenter/namespace-management/virtual-machine-classes/" + workerClass);
+    var wknumCPUs = wkvmclass.config_spec.numCPUs;
+    var wkmemoryMB = wkvmclass.config_spec.memoryMB;
+    var wkmemoryGB = wkmemoryMB / 1024;
+    var wkroundedMemoryGB = Math.round(wkmemoryGB * 10) / 10;
+
+} catch (e) {
+    System.error("Failed to get VM class: " + e);
+    return "";
+}
+
+
+var totalcpu = controlPlaneCount * cpnumCPUs + workerCount * wknumCPUs;
+var totalmem = controlPlaneCount * cproundedMemoryGB + workerCount * wkroundedMemoryGB;
+
+return totalmem.toString();]]></script>
+</dunes-script-module>

@@ -1,0 +1,59 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="apitest" result-type="Properties" api-version="6.0.0" id="d241a84c-3a24-4614-b33b-6df1d432c3ab" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.ecs").AaManager(true);
+return aa.get("/deployment/api/resources/4f17d6ec-44d0-4ce3-a3ca-5e193399e0f4");
+// resourceId : 4f17d6ec-44d0-4ce3-a3ca-5e193399e0f4
+// vpcProfile : /provisioning/resources/network-profiles/30eb342d-f0f1-4a32-b871-8af745a82cfd
+// computeLink : /resources/compute/af98f47b-ebf8-4a4e-a702-0c2a47b5de91
+// interfaceLink : /resources/network-interfaces/5e426396-3157-4855-b7d2-883186fef3ea
+return aa.get("/project-service/api/projects/7b24fbee-68c3-4a41-a3ae-77b7da8cb292");
+return aa.get("/deployment/api/deployments/1173d783-015a-4dd5-9e5a-688a49303561")
+return aa.get("/catalog/api/items/405f3169-dccb-3092-baec-57146e3003d0")
+return aa.get("/catalog/api/items?$filter=name eq 'Segment(ClovirONE)'")
+return aa.get("/deployment/api/resources?resourceTypes=Custom.Project&size=25");
+return aa.get("/project-service/api/projects/c2a6bbbd-30c1-4a39-abae-212e63771a2f")
+return aa.get("/deployment/api/resources/09816611-3061-4d8b-bca7-cd03a8191eb8/actions")
+return aa.get("/deployment/api/deployments/93d8b717-3f30-4cdf-a8a3-2b338819c5e1/resources/09816611-3061-4d8b-bca7-cd03a8191eb8/actions");
+return aa.patch("/project-service/api/project/b0683d1c-07c8-4cdd-bd17-12591376b242",{
+    "properties": {
+        "additionalDeployments": "test02213213213"
+    }
+})
+return aa.get("/project-service/api/projects/ddabf9e9-37e9-4a29-b238-9e1326860f58")
+System.log(JSON.stringify(aa.get("/deployment/api/deployments/c6292eb4-ff7b-4555-bb98-66ecfe27596c/resources")));
+//return aa.get("/deployment/api/deployments/c6292eb4-ff7b-4555-bb98-66ecfe27596c")
+return aa.patch("/deployment/api/deployments/c6292eb4-ff7b-4555-bb98-66ecfe27596c",{
+    "deploymentId": "c6292eb4-ff7b-4555-bb98-66ecfe27596c",
+    "name": "PRJ: additional",
+    "description":"test01, test02",
+    "inputs": {
+        "requestMessage": "test01,test02",
+    },
+});
+aa.patch("/deployment/api/deployments/c6292eb4-ff7b-4555-bb98-66ecfe27596c",{
+    "resources": [
+        {
+            "id": "",
+        },
+    ]
+})
+
+
+
+var subnetLink = "/resources/sub-networks/f882c7f8-9523-4c25-a4ca-a3c750527ec0"
+return aa.getUerp("/resources/subnet-ranges?expand&$filter=subnetLink eq '"+subnetLink+"'")
+//return aa.getUerp("/resources/sub-networks/f882c7f8-9523-4c25-a4ca-a3c750527ec0")
+return aa.getUerp("/provisioning/resources/network-profiles/381a2d54-6db7-4154-8915-5bce891c5bcf");
+var subnetLink = aa.getUerp("/provisioning/resources/network-profiles/b8b7fe21-0810-4e27-ae6c-595e19fff11b").isolationExternalSubnetLink;
+return aa.getUerp("/resources/subnet-ranges?expand&$filter=subnetLink eq '"+subnetLink+"'")
+var subnetLink = "/resources/sub-networks/c2b3dcc9-d0b8-4a7e-bb2f-b7e6a209f2ac";
+return aa.getUerp("/resources/subnet-ranges?expand&$filter=subnetLink eq '" + subnetLink + "'");
+return aa.getUerp("/provisioning/resources/network-profiles/20a9f815-9fcd-429c-849e-f042d2647970");
+
+var rest = System.getModule("com.ecs").RestManager("https://192.150.55.8:6443");
+var cert = crt.content;
+var key = keyfile.content;
+var cacert = cacrt.content;
+System.log(cert);
+return rest.getKube("/api/v1/nodes",cert,key,cacert);]]></script>
+</dunes-script-module>

@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getVpcResourceIdByProjectId" result-type="Array/Properties" api-version="6.0.0" id="576ccea9-815c-4b24-b6b1-f7796dab5d6e" version="0.0.0" category-name="com.gvp.bp.vpcfw">
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if(projectId == "" || projectId == null){ return null};
+var aa = System.getModule("com.bvp").AaManager(true);
+
+var data = aa.get("/deployment/api/resources?projects="+ projectId + "&resourceTypes=Custom.VPC").content;
+var result = [];
+for each(var vpc in data){
+    result.push({
+        label: vpc.properties.displayName,
+        value: vpc.id
+    })
+}
+
+result.sort(function(a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});
+
+return result;]]></script>
+</dunes-script-module>

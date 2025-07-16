@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="vaildPeeringDefaultSegment" result-type="string" api-version="6.0.0" id="104bf0fc-343e-41a9-80a8-169efb69dccc" version="0.0.2" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <param n="in_1" t="string"><![CDATA[]]></param>
+  <param n="in_2" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if(in_1.search("^Default-Segment.*") == 0 && in_2.search("^Default-Segment.*") == 0) {
+    return "기본 생성된 세그먼트 간 Peering은 할 수 없습니다."
+}
+
+
+//inputs are valid, return nothing]]></script>
+</dunes-script-module>

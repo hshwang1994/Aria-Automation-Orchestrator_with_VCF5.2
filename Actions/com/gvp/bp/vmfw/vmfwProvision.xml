@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="vmfwProvision" result-type="Array/Properties" api-version="6.0.0" id="74cd0146-e594-4c40-94fd-9f141c228f58" version="0.0.0" category-name="com.gvp.bp.vmfw">
+  <param n="vpcList" t="Array/Properties"><![CDATA[]]></param>
+  <param n="endpointLinks" t="Array/string"><![CDATA[]]></param>
+  <param n="projectName" t="string"/>
+  <script encoded="false"><![CDATA[var conv = System.getModule("com.bvp").Converter();
+var aa = System.getModule("com.bvp").AaManager(true);
+//var transitAddress = aa.getUerp(transitAddressLink);
+//var managedRouterId = managedRouterLink.split("/routers/")[1];
+//var managedRouter = aa.getUerp(managedRouterLink);
+//var nsx = System.getModule("com.bvp").NsxManager(aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0]);
+
+var result = [];
+for each(var endpointLink in endpointLinks){
+    var nsx = System.getModule("com.bvp").NsxManager(aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0]);
+    var policyName = projectName;
+    var data = nsx.put("/policy/api/v1/infra/domains/default/security-policies/" + policyName,{
+        "display_name": policyName,
+        "category": "Application"
+    });
+    var policyResult = {
+        "endpointLink": endpointLink,
+        "id": data.id,
+        "path": data.path        
+    };
+    result.push(policyResult);
+
+}
+
+return result;]]></script>
+</dunes-script-module>

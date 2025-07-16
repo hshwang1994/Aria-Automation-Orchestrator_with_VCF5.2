@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<config-element id="9995cb21-8fa4-4479-95c7-f32aa3a88f05" version="0.0.0">
+  <display-name><![CDATA[data]]></display-name>
+  <description><![CDATA[AVI]]></description>
+  <atts>
+    <att name="hostname" type="string" read-only="false">
+      <value encoded="n"><![CDATA[10.100.64.90]]></value>
+    </att>
+    <att name="username" type="string" read-only="false">
+      <value encoded="n"><![CDATA[admin]]></value>
+    </att>
+    <att name="password" type="SecureString" read-only="false">
+      <value encoded="n"><![CDATA[__NULL__]]></value>
+    </att>
+  </atts>
+</config-element>

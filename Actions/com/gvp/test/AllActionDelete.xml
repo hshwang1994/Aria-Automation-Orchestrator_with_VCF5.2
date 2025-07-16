@@ -1,0 +1,34 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="AllActionDelete" result-type="Array/string" api-version="6.0.0" id="23ceceeb-412f-4c98-a752-4ba3788589c8" version="0.0.0" category-name="com.gvp.test">
+  <script encoded="false"><![CDATA[var resourceType = "Action";
+var aa = System.getModule("com.bvp").AaManager(true);
+
+function getDeploymentIdsByResourceType(type) {
+    var ids = [];
+    var page = 0;
+    var size = 50;
+    var resp;
+    do {
+        resp = aa.get("/deployment/api/deployments?page=" + page + "&size=" + size);
+        var items = resp.content || [];
+        for (var i = 0; i < items.length; i++) {
+            if (items[i].inputs && items[i].inputs._metadata_main_catalog === type) {
+                ids.push(items[i].id);
+            }
+        }
+        page++;
+    } while (resp.last === false);
+    return ids;
+}
+
+function deleteDeploymentsByResourceType(type) {
+    var idsToDelete = getDeploymentIdsByResourceType(type);
+    for (var i = 0; i < idsToDelete.length; i++) {
+        aa.delete("/deployment/api/deployments/" + idsToDelete[i]);
+    }
+    return idsToDelete;
+}
+
+deleteDeploymentsByResourceType(resourceType);
+]]></script>
+</dunes-script-module>

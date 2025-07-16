@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getVpcCatalogsByAdminProjectName" result-type="Array/Properties" api-version="6.0.0" id="5afe0535-d7f8-48d7-9cf9-fce73bd1b541" version="0.1.1" allowed-operations="vfe" category-name="com.bvp.bp.prj">
+  <description><![CDATA[BP:Project]]></description>
+  <param n="adminProjectName" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!adminProjectName) { throw "adminProjectName cannot be null"; }
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var project = aa.get("/iaas/api/projects?$filter=name eq '" + adminProjectName + "'").content[0];
+var catalogs = aa.get("/catalog/api/admin/items?projects=" + project.id).content;
+var result = [];
+for each(var catalog in catalogs) {
+    var detail = aa.get("/catalog/api/admin/items/" + catalog.id);
+    try {
+        if (detail.schema.properties._metadata_available.default.indexOf("vpc") > -1) {
+            result.push({
+                label: catalog.name,
+                value: catalog.id,
+            });
+        }
+    } catch (e) {}
+}
+return result.sort(function (a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});
+]]></script>
+</dunes-script-module>

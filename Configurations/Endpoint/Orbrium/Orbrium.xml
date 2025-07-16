@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<config-element id="17af2050-9dce-4d69-b8a1-073e671868d7" version="0.0.0">
+  <display-name><![CDATA[Orbrium]]></display-name>
+  <atts>
+    <att name="hostname" type="string" read-only="false">
+      <value encoded="n"><![CDATA[gooddi-orb.gooddi.lab]]></value>
+    </att>
+    <att name="selfEndpoint" type="string" read-only="false">
+      <value encoded="n"><![CDATA[vra.gooddi.lab]]></value>
+    </att>
+    <att name="accessKey" type="SecureString" read-only="false">
+      <value encoded="n"><![CDATA[__NULL__]]></value>
+    </att>
+    <att name="secretKey" type="SecureString" read-only="false">
+      <value encoded="n"><![CDATA[__NULL__]]></value>
+    </att>
+  </atts>
+</config-element>

@@ -1,0 +1,76 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item1" object-name="workflow:name=generic" id="661197dd-deb5-4ed9-a105-0d0b245a5fce" version="0.0.1" api-version="6.0.0" allowed-operations="vfe" editor-version="2.0" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[Copy of Network Post Provision]]></display-name>
+  <position y="50.0" x="100.0"/>
+  <input>
+    <param name="inputProperties" type="Properties"/>
+  </input>
+  <workflow-item name="item0" type="end" end-mode="0">
+    <in-binding/>
+    <position y="50.0" x="340.0"/>
+  </workflow-item>
+  <workflow-item name="item1" out-name="item0" type="task">
+    <display-name><![CDATA[Scriptable task]]></display-name>
+    <script encoded="false"><![CDATA[var customProperties = inputProperties.customProperties;
+var networkType = inputProperties.networkTypes[0];
+if (customProperties.vpc && networkType != "EXISTING") {
+    var subnetId = inputProperties.subnetIds[0];
+    var subnetLink = "/resources/sub-networks/" + subnetId;
+    var endpointId = inputProperties.endpointId;
+    var endpointLink = "/resources/endpoints/" + endpointId;
+    var segmentPath = customProperties.path;
+    var vpcProfileLink = customProperties.vpc;
+    var edgeClusterRouterStateLink = customProperties.edgeClusterRouterStateLink;
+    var conv = System.getModule("com.test.ecs.common").Converter();
+    var aa = System.getModule("com.ecs").AaManager(true);
+    var endpoint = aa.getUerp(endpointLink);
+    var nsx = System.getModule("com.ecs").NsxManager(endpoint.endpointProperties.hostName.split(".")[0]);
+    var subnet = aa.getUerp(subnetLink);
+    var subnetName = subnet.name;
+    var subnetRange = aa.getUerp("/provisioning/mgmt/subnet-range?$filter=subnetLink eq '" + subnetLink + "'");
+    subnetRange = subnetRange.documents[subnetRange.documentLinks[0]];
+    var segment = nsx.get("/policy/api/v1" + segmentPath);
+    var vpcProfile = aa.getUerp(vpcProfileLink);
+    subnet.domain = vpcProfile.customProperties.vpcProjectDomain;
+    subnet.dnsSearchDomains = [vpcProfile.customProperties.vpcProjectDomain];
+    subnet.dnsServerAddresses = JSON.parse(vpcProfile.customProperties.vpcDnsServerAddresses);
+    subnet = aa.putUerp(subnetLink, subnet);
+    if (!vpcProfile.subnets) { vpcProfile.subnets = []; }
+    if (!vpcProfile.subnetLinks) { vpcProfile.subnetLinks = []; }
+    vpcProfile.subnets.push(subnet);
+    vpcProfile.subnetLinks.push(subnetLink);
+    vpcProfile = aa.putUerp(vpcProfileLink, vpcProfile);
+    segment.connectivity_path = vpcProfile.customProperties.vpcManagedTier1Path;
+    subnetRange.startIPAddress = conv.ip.getString(conv.ip.getNumeric(subnetRange.startIPAddress) + 1);
+    subnetRange.endIPAddress = conv.ip.getString(conv.ip.getNumeric(subnetRange.endIPAddress) - 1);
+    aa.putUerp(subnetRange.documentSelfLink, subnetRange);
+    var dhcpServerAddress = conv.ip.getString(conv.ip.getNumeric(subnet.gatewayAddress) + 1) + "/" + subnet.subnetCIDR.split("/")[1];
+    var dhcpServer = nsx.put("/policy/api/v1/infra/dhcp-server-configs/" + subnetName, {
+        display_name: subnetName,
+        edge_cluster_path: "/infra/sites/default/enforcement-points/default/edge-clusters/" + aa.getUerp(edgeClusterRouterStateLink).id,
+        enable_standby_relocation: false,
+        resource_type: "DhcpServerConfig",
+        server_addresses: [dhcpServerAddress]
+    });
+    segment.dhcp_config_path = dhcpServer.path;
+    segment.subnets[0].dhcp_config = {
+        resource_type: "SegmentDhcpV4Config",
+        server_address: dhcpServerAddress,
+        lease_time: 86400,
+        dns_servers: subnet.dnsServerAddresses
+    }
+    nsx.put("/policy/api/v1" + segmentPath, segment);
+}]]></script>
+    <in-binding>
+      <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.0" x="180.0"/>
+  </workflow-item>
+  <presentation>
+    <p-param name="inputProperties">
+      <desc><![CDATA[inputProperties]]></desc>
+    </p-param>
+  </presentation>
+</workflow>

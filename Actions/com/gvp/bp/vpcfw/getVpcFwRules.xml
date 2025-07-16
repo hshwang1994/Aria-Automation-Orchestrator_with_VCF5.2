@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getVpcFwRules" result-type="Array/Properties" api-version="6.0.0" id="b3b4a1c2-f27d-46fb-b855-f93e1836b962" version="0.0.0" category-name="com.gvp.bp.vpcfw">
+  <param n="vpcfwId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if(vpcfwId == "" || vpcfwId == null || vpcfwId == undefined ) {
+    return [];
+};
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var vpcfwRules = aa.get("/deployment/api/resources/" + vpcfwId).properties.rules;
+
+return vpcfwRules;]]></script>
+</dunes-script-module>

@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getLbTagValueByVpc" result-type="string" api-version="6.0.0" id="e32df384-81ff-4c70-9f26-a896b57ec8ad" version="0.0.0" category-name="com.gvp.bp.nlb">
+  <param n="profileLink" t="string"><![CDATA[]]></param>
+  <param n="category" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if(!category) { throw "category cannot be null"; }
+if(!profileLink) { throw "vpc profile link cannot be null";}
+var checker = category + "\n";
+var aa = System.getModule("com.bvp").AaManager();
+var lbLink = aa.get(profileLink).loadBalancerLinks[0];
+for each(var tagObj in aa.getUerp(lbLink).expandedTags) {
+    if (tagObj.tag.indexOf(checker) > -1) { return tagObj.tag.split("\n")[1]; }
+}
+throw 'could not find "' + category + '" tag';]]></script>
+</dunes-script-module>

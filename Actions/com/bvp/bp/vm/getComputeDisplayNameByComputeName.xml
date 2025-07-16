@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getComputeDisplayNameByComputeName" result-type="string" api-version="6.0.0" id="5b4bab77-89ce-46ac-bcca-c079ed0fa074" version="0.1.1" allowed-operations="vfe" category-name="com.bvp.bp.vm">
+  <description><![CDATA[Act:Change Machine Display Name]]></description>
+  <param n="computeName" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if(!computeName){ throw "computeName cannot be null"; }
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var computes = aa.getUerp("/resources/compute?expand&$filter=name eq '" + computeName + "'");
+var result = "";
+for each(var computeLink in computes.documentLinks) {
+    var compute = computes.documents[computeLink];
+    result = compute.customProperties.displayName ? compute.customProperties.displayName : compute.hostName
+}
+return result;]]></script>
+</dunes-script-module>

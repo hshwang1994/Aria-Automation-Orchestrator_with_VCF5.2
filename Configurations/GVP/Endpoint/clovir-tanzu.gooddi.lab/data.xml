@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<config-element id="e1687d8a-b6a6-44fc-832c-0c479ee5bfda" version="0.0.0">
+  <display-name><![CDATA[data]]></display-name>
+  <atts>
+    <att name="hostname" type="string" read-only="false">
+      <value encoded="n"><![CDATA[clovir-tanzu.gooddi.lab]]></value>
+    </att>
+    <att name="username" type="string" read-only="false">
+      <value encoded="n"><![CDATA[cloviradmin]]></value>
+    </att>
+    <att name="password" type="SecureString" read-only="false">
+      <value encoded="n"><![CDATA[__NULL__]]></value>
+    </att>
+    <att name="port" type="number" read-only="false">
+      <value encoded="n"><![CDATA[22.0]]></value>
+    </att>
+  </atts>
+</config-element>

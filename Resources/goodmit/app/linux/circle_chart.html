@@ -1,0 +1,18 @@
+<script src="../temp/tween.js"></script>
+<script src="clockGauge.js"></script>
+<body style="background-color:black">
+<canvas id="canvas" width="300" height="300"></canvas>
+<canvas id="canvas1" width="300" height="300"></canvas>
+<script>
+ 
+var chart = new clockGauge("canvas",{backgroundImage:'clock.png'}) ;
+chart.repaint();
+var chart1 = new clockGauge("canvas1",{backgroundImage:'clock2.png'}) ;
+chart1.repaint();
+setTimeout(function(){
+	chart.setValueAnimated(30);
+	chart1.setValueAnimated(80);
+}, 1000);
+
+</script>
+<script>

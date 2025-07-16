@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getVpcProjectDomainByProfileLink_Copy" result-type="string" api-version="6.0.0" id="ac760df3-4e67-4b03-9027-9d879ab9261f" version="0.1.0" allowed-operations="vfe" category-name="com.test.ecs.action.backup">
+  <description><![CDATA[BP:Virtual Machine]]></description>
+  <param n="profileLink" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.ecs").AaManager();
+var profile = aa.getUerp(profileLink);
+return profile.customProperties.vpcProjectDomain ? profile.customProperties.vpcProjectDomain : profile.name;]]></script>
+</dunes-script-module>

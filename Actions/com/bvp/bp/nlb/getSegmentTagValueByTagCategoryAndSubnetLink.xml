@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getSegmentTagValueByTagCategoryAndSubnetLink" result-type="string" api-version="6.0.0" id="e42924e0-49f2-4bac-8125-05e8f678f801" version="0.1.1" allowed-operations="vfe" category-name="com.bvp.bp.nlb">
+  <description><![CDATA[BP:Virtual Machine]]></description>
+  <param n="subnetLink" t="string"><![CDATA[]]></param>
+  <param n="category" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if(!category) { throw "category cannot be null"; }
+if(!subnetLink) { throw "subnetLink cannot be null";}
+
+var checker = category + "\n";
+var aa = System.getModule("com.bvp").AaManager();
+for each(var tagObj in aa.getUerp(subnetLink).expandedTags) {
+    if (tagObj.tag.indexOf(checker) > -1) { return tagObj.tag.split("\n")[1]; }
+}
+throw 'could not find "' + category + '" tag';]]></script>
+</dunes-script-module>

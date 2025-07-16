@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getVpcSubnetTagValuesByTagCategoryAndProfileLink_Copy" result-type="Array/Properties" api-version="6.0.0" id="8ea8ed41-73f4-4e7e-8232-8e429f1052d6" version="0.1.0" allowed-operations="vfe" category-name="com.test.ecs.action.backup">
+  <param n="category" t="string"><![CDATA[]]></param>
+  <param n="profileLink" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.ecs").AaManager(true);
+var checker = category + "\n";
+var subnets = aa.getUerp("/resources/sub-networks?expand&$filter=customProperties.vpc eq '" + profileLink + "'");
+var result = [];
+for each(var subnetLink in subnets.documentLinks) {
+    var subnet = subnets.documents[subnetLink];
+    for each(var tagObj in subnet.expandedTags) {
+        if (tagObj.tag.indexOf(checker) > -1) {
+            result.push({
+                label: subnet.customProperties.displayName ? subnet.customProperties.displayName : subnet.name,
+                value: tagObj.tag.split("\n")[1],
+            });
+            break;
+        }
+    }
+}
+return result.sort(function (a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});]]></script>
+</dunes-script-module>

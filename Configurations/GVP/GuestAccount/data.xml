@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<config-element id="1b896168-2460-421b-8851-4ae1f215ed39" version="0.0.0">
+  <display-name><![CDATA[data]]></display-name>
+  <atts>
+    <att name="guest_lin_id" type="string" read-only="false">
+      <value encoded="n"><![CDATA[cloody]]></value>
+    </att>
+    <att name="guest_win_pwd" type="SecureString" read-only="false">
+      <value encoded="n"><![CDATA[__NULL__]]></value>
+    </att>
+    <att name="guest_win_id" type="string" read-only="false">
+      <value encoded="n"><![CDATA[Administrator]]></value>
+    </att>
+    <att name="guest_lin_pwd" type="SecureString" read-only="false">
+      <value encoded="n"><![CDATA[__NULL__]]></value>
+    </att>
+  </atts>
+</config-element>

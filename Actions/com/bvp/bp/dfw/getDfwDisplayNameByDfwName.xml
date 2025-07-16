@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getDfwDisplayNameByDfwName" result-type="string" api-version="6.0.0" id="dff1598c-69f2-4bf5-b0d0-2452302afad1" version="0.1.1" allowed-operations="vfe" category-name="com.bvp.bp.dfw">
+  <description><![CDATA[Act:Change Segment Display Name]]></description>
+  <param n="deploymentId" t="string"><![CDATA[]]></param>
+  <param n="dfwName" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if(!deploymentId){ throw "deploymentId cannot be null"; }
+if(!dfwName){ throw "dfwName cannot be null"; }
+
+var aa = System.getModule("com.bvp").AaManager(true);
+for each(var content in aa.get("/deployment/api/deployments/" + deploymentId + "/resources?resourceTypes=Cloud.SecurityGroup").content) {
+    if (content.properties.name == dfwName) {
+        return content.properties.displayName;
+    }
+}
+throw "could not find name";]]></script>
+</dunes-script-module>

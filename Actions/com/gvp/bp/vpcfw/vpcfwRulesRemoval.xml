@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="vpcfwRulesRemoval" result-type="Properties" api-version="6.0.0" id="ebd0bcaf-c9a9-45ad-bcf2-3afcd360a952" version="0.0.0" category-name="com.gvp.bp.vpcfw">
+  <param n="endpointLink" t="string"><![CDATA[]]></param>
+  <param n="securityPolicyPath" t="string"><![CDATA[]]></param>
+  <param n="rules" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var conv = System.getModule("com.bvp").Converter();
+var aa = System.getModule("com.bvp").AaManager(true);
+var nsx = System.getModule("com.bvp").NsxManager(aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0]);
+var inputRules = JSON.parse(rules);
+
+for each(var rule in inputRules){
+    nsx.delete("/policy/api/v1" + securityPolicyPath + "/rules/" + rule.id);
+}
+
+
+return {};]]></script>
+</dunes-script-module>

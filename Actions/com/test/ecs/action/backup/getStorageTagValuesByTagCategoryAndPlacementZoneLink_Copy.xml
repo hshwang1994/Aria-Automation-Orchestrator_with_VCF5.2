@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getStorageTagValuesByTagCategoryAndPlacementZoneLink_Copy" result-type="Array/Properties" api-version="6.0.0" id="8924d7c1-4dec-4c7b-b52f-d1816af39ef7" version="0.0.0" allowed-operations="vfe" category-name="com.test.ecs.action.backup">
+  <param n="category" t="string"><![CDATA[]]></param>
+  <param n="placementZoneLink" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!placementZoneLink) { return []; }
+var aa = System.getModule("com.ecs").AaManager(true);
+var storageProfiles = aa.get("/provisioning/mgmt/storage-profile?expand?$filter=placementZoneLink eq '" + placementZoneLink + "'");
+var result = [];
+for each(var link in storageProfiles.documentLinks) {
+    var storageProfile = storageProfiles.documents[link];
+    for each(var storageItem in storageProfile.storageItems) {
+        for each(var tagLink in storageItem.tagLinks) {
+            var tag = aa.getUerp(tagLink);
+            if (tag.key == category) {
+                result.push({
+                    label: storageItem.name,
+                    value: tag.value
+                })
+                break;
+            }
+        }
+    }
+}
+return result.sort(function (a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});]]></script>
+</dunes-script-module>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:workflow xmlns:ns2="http://vmware.com/vco/workflow" root-name="item1" object-name="workflow:name=generic" id="3c735b54-e980-4f57-96d6-8a09e7980c6f" editor-version="2.0" version="0.0.0" api-version="6.0.0" restartMode="1" resumeFromFailedMode="0">
+    <display-name>detachBlockDisk_(Not Used)</display-name>
+    <position y="50.0" x="100.0"/>
+    <input>
+        <param name="vmName" type="string"/>
+        <param name="diskId" type="string"/>
+    </input>
+    <output>
+        <param name="requestTracker" type="VRA:RequestTracker"/>
+    </output>
+    <workflow-item name="item0" type="end" end-mode="0" comparator="0">
+        <in-binding/>
+        <out-binding/>
+        <position y="50.0" x="380.0"/>
+    </workflow-item>
+    <workflow-item name="item1" out-name="item0" type="task" comparator="0">
+        <display-name>Scriptable task</display-name>
+        <script encoded="false">if (!vmName) { throw "vmName cannot be null"; }
+if (!diskId) { throw "diskId cannot be null"; }
+
+
+var vraHosts = Server.findAllForType("VRA:Host"); 
+for each(var host in vraHosts) {
+    if(host.name == "Admin"){
+        var vraHost = host;
+    }
+}
+
+
+var machine = VraEntitiesFinder.getMachines(vraHost,"name eq '"+vmName+"'")[0]; // VRA:Machine
+var blockDevice = VraEntitiesFinder.getBlockDevice(vraHost, diskId); // VRA:BlockDevice
+var unitNumber = null; // string Deprecated
+var scsiController = null; // string Deprecated
+var diskAttachmentProperties = null; // Properties
+
+
+var host = blockDevice.host;
+var machineService = host.createInfrastructureClient().createMachineService()
+if(blockDevice.blockDeviceStatus == "ATTACHED"){
+    requestTracker = machineService.detachMachineDisk(machine.id, blockDevice.id);
+    System.log("Disk detach request for disk " + blockDevice.name + " has been successfully placed with request tracker id " + requestTracker.id)
+}
+else {
+    throw "Disk should be in attached state"
+}</script>
+        <in-binding>
+            <bind name="vmName" type="string" export-name="vmName"/>
+            <bind name="diskId" type="string" export-name="diskId"/>
+        </in-binding>
+        <out-binding>
+            <bind name="requestTracker" type="VRA:RequestTracker" export-name="requestTracker"/>
+        </out-binding>
+        <description>Simple task with custom script capability.</description>
+        <position y="60.0" x="200.0"/>
+    </workflow-item>
+</ns2:workflow>

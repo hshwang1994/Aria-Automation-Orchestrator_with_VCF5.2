@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getproviderIdByProjectId" result-type="string" api-version="6.0.0" id="6a139023-bf90-4da3-b5a3-00ee71abecaa" version="0.0.0" category-name="com.gvp.bp.tkgs">
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!projectId) {
+    return "";
+}
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var k8szones = aa.get("/cmx/api/resources/k8s-zones");
+var zones = k8szones.content || [];
+
+for (var i = 0; i < zones.length; i++) {
+    var zone = zones[i];
+    var projects = zone.projects || [];
+    
+    for (var j = 0; j < projects.length; j++) {
+        if (projects[j].projectId === projectId) {
+            return zone.providerId;
+        }
+    }
+}
+
+return "";
+]]></script>
+</dunes-script-module>

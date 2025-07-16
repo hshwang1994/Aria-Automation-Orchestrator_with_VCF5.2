@@ -1,0 +1,108 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="batchgputest" result-type="Properties" api-version="6.0.0" id="87543765-c258-479f-a746-70e62486afdf" version="0.0.0" category-name="com.gvp.test">
+  <script encoded="false"><![CDATA[var vcenters = [];
+var vcsaSdks = VcPlugin.allSdkConnections;
+var currentTime = System.getCurrentTime();
+var dayBeforeTime = currentTime - (24 * 60 * 60 * 1000);
+var startTime = new Date(dayBeforeTime);
+var endTime = new Date(currentTime);
+
+for(var i in vcsaSdks){
+    var format = {};
+    var vim = vcsaSdks[i];
+    var perf = vim.PerformanceManager;
+    format.vcenter = {};
+    format.vcenter.name = vim.id;
+    format.vcenter.timestamp = String(endTime);
+    format.vcenter.clusters = [];
+    
+    var clusters = vim.getAllClusterComputeResources();
+    for(var c in clusters){
+        var query = new Array;
+        query[0] = new VcPerfQuerySpec;
+        query[0].entity = clusters[c];
+        query[0].startTime = startTime;
+        query[0].endTime = endTime;
+        query[0].metricId =  perf.queryAvailablePerfMetric(clusters[c]).filter(function(item) {return (item.counterId == 284 || item.counterId == 280); }); 
+        var metricSeries = query[0].metricId.length > 0?perf.queryPerf(query)[0].value:null;
+
+        if( metricSeries && metricSeries.some(function(item){return item && item.value !== null;})){
+            var totalGpuMem = metricSeries.filter(function(item){return item.id.counterId == 284})[0].value;
+            var usedGpuMem = metricSeries.filter(function(item){return item.id.counterId == 280})[0].value;
+            var clusterFormat = {};
+            clusterFormat.name = clusters[c].name;
+            clusterFormat.summary = {};
+            clusterFormat.summary.total_gpu_memory_gb = totalGpuMem[0];
+            clusterFormat.summary.used_gpu_memory_gb = usedGpuMem[0];
+            clusterFormat.summary.total_gpus = 0;
+            clusterFormat.summary.total_hosts = clusters[c].host.length;
+            clusterFormat.summary.hosts_with_gpu = 0;
+            clusterFormat.summary.total_vms_with_gpu = 0;
+            clusterFormat.hosts = [];
+
+            var hostList = clusters[c].host;
+            for (var h in hostList){
+                var gpuManager = hostList[h].configManager.graphicsManager;
+                if(gpuManager.retrieveVgpuProfileInfo() != null) {
+                    var gpuDevices = gpuManager.graphicsInfo;
+                    var hostFormat = {};
+                    hostFormat.name = hostList[h].name;
+                    hostFormat.summary = {};
+                    hostFormat.summary.total_gpus = gpuDevices.length;
+                    hostFormat.summary.gpu_profile_types = gpuManager.sharedPassthruGpuTypes || [];
+                    hostFormat.summary.total_gpu_memory = 0;
+                    hostFormat.summary.allocated_gpu_memory = 0;
+                    hostFormat.summary.total_vms = hostList[h].vm.length;
+                    hostFormat.summary.vms_with_gpu = 0;
+                    hostFormat.gpuDevices = [];
+                    
+                    for(var g in gpuDevices){
+                        var gpuFormat = {};
+                        var vms = gpuDevices[g].vm;
+                        gpuFormat.name = gpuDevices[g].deviceName;
+                        gpuFormat.summary = {};
+                        gpuFormat.summary.memory_size_kb = gpuDevices[g].memorySizeInKB;
+                        gpuFormat.virtual_machines = [];
+
+
+                        for(var v in vms ){
+                            var vmFormat = {};
+                            var devices = vms[v].config.hardware.device;
+                            var vgpuProfile = "Unknown";
+                            for (var d in devices) {
+                                if (devices[d] instanceof VcVirtualPCIPassthrough) {
+                                    vgpuProfile = devices[d].backing.vgpu;
+                                    break;
+                                }
+                            }
+                            
+                            vmFormat.name = vms[v].name;
+                            vmFormat.power_state = vms[v].runtime.powerState.value;
+                            vmFormat.gpu_allocation = {};
+                            vmFormat.gpu_allocation.vgpu_profile = vgpuProfile;
+                            vmFormat.gpu_allocation.allocated_memory = 0;
+                            
+                            gpuFormat.virtual_machines.push(vmFormat);
+                        }
+
+                        hostFormat.summary.total_gpu_memory += gpuDevices[g].memorySizeInKB;
+                        hostFormat.summary.vms_with_gpu += gpuFormat.virtual_machines.length;
+                        clusterFormat.summary.total_vms_with_gpu += gpuFormat.virtual_machines.length;
+                        hostFormat.gpuDevices.push(gpuFormat);
+                    }
+
+                    clusterFormat.summary.total_gpus += gpuDevices.length;
+                    clusterFormat.hosts.push(hostFormat);
+                }
+                
+            }
+            clusterFormat.summary.hosts_with_gpu = clusterFormat.hosts.length;
+            format.vcenter.clusters.push(clusterFormat);
+        }
+    };
+    if(format.vcenter.clusters.length > 0){vcenters.push(format);}
+}
+
+output = vcenters;
+]]></script>
+</dunes-script-module>

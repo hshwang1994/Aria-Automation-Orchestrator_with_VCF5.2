@@ -1,0 +1,34 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="AllDeploymentDelete" result-type="Array/string" api-version="6.0.0" id="05761465-5752-4c33-9c7d-a1d98a270d5e" version="0.0.0" category-name="com.gvp.test">
+  <param n="catalog" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.bvp").AaManager(true);
+
+function getDeploymentIdsBycatalog(type) {
+    var ids = [];
+    var page = 0;
+    var size = 50;
+    var resp;
+    do {
+        resp = aa.get("/deployment/api/deployments?page=" + page + "&size=" + size);
+        var items = resp.content || [];
+        for (var i = 0; i < items.length; i++) {
+            if (items[i].inputs && items[i].inputs._metadata_catalog === type) {
+                ids.push(items[i].id);
+            }
+        }
+        page++;
+    } while (resp.last === false);
+    return ids;
+}
+
+function deleteDeploymentsBycatalog(type) {
+    var idsToDelete = getDeploymentIdsBycatalog(type);
+    for (var i = 0; i < idsToDelete.length; i++) {
+        aa.delete("/deployment/api/deployments/" + idsToDelete[i]);
+    }
+    return idsToDelete;
+}
+
+deleteDeploymentsBycatalog(catalog);
+]]></script>
+</dunes-script-module>

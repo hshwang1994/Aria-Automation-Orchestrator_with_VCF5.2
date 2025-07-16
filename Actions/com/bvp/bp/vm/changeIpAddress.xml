@@ -1,0 +1,131 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="changeIpAddress" result-type="string" api-version="6.0.0" id="84a050d9-237d-4162-8c45-94b998e3e8bc" version="0.1.1" allowed-operations="vfe" category-name="com.bvp.bp.vm">
+  <description><![CDATA[Act:Change IP Address]]></description>
+  <param n="computeLink" t="string"><![CDATA[]]></param>
+  <param n="interfaceLink" t="string"><![CDATA[]]></param>
+  <param n="newIpAddress" t="string"><![CDATA[]]></param>
+  <param n="releaseMode" t="string"><![CDATA[]]></param>
+  <param n="adminUsername" t="string"><![CDATA[]]></param>
+  <param n="adminPassword" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!computeLink) { throw "computeLink cannot be null"; }
+if (!interfaceLink) { throw "interfaceLink cannot be null"; }
+if (!newIpAddress) { throw "newIpAddress cannot be null"; }
+if (!releaseMode) { throw "releaseMode cannot be null"; }
+if (!adminUsername) { throw "adminUsername cannot be null"; }
+if (!adminPassword) { throw "adminPassword cannot be null"; }
+
+var properties = System.getContext().getParameter("__metadata_resourceProperties");
+var context = System.getContext();
+var conv = System.getModule("com.bvp").Converter();
+var aa = System.getModule("com.bvp").AaManager(true);
+var compute = aa.getUerp(computeLink);
+var projectId = compute.customProperties.project;
+var computeDesc = aa.getUerp(compute.descriptionLink);
+var interfaceId = interfaceLink.split("/network-interfaces/")[1];
+var interface = aa.getUerp(interfaceLink);
+var ipAddress = interface.address;
+var subnet = aa.getUerp(interface.subnetLink);
+var subnetRange = aa.getUerp("/provisioning/mgmt/subnet-range?$filter=subnetLink eq '" + subnet.documentSelfLink + "'");
+var subnetRangeLink = subnetRange.documents[subnetRange.documentLinks[0]].documentSelfLink;
+var ipRangeId = subnetRangeLink.split("/subnet-ranges/")[1];
+var subnetIps = aa.getUerp("/resources/ip-addresses?expand&$filter=subnetRangeLink eq '" + subnetRangeLink + "'");
+var curIpDocument = null;
+var newIpDocument = null;
+for each(var link in subnetIps.documentLinks) {
+    var document = subnetIps.documents[link];
+    if (document.ipAddress == ipAddress) { curIpDocument = document; }
+    if (document.ipAddress == newIpAddress) {
+        newIpDocument = document;
+        if (document.ipAddressStatus == "ALLOCATED") { throw 'Error [Opera Change IP Address] : ip address is duplicated'; }
+    }
+}
+if (!curIpDocument) { throw "Error [Opera Change IP Address] : could not find current ip address"; }
+curIpDocument.ipAddressStatus = "RELEASED";
+curIpDocument.connectedResourceLink = undefined;
+curIpDocument.ipAllocationType = "NONE";
+curIpDocument = aa.patchUerp(curIpDocument.documentSelfLink, curIpDocument);
+if (newIpDocument) {
+    newIpDocument.ipAddressStatus = "ALLOCATED";
+    newIpDocument.connectedResourceLink = interfaceLink;
+    newIpDocument.ipAllocationType = "SYSTEM";
+    newIpDocument = aa.patchUerp(newIpDocument.documentSelfLink, newIpDocument);
+} else {
+    newIpDocument = aa.postUerp("/resources/ip-addresses", {
+        subnetRangeLink: subnetRangeLink,
+        connectedResourceLink: interfaceLink,
+        ipAddress: newIpAddress,
+        ipAddressStatus: "ALLOCATED",
+        ipAllocationType: "SYSTEM",
+        customProperties: {}
+    });
+}
+var nsx = System.getModule("com.bvp").NsxManager(aa.getUerp(subnet.endpointLink).endpointProperties.hostName.split(".")[0]);
+var nsxUpdated = false;
+for each(var dhcp in nsx.get("/policy/api/v1" + subnet.customProperties.__path + "/dhcp-static-binding-configs").results) {
+    if (dhcp.id == interfaceId) {
+        dhcp.ip_address = newIpAddress;
+        nsx.patch("/policy/api/v1" + dhcp.path, dhcp);
+        nsxUpdated = true;
+        break;
+    }
+}
+if (!nsxUpdated) {
+    curIpDocument.ipAddressStatus = "ALLOCATED";
+    curIpDocument.connectedResourceLink = interfaceLink;
+    curIpDocument.ipAllocationType = "SYSTEM";
+    curIpDocument = aa.patchUerp(curIpDocument.documentSelfLink, curIpDocument);
+    newIpDocument.ipAddressStatus = "AVAILABLE";
+    newIpDocument.connectedResourceLink = undefined;
+    newIpDocument.ipAllocationType = "NONE";
+    newIpDocument = aa.patchUerp(newIpDocument.documentSelfLink, newIpDocument);
+    throw 'could not find previous dhcp setting in nsx';
+}
+for each(var aip in aa.get("/deployment/api/resources?resourceTypes=Custom.AIP&projects=" + projectId).content) {
+    if (aip.properties.interface == interfaceLink) {
+        var vpcManagedTier1Path = subnet.customProperties.vpcManagedTier1Path;
+        var natRuleUrl = "/policy/api/v1" + vpcManagedTier1Path + "/nat/USER/nat-rules/" + aip.properties.id;
+        var natRule = nsx.get(natRuleUrl);
+        natRule.translated_network = newIpAddress;
+        nsx.patch(natRuleUrl, natRule);
+    }
+}
+interface.address = newIpAddress;
+interface.addressLinks = [newIpDocument.documentSelfLink];
+aa.putUerp(interfaceLink, interface);
+if (interface.customProperties.primaryAddress == "true") {
+    nsx.patch("/policy/api/v1" + subnet.customProperties.vpcManagedTier1Path + "/nat/USER/nat-rules/" + compute.id, {
+        action: "DNAT",
+        enabled: true,
+        display_name: compute.name,
+        destination_network: subnet.customProperties.vpcTransitAddress,
+        translated_network: newIpAddress,
+        service: "/infra/services/SSH",
+        translated_ports: (parseInt(compute.customProperties.__moref.split(":vm-")[1]) % 55000) + 10000,
+        firewall_match: "MATCH_INTERNAL_ADDRESS",
+        policy_based_vpn_mode: "BYPASS",
+        sequence_number: 0,
+        id: compute.id
+    });
+    compute.address = newIpAddress;
+    compute = aa.putUerp(computeLink, compute);
+    computeDesc.address = newIpAddress;
+    aa.putUerp(compute.descriptionLink, computeDesc);
+}
+var scripts = "";
+scripts += "sudo /usr/bin/cloud-init clean -c network\n";
+scripts += "sudo rm -rf /etc/sysconfig/network-scripts/ifcfg-*\n";
+scripts += "sudo rm -rf /etc/network/interfaces\n";
+scripts += "sudo rm -rf /etc/netplan/*\n";
+scripts += "sudo /usr/bin/cloud-init init --local\n";
+scripts += "sudo /usr/bin/cloud-init init\n";
+var resourceId = computeLink.split("/compute/")[1];
+var resourceName = compute.name;
+var vcConf = System.getModule("com.bvp").ConfManager().load("/Endpoint/" + aa.getUerp(compute.endpointLink).endpointProperties.hostName.split(".")[0]);
+System.getModule("com.bvp").execScripts(vcConf.hostname, vcConf.username, vcConf.password, compute.name, adminUsername, adminPassword, scripts);
+aa.post("/iaas/api/machines/" + resourceId + "/operations/reboot", {});
+if (releaseMode != "RELEASED") {
+    curIpDocument.ipAddressStatus = releaseMode;
+    aa.patchUerp(curIpDocument.documentSelfLink, curIpDocument);
+}
+return "";]]></script>
+</dunes-script-module>

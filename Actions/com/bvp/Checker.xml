@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="Checker" result-type="Properties" api-version="6.0.0" id="7a248b25-2060-4422-801a-f818f4760ccf" version="0.0.1" allowed-operations="vfe" category-name="com.bvp">
+  <script encoded="false"><![CDATA[return {
+    isString: function (input) {
+        if (System.getObjectClassName(input) == "String") { return true; }
+        return false;
+    },
+    isObject: function (input) {
+        if (System.getObjectClassName(input) == "Object") { return true; }
+        return false;
+    },
+    isUUID: function (input) {
+        if (this.isString(input) && input.match("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$") !== null) {
+            return true;
+        }
+        return false;
+    }
+}]]></script>
+</dunes-script-module>

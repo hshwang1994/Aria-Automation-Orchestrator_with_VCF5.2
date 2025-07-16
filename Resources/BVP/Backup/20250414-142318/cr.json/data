@@ -1,0 +1,1284 @@
+{
+  "a0a67d84-4fae-4231-8ae2-938fb08cd8a5": {
+    "id": "a0a67d84-4fae-4231-8ae2-938fb08cd8a5",
+    "displayName": "Project",
+    "description": "install by value pack at 20250324-191120",
+    "resourceType": "Custom.Project",
+    "status": "RELEASED",
+    "orgId": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+    "mainActions": {
+      "create": {
+        "id": "8a7481dd926c0ab601926c7cd7660011",
+        "name": "Custom.Project.create",
+        "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+        "type": "abx.action",
+        "inputParameters": []
+      },
+      "read": {
+        "id": "8a7481dd926c0ab601926c7d1dcf0012",
+        "name": "Custom.Project.read",
+        "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+        "type": "abx.action",
+        "inputParameters": []
+      },
+      "delete": {
+        "id": "8a7481dd926c0ab601926c7d6a960013",
+        "name": "Custom.Project.delete",
+        "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+        "type": "abx.action",
+        "inputParameters": []
+      }
+    },
+    "additionalActions": [
+      {
+        "id": "Custom.Project.custom.changesupervisors",
+        "name": "changeSupervisors",
+        "displayName": "Change Supervisors",
+        "providerName": "xaas",
+        "resourceType": "Custom.Project",
+        "status": "RELEASED",
+        "orgId": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+        "runnableItem": {
+          "id": "8a74819a93bf04810193c9527fd0004c",
+          "name": "Custom.Project.changeSupervisors",
+          "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+          "type": "abx.action",
+          "inputParameters": [
+            {
+              "type": "string",
+              "name": "newUsers"
+            }
+          ]
+        },
+        "formDefinition": {
+          "tenant": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+          "id": "517fa27d-73b8-49a5-a360-e27e80f2e23a",
+          "name": "changeSupervisors",
+          "form": "{\"layout\":{\"pages\":[{\"id\":\"page_1\",\"title\":\"Update\",\"sections\":[{\"id\":\"Section-newUsers\",\"fields\":[{\"id\":\"newUsers\",\"display\":\"textField\",\"state\":{\"visible\":false,\"read-only\":false},\"signpostPosition\":\"right-middle\"}]},{\"id\":\"section_e0313ab5\",\"fields\":[{\"id\":\"array_2fe05f15\",\"display\":\"array\",\"state\":{\"visible\":true,\"read-only\":false},\"signpostPosition\":\"right-middle\"}]}],\"state\":{\"visible\":true}}]},\"schema\":{\"newUsers\":{\"label\":\"newUsers\",\"type\":{\"dataType\":\"string\",\"isMultiple\":false},\"default\":{\"type\":\"scriptAction\",\"id\":\"com.bvp.bp.prj/changeArrayToCommaString\",\"parameters\":[{\"arrayString\":\"array_2fe05f15\",\"$type\":{\"dataType\":\"string\",\"isMultiple\":true}}]},\"constraints\":{}},\"array_2fe05f15\":{\"label\":\"Supervisor Usernames\",\"signpost\":\"User.username\",\"type\":{\"dataType\":\"string\",\"isMultiple\":true},\"default\":{\"type\":\"scriptAction\",\"id\":\"com.bvp.bp.prj/getSupervisorsByProjectId\",\"parameters\":[{\"projectId\":\"_resource.selfId\",\"$type\":{\"dataType\":\"string\",\"isMultiple\":false}}]},\"constraints\":{\"required\":false}}},\"options\":{\"externalValidations\":[]}}",
+          "sourceType": "resource.action",
+          "sourceId": "Custom.Project.custom.changesupervisors",
+          "type": "requestForm",
+          "status": "ON",
+          "formFormat": "JSON",
+          "externalSourceFormSchemas": [
+            {
+              "externalSourceId": "com.bvp.bp.prj/changeArrayToCommaString",
+              "elementId": "newUsers",
+              "elementType": "CANVAS_FIELD",
+              "facet": "default",
+              "parameters": [
+                {
+                  "name": "arrayString",
+                  "isValidatable": false
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "Custom.Project.custom.changedisplayname",
+        "name": "changeDisplayName",
+        "displayName": "Change Display Name",
+        "providerName": "xaas",
+        "resourceType": "Custom.Project",
+        "status": "RELEASED",
+        "orgId": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+        "runnableItem": {
+          "id": "8a7481dd926c0ab601926cf3bf2a0027",
+          "name": "Custom.Project.changeDisplayName",
+          "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+          "type": "abx.action",
+          "inputParameters": [
+            {
+              "type": "string",
+              "name": "newDisplayName"
+            }
+          ]
+        },
+        "formDefinition": {
+          "tenant": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+          "id": "20e98654-a0a8-40b2-bf2e-bc45092316c3",
+          "name": "changeDisplayName",
+          "form": "{\"layout\":{\"pages\":[{\"id\":\"page_1\",\"title\":\"Update\",\"sections\":[{\"id\":\"Section-newDisplayName\",\"fields\":[{\"id\":\"newDisplayName\",\"display\":\"textField\",\"state\":{\"visible\":true,\"read-only\":false},\"signpostPosition\":\"right-middle\"}]}],\"state\":{\"visible\":true}}]},\"schema\":{\"newDisplayName\":{\"label\":\"New Display Name\",\"type\":{\"dataType\":\"string\",\"isMultiple\":false},\"default\":{\"bind\":\"_resource.displayName\"}}},\"options\":{\"externalValidations\":[]}}",
+          "sourceType": "resource.action",
+          "sourceId": "Custom.Project.custom.changedisplayname",
+          "type": "requestForm",
+          "status": "ON",
+          "formFormat": "JSON",
+          "externalSourceFormSchemas": []
+        }
+      },
+      {
+        "id": "Custom.Project.custom.changeviewers",
+        "name": "changeViewers",
+        "displayName": "Change Viewers",
+        "providerName": "xaas",
+        "resourceType": "Custom.Project",
+        "status": "RELEASED",
+        "orgId": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+        "runnableItem": {
+          "id": "8a74809d93bf04680193c9506f4310dc",
+          "name": "Custom.Project.changeViewers",
+          "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+          "type": "abx.action",
+          "inputParameters": [
+            {
+              "type": "string",
+              "name": "newUsers"
+            }
+          ]
+        },
+        "formDefinition": {
+          "tenant": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+          "id": "fb7e3960-efec-4a54-9915-153a5e8c72a2",
+          "name": "changeViewers",
+          "form": "{\"layout\":{\"pages\":[{\"id\":\"page_1\",\"title\":\"Update\",\"sections\":[{\"id\":\"Section-newUsers\",\"fields\":[{\"id\":\"newUsers\",\"display\":\"textField\",\"state\":{\"visible\":false,\"read-only\":false},\"signpostPosition\":\"right-middle\"}]},{\"id\":\"section_e0313ab5\",\"fields\":[{\"id\":\"array_2fe05f15\",\"display\":\"array\",\"state\":{\"visible\":true,\"read-only\":false},\"signpostPosition\":\"right-middle\"}]}],\"state\":{\"visible\":true}}]},\"schema\":{\"newUsers\":{\"label\":\"newUsers\",\"type\":{\"dataType\":\"string\",\"isMultiple\":false},\"default\":{\"type\":\"scriptAction\",\"id\":\"com.bvp.bp.prj/changeArrayToCommaString\",\"parameters\":[{\"arrayString\":\"array_2fe05f15\",\"$type\":{\"dataType\":\"string\",\"isMultiple\":true}}]},\"constraints\":{}},\"array_2fe05f15\":{\"label\":\"Viewer Usernames\",\"signpost\":\"User.username\",\"type\":{\"dataType\":\"string\",\"isMultiple\":true},\"default\":{\"type\":\"scriptAction\",\"id\":\"com.bvp.bp.prj/getViewersByProjectId\",\"parameters\":[{\"projectId\":\"_resource.selfId\",\"$type\":{\"dataType\":\"string\",\"isMultiple\":false}}]},\"constraints\":{\"required\":false}}},\"options\":{\"externalValidations\":[]}}",
+          "sourceType": "resource.action",
+          "sourceId": "Custom.Project.custom.changeviewers",
+          "type": "requestForm",
+          "status": "ON",
+          "formFormat": "JSON",
+          "externalSourceFormSchemas": [
+            {
+              "externalSourceId": "com.bvp.bp.prj/changeArrayToCommaString",
+              "elementId": "newUsers",
+              "elementType": "CANVAS_FIELD",
+              "facet": "default",
+              "parameters": [
+                {
+                  "name": "arrayString",
+                  "isValidatable": false
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "Custom.Project.custom.changesharedresources",
+        "name": "changeSharedResources",
+        "displayName": "Change Shared Resources",
+        "providerName": "xaas",
+        "resourceType": "Custom.Project",
+        "status": "RELEASED",
+        "orgId": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+        "runnableItem": {
+          "id": "8a74809d93bf04680193c95d9b7910e5",
+          "name": "Custom.Project.changeSharedResources",
+          "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+          "type": "abx.action",
+          "inputParameters": [
+            {
+              "type": "string",
+              "name": "newSharedResources"
+            }
+          ]
+        },
+        "formDefinition": {
+          "tenant": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+          "id": "60941f80-75cd-4fad-906f-93f214e324ac",
+          "name": "changeSharedResources",
+          "form": "{\"layout\":{\"pages\":[{\"id\":\"page_1\",\"title\":\"Update\",\"sections\":[{\"id\":\"Section-newSharedResources\",\"fields\":[{\"id\":\"newSharedResources\",\"display\":\"dropDown\",\"state\":{\"visible\":true,\"read-only\":false},\"signpostPosition\":\"right-middle\"}]}],\"state\":{\"visible\":true}}]},\"schema\":{\"newSharedResources\":{\"label\":\"Shared Resources\",\"type\":{\"dataType\":\"string\",\"isMultiple\":false},\"default\":{\"type\":\"scriptAction\",\"id\":\"com.bvp.bp.prj/getSharedResourcesByProjectId\",\"parameters\":[{\"projectId\":\"_resource.selfId\",\"$type\":{\"dataType\":\"string\",\"isMultiple\":false}}]},\"valueList\":[{\"value\":\"true\",\"label\":\"Shared\"},{\"value\":\"false\",\"label\":\"Isolated\"}],\"constraints\":{\"required\":true}}},\"options\":{\"externalValidations\":[]}}",
+          "sourceType": "resource.action",
+          "sourceId": "Custom.Project.custom.changesharedresources",
+          "type": "requestForm",
+          "status": "ON",
+          "formFormat": "JSON",
+          "externalSourceFormSchemas": []
+        }
+      },
+      {
+        "id": "Custom.Project.custom.changeadministrators",
+        "name": "changeAdministrators",
+        "displayName": "Change Administrators",
+        "providerName": "xaas",
+        "resourceType": "Custom.Project",
+        "status": "RELEASED",
+        "orgId": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+        "runnableItem": {
+          "id": "8a74821b939d61690193be5998813188",
+          "name": "Custom.Project.changeAdministrators",
+          "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+          "type": "abx.action",
+          "inputParameters": [
+            {
+              "type": "string",
+              "name": "newUsers"
+            }
+          ]
+        },
+        "formDefinition": {
+          "tenant": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+          "id": "961a863f-2e40-416d-8184-009c86106bda",
+          "name": "changeAdministrators",
+          "form": "{\"layout\":{\"pages\":[{\"id\":\"page_1\",\"title\":\"Update\",\"sections\":[{\"id\":\"Section-newUsers\",\"fields\":[{\"id\":\"newUsers\",\"display\":\"textField\",\"state\":{\"visible\":false,\"read-only\":false},\"signpostPosition\":\"right-middle\"}]},{\"id\":\"section_e0313ab5\",\"fields\":[{\"id\":\"array_2fe05f15\",\"display\":\"array\",\"state\":{\"visible\":true,\"read-only\":false},\"signpostPosition\":\"right-middle\"}]}],\"state\":{\"visible\":true}}]},\"schema\":{\"newUsers\":{\"label\":\"newUsers\",\"type\":{\"dataType\":\"string\",\"isMultiple\":false},\"default\":{\"type\":\"scriptAction\",\"id\":\"com.bvp.bp.prj/changeArrayToCommaString\",\"parameters\":[{\"arrayString\":\"array_2fe05f15\",\"$type\":{\"dataType\":\"string\",\"isMultiple\":true}}]},\"constraints\":{}},\"array_2fe05f15\":{\"label\":\"Administrator Usernames\",\"signpost\":\"User.username\",\"type\":{\"dataType\":\"string\",\"isMultiple\":true},\"default\":{\"type\":\"scriptAction\",\"id\":\"com.bvp.bp.prj/getAdministratorsByProjectId\",\"parameters\":[{\"projectId\":\"_resource.selfId\",\"$type\":{\"dataType\":\"string\",\"isMultiple\":false}}]},\"constraints\":{\"required\":true}}},\"options\":{\"externalValidations\":[]}}",
+          "sourceType": "resource.action",
+          "sourceId": "Custom.Project.custom.changeadministrators",
+          "type": "requestForm",
+          "status": "ON",
+          "formFormat": "JSON",
+          "externalSourceFormSchemas": [
+            {
+              "externalSourceId": "com.bvp.bp.prj/changeArrayToCommaString",
+              "elementId": "newUsers",
+              "elementType": "CANVAS_FIELD",
+              "facet": "default",
+              "parameters": [
+                {
+                  "name": "arrayString",
+                  "isValidatable": false
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "Custom.Project.custom.changemembers",
+        "name": "changeMembers",
+        "displayName": "Change Members",
+        "providerName": "xaas",
+        "resourceType": "Custom.Project",
+        "status": "RELEASED",
+        "orgId": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+        "runnableItem": {
+          "id": "8a74829a93bf04610193c94fdcc1003c",
+          "name": "Custom.Project.changeMembers",
+          "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+          "type": "abx.action",
+          "inputParameters": [
+            {
+              "type": "string",
+              "name": "newUsers"
+            }
+          ]
+        },
+        "formDefinition": {
+          "tenant": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+          "id": "630ea0e8-7877-4168-b79e-5f7b28b6c3c1",
+          "name": "changeMembers",
+          "form": "{\"layout\":{\"pages\":[{\"id\":\"page_1\",\"title\":\"Update\",\"sections\":[{\"id\":\"Section-newUsers\",\"fields\":[{\"id\":\"newUsers\",\"display\":\"textField\",\"state\":{\"visible\":false,\"read-only\":false},\"signpostPosition\":\"right-middle\"}]},{\"id\":\"section_e0313ab5\",\"fields\":[{\"id\":\"array_2fe05f15\",\"display\":\"array\",\"state\":{\"visible\":true,\"read-only\":false},\"signpostPosition\":\"right-middle\"}]}],\"state\":{\"visible\":true}}]},\"schema\":{\"newUsers\":{\"label\":\"newUsers\",\"type\":{\"dataType\":\"string\",\"isMultiple\":false},\"default\":{\"type\":\"scriptAction\",\"id\":\"com.bvp.bp.prj/changeArrayToCommaString\",\"parameters\":[{\"arrayString\":\"array_2fe05f15\",\"$type\":{\"dataType\":\"string\",\"isMultiple\":true}}]},\"constraints\":{}},\"array_2fe05f15\":{\"label\":\"Member Usernames\",\"signpost\":\"User.username\",\"type\":{\"dataType\":\"string\",\"isMultiple\":true},\"default\":{\"type\":\"scriptAction\",\"id\":\"com.bvp.bp.prj/getMembersByProjectId\",\"parameters\":[{\"projectId\":\"_resource.selfId\",\"$type\":{\"dataType\":\"string\",\"isMultiple\":false}}]},\"constraints\":{\"required\":false}}},\"options\":{\"externalValidations\":[]}}",
+          "sourceType": "resource.action",
+          "sourceId": "Custom.Project.custom.changemembers",
+          "type": "requestForm",
+          "status": "ON",
+          "formFormat": "JSON",
+          "externalSourceFormSchemas": [
+            {
+              "externalSourceId": "com.bvp.bp.prj/changeArrayToCommaString",
+              "elementId": "newUsers",
+              "elementType": "CANVAS_FIELD",
+              "facet": "default",
+              "parameters": [
+                {
+                  "name": "arrayString",
+                  "isValidatable": false
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "properties": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name",
+          "description": "Project Name"
+        },
+        "selfId": {
+          "type": "string",
+          "title": "Self Project ID",
+          "description": "Self Project ID",
+          "computed": true,
+          "default": ""
+        },
+        "members": {
+          "type": "array",
+          "title": "Member Usernames",
+          "description": "Array of member username",
+          "items": {
+            "type": "string",
+            "title": "Username"
+          },
+          "default": []
+        },
+        "viewers": {
+          "type": "array",
+          "title": "Viewer Usernames",
+          "description": "Array of viewer username",
+          "items": {
+            "type": "string",
+            "title": "Username"
+          },
+          "default": []
+        },
+        "approver": {
+          "type": "string",
+          "title": "Approver",
+          "description": "Approver Username",
+          "default": ""
+        },
+        "catalogs": {
+          "type": "array",
+          "title": "Catalogs",
+          "description": "Array of Catalog.id @ /catalog/api/admin/items.id",
+          "items": {
+            "type": "string",
+            "title": "Catalog ID"
+          },
+          "default": []
+        },
+        "cloudZones": {
+          "type": "array",
+          "title": "Availablity Zones",
+          "description": "Array of CloudZone.id @ /iaas/api/zones",
+          "items": {
+            "type": "string",
+            "title": "Zone ID"
+          }
+        },
+        "displayName": {
+          "type": "string",
+          "title": "Display Name",
+          "description": "Display Name"
+        },
+        "supervisors": {
+          "type": "array",
+          "title": "Supervisor Usernames",
+          "description": "Array of supervisor username",
+          "items": {
+            "type": "string",
+            "title": "Username"
+          },
+          "default": []
+        },
+        "catalogPolicy": {
+          "type": "string",
+          "title": "Catalog Policy ID",
+          "description": "Policy.id @ /policy/api/policies",
+          "computed": true,
+          "default": ""
+        },
+        "administrators": {
+          "type": "array",
+          "title": "Administrator Usernames",
+          "description": "Array of administrator username",
+          "items": {
+            "type": "string",
+            "title": "Username"
+          },
+          "default": []
+        },
+        "approvalPolicy": {
+          "type": "string",
+          "title": "Approval Policy ID",
+          "description": "Policy.id @ /policy/api/policies",
+          "computed": true,
+          "default": ""
+        },
+        "requestMessage": {
+          "type": "string",
+          "title": "Request Message",
+          "description": "Request Message"
+        },
+        "approvalActions": {
+          "type": "array",
+          "title": "Approval Actions",
+          "description": "Action.id @ /policy/api/policyTypes/com.vmware.policy.approval/data/actions",
+          "items": {
+            "type": "string",
+            "title": "Approval Action"
+          },
+          "default": []
+        },
+        "placementPolicy": {
+          "type": "string",
+          "title": "Placement Policy",
+          "description": "Static placement = default, CPU allocation based = spread",
+          "enum": [
+            "default",
+            "spread"
+          ],
+          "default": "default"
+        },
+        "sharedResources": {
+          "type": "boolean",
+          "title": "Shared Resources",
+          "description": "Shared = true, Indivisual = false",
+          "default": true
+        },
+        "autoApprovalExpiry": {
+          "type": "number",
+          "title": "Auto Approval Expiry Days",
+          "default": 1
+        },
+        "autoApprovalDecision": {
+          "type": "string",
+          "title": "Auto Approval Decision",
+          "enum": [
+            "APPROVE",
+            "REJECT"
+          ],
+          "default": "REJECT"
+        }
+      },
+      "required": [
+        "requestMessage",
+        "displayName",
+        "name",
+        "cloudZones"
+      ]
+    },
+    "schemaType": "ABX_USER_DEFINED"
+  },
+  "797dd442-87e1-45af-993c-1932cf2d40cf": {
+    "id": "797dd442-87e1-45af-993c-1932cf2d40cf",
+    "displayName": "VPC",
+    "description": "install by value pack at 20250324-191120",
+    "resourceType": "Custom.VPC",
+    "status": "RELEASED",
+    "orgId": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+    "mainActions": {
+      "create": {
+        "id": "8a7481dd926c0ab601926c7f198b0014",
+        "name": "Custom.VPC.create",
+        "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+        "type": "abx.action",
+        "inputParameters": []
+      },
+      "read": {
+        "id": "8a7481dd926c0ab601926c7f53a40015",
+        "name": "Custom.VPC.read",
+        "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+        "type": "abx.action",
+        "inputParameters": []
+      },
+      "delete": {
+        "id": "8a7481dd926c0ab601926c7f90410016",
+        "name": "Custom.VPC.delete",
+        "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+        "type": "abx.action",
+        "inputParameters": []
+      }
+    },
+    "additionalActions": [
+      {
+        "id": "Custom.VPC.custom.changedisplayname",
+        "name": "changeDisplayname",
+        "displayName": "Change Display Name",
+        "providerName": "xaas",
+        "resourceType": "Custom.VPC",
+        "status": "RELEASED",
+        "orgId": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+        "runnableItem": {
+          "id": "8a7481dd926c0ab601926cfa34490030",
+          "name": "Custom.VPC.changeDisplayName",
+          "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+          "type": "abx.action",
+          "inputParameters": [
+            {
+              "type": "string",
+              "name": "newDisplayName"
+            }
+          ]
+        },
+        "formDefinition": {
+          "tenant": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+          "id": "b647cc00-5f69-4de3-aca2-a6e51f7d0c32",
+          "name": "changeDisplayname",
+          "form": "{\"layout\":{\"pages\":[{\"id\":\"page_1\",\"title\":\"Page 1\",\"sections\":[{\"id\":\"Section-newDisplayName\",\"fields\":[{\"id\":\"newDisplayName\",\"display\":\"textField\",\"state\":{\"visible\":true,\"read-only\":false},\"signpostPosition\":\"right-middle\"}]}]}]},\"schema\":{\"newDisplayName\":{\"label\":\"New Display Name\",\"type\":{\"dataType\":\"string\",\"isMultiple\":false},\"default\":{\"bind\":\"_resource.displayName\"},\"constraints\":{\"required\":true}}},\"options\":{\"externalValidations\":[]}}",
+          "sourceType": "resource.action",
+          "sourceId": "Custom.VPC.custom.changedisplayname",
+          "type": "requestForm",
+          "status": "ON",
+          "formFormat": "JSON",
+          "externalSourceFormSchemas": []
+        }
+      }
+    ],
+    "properties": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name",
+          "description": "VPC Name"
+        },
+        "infraName": {
+          "type": "string",
+          "title": "Infra Name",
+          "description": "Infra Name",
+          "computed": true,
+          "default": ""
+        },
+        "routerName": {
+          "type": "string",
+          "title": "Router Name",
+          "description": "Router Name",
+          "computed": true,
+          "default": ""
+        },
+        "vpcProfile": {
+          "type": "string",
+          "title": "VPC Profile",
+          "description": "NetworkProfile link @ /provisioning/mgmt/network-profile",
+          "computed": true,
+          "default": ""
+        },
+        "displayName": {
+          "type": "string",
+          "title": "Display Name",
+          "description": "Display Name"
+        },
+        "projectName": {
+          "type": "string",
+          "title": "Project Name",
+          "description": "Project Name",
+          "computed": true,
+          "default": ""
+        },
+        "managedTier1": {
+          "type": "string",
+          "title": "VPC Managed Tier-1",
+          "description": "NSX tier1 path @ /infra/tier-1s",
+          "computed": true,
+          "default": ""
+        },
+        "managedRouter": {
+          "type": "string",
+          "title": "VPC Managed Router",
+          "description": "Router link @ /resources/routers",
+          "computed": true,
+          "default": ""
+        },
+        "managedSubnet": {
+          "type": "string",
+          "title": "VPC Managed Subnet",
+          "description": "Subnet link @ /resources/sub-networks",
+          "computed": true,
+          "default": ""
+        },
+        "placementZone": {
+          "type": "string",
+          "title": "Placement Zone",
+          "description": "PlacementZone link @ /provisioning/resources/placement-zones"
+        },
+        "projectDomain": {
+          "type": "string",
+          "title": "Project Domain",
+          "description": "Project Domain",
+          "computed": true,
+          "default": ""
+        },
+        "transitSubnet": {
+          "type": "string",
+          "title": "VPC Transit Subnet",
+          "description": "Subnet link @ /resources/sub-networks",
+          "computed": true,
+          "default": ""
+        },
+        "managedAddress": {
+          "type": "string",
+          "title": "VPC Managed Address",
+          "description": "IP Address",
+          "computed": true,
+          "default": ""
+        },
+        "managedGateway": {
+          "type": "string",
+          "title": "VPC Managed Gateway",
+          "description": "Gateway link @ /provisioning/resources/compute-gateways"
+        },
+        "managedNetwork": {
+          "type": "string",
+          "title": "VPC Managed Network",
+          "description": "Network link @ /provisioning/resources/compute-networks"
+        },
+        "managedSegment": {
+          "type": "string",
+          "title": "VPC Managed Segment",
+          "description": "NSX segment path @ /infra/segments",
+          "computed": true,
+          "default": ""
+        },
+        "requestMessage": {
+          "type": "string",
+          "title": "Request Message",
+          "description": "Request Message"
+        },
+        "transitAddress": {
+          "type": "string",
+          "title": "VPC Transit Address",
+          "description": "IP Address",
+          "computed": true,
+          "default": ""
+        },
+        "transitSegment": {
+          "type": "string",
+          "title": "VPC Transit Segment",
+          "description": "NSX segment path @ /infra/segments",
+          "computed": true,
+          "default": ""
+        },
+        "vpcTagCategory": {
+          "type": "string",
+          "title": "VPC Tag Category",
+          "description": "VPC Tag Category"
+        },
+        "vpcInfraProfile": {
+          "type": "string",
+          "title": "VPC Infra Profile",
+          "description": "NetworkProfile link @ /provisioning/mgmt/network-profile"
+        },
+        "managedIpAddress": {
+          "type": "string",
+          "title": "VPC Managed IP Address",
+          "description": "IP address link @ /resources/ip-addresses",
+          "computed": true,
+          "default": ""
+        },
+        "transitIpAddress": {
+          "type": "string",
+          "title": "VPC Transit IP Address",
+          "description": "IP address link @ /resources/ip-addresses",
+          "computed": true,
+          "default": ""
+        },
+        "managedLoadBalancer": {
+          "type": "string",
+          "title": "VPC Managed Load Balancer",
+          "description": "LoadBalancer link @ /resources/load-balancers"
+        }
+      },
+      "required": [
+        "managedGateway",
+        "requestMessage",
+        "managedNetwork",
+        "displayName",
+        "name",
+        "vpcTagCategory",
+        "managedLoadBalancer",
+        "placementZone",
+        "vpcInfraProfile"
+      ]
+    },
+    "schemaType": "ABX_USER_DEFINED"
+  },
+  "3aa3b96b-a4b7-4f98-bdbb-5076cc83ea6c": {
+    "id": "3aa3b96b-a4b7-4f98-bdbb-5076cc83ea6c",
+    "displayName": "NFS",
+    "description": "install by value pack at 20250324-191120",
+    "resourceType": "Custom.NFS",
+    "status": "RELEASED",
+    "orgId": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+    "mainActions": {
+      "create": {
+        "id": "8a74809294779ca301951d2f8f200296",
+        "name": "Custom.NFS.create",
+        "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+        "type": "abx.action",
+        "inputParameters": []
+      },
+      "read": {
+        "id": "8a7482f295174f3201951d2fe5020cd5",
+        "name": "Custom.NFS.read",
+        "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+        "type": "abx.action",
+        "inputParameters": []
+      },
+      "delete": {
+        "id": "8a74818f94779d7701951d3060c34228",
+        "name": "Custom.NFS.delete",
+        "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+        "type": "abx.action",
+        "inputParameters": []
+      }
+    },
+    "additionalActions": [],
+    "properties": {
+      "type": "object",
+      "properties": {
+        "vpc": {
+          "type": "string",
+          "title": "VPC Profile",
+          "description": "Network Profile Link @ /provisioning/resources/network-profiles"
+        },
+        "name": {
+          "type": "string",
+          "title": "Name",
+          "description": "Hosting Name",
+          "computed": true,
+          "default": ""
+        },
+        "size": {
+          "type": "number",
+          "title": "NFS Size (GB)",
+          "minimum": 1
+        },
+        "address": {
+          "type": "string",
+          "title": "Address",
+          "description": "Address",
+          "computed": true,
+          "default": ""
+        },
+        "compute": {
+          "type": "string",
+          "title": "Compute",
+          "description": "Compute Link @ /resources/compute"
+        },
+        "displayName": {
+          "type": "string",
+          "title": "Display Name",
+          "description": "Display Name"
+        }
+      },
+      "required": [
+        "compute",
+        "size",
+        "displayName",
+        "vpc"
+      ]
+    },
+    "schemaType": "ABX_USER_DEFINED"
+  },
+  "d2a30d75-c38e-471a-922c-f05373b152dd": {
+    "id": "d2a30d75-c38e-471a-922c-f05373b152dd",
+    "displayName": "Kubernetes",
+    "description": "install by value pack at 20250324-191120",
+    "resourceType": "Custom.Kubernetes",
+    "status": "RELEASED",
+    "orgId": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+    "mainActions": {
+      "create": {
+        "id": "8a74818f94779d77019535f094db428c",
+        "name": "Custom.Kubernetes.create",
+        "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+        "type": "abx.action",
+        "inputParameters": [
+          {
+            "type": "string",
+            "name": "target"
+          }
+        ]
+      },
+      "read": {
+        "id": "8a74809294779ca3019535f02fe302c0",
+        "name": "Custom.Kubernetes.read",
+        "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+        "type": "abx.action",
+        "inputParameters": [
+          {
+            "type": "string",
+            "name": "target"
+          }
+        ]
+      },
+      "update": {
+        "id": "8a7482f295174f32019535efd2ad4d9a",
+        "name": "Custom.Kubernetes.update",
+        "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+        "type": "abx.action",
+        "inputParameters": [
+          {
+            "type": "string",
+            "name": "target"
+          }
+        ]
+      },
+      "delete": {
+        "id": "8a74809294779ca3019535eefa0b02bf",
+        "name": "Custom.Kubernetes.delete",
+        "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+        "type": "abx.action",
+        "inputParameters": []
+      }
+    },
+    "additionalActions": [],
+    "properties": {
+      "type": "object",
+      "required": []
+    },
+    "schemaType": "ABX_USER_DEFINED"
+  },
+  "302d0112-d56d-4112-b9eb-a65c85a5d773": {
+    "id": "302d0112-d56d-4112-b9eb-a65c85a5d773",
+    "displayName": "AIP",
+    "description": "install by value pack at 20250324-191120",
+    "resourceType": "Custom.AIP",
+    "status": "RELEASED",
+    "orgId": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+    "mainActions": {
+      "create": {
+        "id": "8a7481dd926c0ab60192769fc5ed00e5",
+        "name": "Custom.AIP.create",
+        "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+        "type": "abx.action",
+        "inputParameters": []
+      },
+      "read": {
+        "id": "8a7481dd926c0ab6019276c8b2c900f2",
+        "name": "Custom.AIP.read",
+        "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+        "type": "abx.action",
+        "inputParameters": []
+      },
+      "delete": {
+        "id": "8a7481dd926c0ab6019276c943f300f3",
+        "name": "Custom.AIP.delete",
+        "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+        "type": "abx.action",
+        "inputParameters": []
+      }
+    },
+    "additionalActions": [
+      {
+        "id": "Custom.AIP.custom.detach",
+        "name": "detach",
+        "displayName": "Detach From Virtual Machine",
+        "providerName": "xaas",
+        "resourceType": "Custom.AIP",
+        "status": "RELEASED",
+        "orgId": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+        "runnableItem": {
+          "id": "8a7481dd926c0ab601928a9719ae01ef",
+          "name": "Custom.AIP.detach",
+          "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+          "type": "abx.action",
+          "inputParameters": []
+        },
+        "formDefinition": {
+          "tenant": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+          "id": "cf484f5a-d0fe-49cb-a75b-ff6bc7521581",
+          "name": "detach",
+          "form": "{\"layout\":{\"pages\":[{\"id\":\"page_1\",\"title\":\"Page 1\",\"sections\":[],\"state\":{}}]},\"schema\":{},\"options\":{\"externalValidations\":[]}}",
+          "sourceType": "resource.action",
+          "sourceId": "Custom.AIP.custom.detach",
+          "type": "requestForm",
+          "status": "ON",
+          "formFormat": "JSON",
+          "externalSourceFormSchemas": []
+        }
+      },
+      {
+        "id": "Custom.AIP.custom.attach",
+        "name": "attach",
+        "displayName": "Attach To Virtual Machine",
+        "providerName": "xaas",
+        "resourceType": "Custom.AIP",
+        "status": "RELEASED",
+        "orgId": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+        "runnableItem": {
+          "id": "8a7481dd926c0ab601928a6f461901ea",
+          "name": "Custom.AIP.attach",
+          "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+          "type": "abx.action",
+          "inputParameters": [
+            {
+              "type": "string",
+              "name": "computeLink"
+            },
+            {
+              "type": "string",
+              "name": "interfaceLink"
+            }
+          ]
+        },
+        "formDefinition": {
+          "tenant": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+          "id": "955cec9f-56ed-46ed-9ffa-d4cd1cb9efef",
+          "name": "attach",
+          "form": "{\"layout\":{\"pages\":[{\"id\":\"page_1\",\"title\":\"Page 1\",\"sections\":[{\"id\":\"Section-computeLink\",\"fields\":[{\"id\":\"computeLink\",\"display\":\"dropDown\",\"state\":{\"visible\":true,\"read-only\":false},\"signpostPosition\":\"right-middle\"}]},{\"id\":\"Section-interfaceLink\",\"fields\":[{\"id\":\"interfaceLink\",\"display\":\"dropDown\",\"state\":{\"visible\":true,\"read-only\":false},\"signpostPosition\":\"right-middle\"}]}]}]},\"schema\":{\"computeLink\":{\"label\":\"Compute\",\"type\":{\"dataType\":\"string\",\"isMultiple\":false},\"default\":\"\",\"valueList\":{\"id\":\"com.bvp.bp.aip/getVpcComputesByProfileLink\",\"type\":\"scriptAction\",\"parameters\":[{\"$type\":{\"dataType\":\"string\",\"isMultiple\":false},\"profileLink\":\"_resource.vpc\"}]},\"constraints\":{\"required\":true}},\"interfaceLink\":{\"label\":\"Interface\",\"type\":{\"dataType\":\"string\",\"isMultiple\":false},\"default\":\"\",\"valueList\":{\"id\":\"com.bvp.bp.aip/getInterfacesByComputeLink\",\"type\":\"scriptAction\",\"parameters\":[{\"$type\":{\"dataType\":\"string\",\"isMultiple\":false},\"computeLink\":\"computeLink\"}]},\"constraints\":{\"required\":true}}},\"options\":{\"externalValidations\":[]}}",
+          "sourceType": "resource.action",
+          "sourceId": "Custom.AIP.custom.attach",
+          "type": "requestForm",
+          "status": "ON",
+          "formFormat": "JSON",
+          "externalSourceFormSchemas": [
+            {
+              "externalSourceId": "com.bvp.bp.aip/getInterfacesByComputeLink",
+              "elementId": "interfaceLink",
+              "elementType": "CANVAS_FIELD",
+              "facet": "valueList",
+              "parameters": [
+                {
+                  "name": "computeLink",
+                  "isValidatable": false
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "properties": {
+      "type": "object",
+      "properties": {
+        "vpc": {
+          "type": "string",
+          "title": "VPC Profile",
+          "description": "Network Profile Link @ /provisioning/resources/network-profiles"
+        },
+        "name": {
+          "type": "string",
+          "title": "Name",
+          "description": "Hosting Name"
+        },
+        "subnet": {
+          "type": "string",
+          "title": "Subnet",
+          "description": "Subnet link @ /resources/sub-networks",
+          "computed": true,
+          "default": ""
+        },
+        "address": {
+          "type": "string",
+          "title": "Address",
+          "description": "Address",
+          "computed": true,
+          "default": ""
+        },
+        "compute": {
+          "type": "string",
+          "title": "Compute",
+          "description": "Compute Link @ /resources/compute",
+          "computed": true,
+          "default": "NONE"
+        },
+        "interface": {
+          "type": "string",
+          "title": "Interface",
+          "description": "Interface Link @ /resources/network-interfaces",
+          "computed": true,
+          "default": "NONE"
+        },
+        "ipAddress": {
+          "type": "string",
+          "title": "IP Address",
+          "description": "IP Address Link @ /resources/ip-addresses",
+          "computed": true,
+          "default": ""
+        },
+        "subnetName": {
+          "type": "string",
+          "title": "Subnet Name",
+          "description": "Subnet Name @ /resources/sub-networks",
+          "computed": true,
+          "default": ""
+        },
+        "displayName": {
+          "type": "string",
+          "title": "Display Name",
+          "description": "Display Name"
+        },
+        "subnetRange": {
+          "type": "string",
+          "title": "Subnet Range",
+          "description": "Subnet Range Link @ /resources/subnet-ranges",
+          "computed": true,
+          "default": ""
+        },
+        "accessDomain": {
+          "type": "string",
+          "title": "Access Domain",
+          "description": "Access Domain"
+        },
+        "compupteName": {
+          "type": "string",
+          "title": "Compute Name",
+          "description": "Compute Name @ /resources/compute",
+          "computed": true,
+          "default": ""
+        },
+        "subnetRangeName": {
+          "type": "string",
+          "title": "Subnet Range Name",
+          "description": "Subnet Range Name @ /resources/subnet-ranges",
+          "computed": true,
+          "default": ""
+        },
+        "interfaceAddress": {
+          "type": "string",
+          "title": "Interface Address",
+          "description": "Interface Address @ /resources/network-interfaces",
+          "computed": true,
+          "default": ""
+        }
+      },
+      "required": [
+        "displayName",
+        "vpc",
+        "name",
+        "accessDomain"
+      ]
+    },
+    "schemaType": "ABX_USER_DEFINED"
+  },
+  "91e653be-7787-491e-9027-520bffaa242b": {
+    "id": "91e653be-7787-491e-9027-520bffaa242b",
+    "displayName": "Peering",
+    "description": "install by value pack at 20250324-191120",
+    "resourceType": "Custom.Peering",
+    "status": "RELEASED",
+    "orgId": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+    "mainActions": {
+      "create": {
+        "id": "8a74801d929873a00192a96576b00211",
+        "name": "Custom.Peering.create",
+        "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+        "type": "abx.action",
+        "inputParameters": []
+      },
+      "read": {
+        "id": "8a74801d929873a00192a965bb870212",
+        "name": "Custom.Peering.read",
+        "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+        "type": "abx.action",
+        "inputParameters": []
+      },
+      "delete": {
+        "id": "8a74801d929873a00192a96643fe0213",
+        "name": "Custom.Peering.delete",
+        "projectId": "aa0ba574-aec3-4c69-88d0-6bbb1964e8ae",
+        "type": "abx.action",
+        "inputParameters": []
+      }
+    },
+    "additionalActions": [],
+    "properties": {
+      "type": "object",
+      "properties": {
+        "vpc1": {
+          "type": "string",
+          "title": "VPC 1",
+          "description": "Profile link @ /resources/network-profiles"
+        },
+        "vpc2": {
+          "type": "string",
+          "title": "VPC 2",
+          "description": "Profile link @ /resources/network-profiles"
+        },
+        "subnet1": {
+          "type": "string",
+          "title": "Segment 1",
+          "description": "Subnet link @ /resources/sub-networks"
+        },
+        "subnet2": {
+          "type": "string",
+          "title": "Segment 2",
+          "description": "Subnet link @ /resources/sub-networks"
+        },
+        "displayName": {
+          "type": "string",
+          "title": "Display Name",
+          "description": "Display Name"
+        }
+      },
+      "required": [
+        "displayName",
+        "subnet1",
+        "subnet2",
+        "vpc2",
+        "vpc1"
+      ]
+    },
+    "schemaType": "ABX_USER_DEFINED"
+  },
+  "c9679dec-0800-456c-88b5-367f0786d8e0": {
+    "id": "c9679dec-0800-456c-88b5-367f0786d8e0",
+    "displayName": "DSMDB",
+    "description": "",
+    "resourceType": "Custom.DSMDB",
+    "status": "RELEASED",
+    "orgId": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+    "mainActions": {
+      "create": {
+        "id": "8a74818f94779d770195d07c72c876a6",
+        "name": "DSM-DB-crud",
+        "projectId": "b2511474-8a9e-445d-975b-b4cbb01cc636",
+        "type": "abx.action"
+      },
+      "read": {
+        "id": "8a74818f94779d770195d07c72c876a6",
+        "name": "DSM-DB-crud",
+        "projectId": "b2511474-8a9e-445d-975b-b4cbb01cc636",
+        "type": "abx.action"
+      },
+      "update": {
+        "id": "8a74818f94779d770195d07c72c876a6",
+        "name": "DSM-DB-crud",
+        "projectId": "b2511474-8a9e-445d-975b-b4cbb01cc636",
+        "type": "abx.action"
+      },
+      "delete": {
+        "id": "8a74818f94779d770195d07c72c876a6",
+        "name": "DSM-DB-crud",
+        "projectId": "b2511474-8a9e-445d-975b-b4cbb01cc636",
+        "type": "abx.action"
+      }
+    },
+    "additionalActions": [
+      {
+        "id": "Custom.DSMDB.custom.get-connection-string",
+        "name": "Get-Connection-String",
+        "displayName": "Get Connection String",
+        "providerName": "xaas",
+        "resourceType": "Custom.DSMDB",
+        "status": "RELEASED",
+        "orgId": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+        "runnableItem": {
+          "id": "8a7482f295174f320195d07c73d071f8",
+          "name": "DSM-Day2-Operations",
+          "projectId": "b2511474-8a9e-445d-975b-b4cbb01cc636",
+          "type": "abx.action",
+          "inputParameters": []
+        },
+        "formDefinition": {
+          "tenant": "72289d0c-8e6c-4825-ad70-89208f5c1e75",
+          "id": "5561323d-a45d-4257-90d8-7f4b2b1fed5f",
+          "name": "Get-Connection-String",
+          "form": "{\"layout\":{\"pages\":[{\"id\":\"page_1\",\"title\":\"Page 1\",\"sections\":[{\"id\":\"section_note\",\"fields\":[{\"id\":\"note\",\"display\":\"textField\",\"state\":{\"visible\":true,\"read-only\":true},\"signpostPosition\":\"right-middle\"}]},{\"id\":\"section_connection_string\",\"fields\":[{\"id\":\"connection_string\",\"display\":\"textField\",\"state\":{\"visible\":true,\"read-only\":true},\"signpostPosition\":\"right-middle\"}]}],\"state\":{}}]},\"schema\":{\"note\":{\"label\":\"Note:\",\"type\":{\"dataType\":\"string\"},\"default\":\"CLICKING THE SUBMIT BUTTON IS NOT REQUIRED AT THIS TIME\",\"placeholder\":\"\",\"constraints\":{}},\"connection_string\":{\"label\":\"Connection String:\",\"type\":{\"dataType\":\"string\"},\"default\":{\"id\":\"com.vmware.dsm/form_connectionstring\",\"type\":\"scriptAction\",\"parameters\":[{\"$type\":{\"dataType\":\"string\",\"isMultiple\":false},\"deploymentName\":\"_resource.deploymentName\"},{\"$type\":{\"dataType\":\"string\",\"isMultiple\":false},\"databaseName\":\"_resource.databaseName\"},{\"$type\":{\"dataType\":\"string\",\"isMultiple\":false},\"adminUsername\":\"_resource.adminUsername\"},{\"$type\":{\"dataType\":\"string\",\"isMultiple\":false},\"dbengine\":\"_resource.dbengine\"},{\"$type\":{\"dataType\":\"string\",\"isMultiple\":false},\"conn_host\":\"_resource.conn_host\"},{\"$type\":{\"dataType\":\"number\",\"isMultiple\":false},\"conn_port\":\"_resource.conn_port\"},{\"$type\":{\"dataType\":\"string\",\"isMultiple\":false},\"action\":\"`form-connectionstring`\"}]},\"placeholder\":\"\",\"constraints\":{}}},\"options\":{\"externalValidations\":[]}}",
+          "sourceType": "resource.action",
+          "sourceId": "Custom.DSMDB.custom.get-connection-string",
+          "type": "requestForm",
+          "status": "ON",
+          "formFormat": "JSON"
+        },
+        "criteria": {
+          "matchExpression": [
+            {
+              "and": [
+                {
+                  "key": "${properties.ready}",
+                  "operator": "eq",
+                  "value": "True"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "properties": {
+      "type": "object",
+      "properties": {
+        "ready": {
+          "type": "string",
+          "readOnly": true,
+          "default": "False"
+        },
+        "vmClass": {
+          "type": "string"
+        },
+        "dbengine": {
+          "type": "string"
+        },
+        "topology": {
+          "type": "string"
+        },
+        "conn_host": {
+          "type": "string",
+          "readOnly": true,
+          "default": "Unset"
+        },
+        "conn_port": {
+          "type": "number",
+          "readOnly": true,
+          "default": 0
+        },
+        "dbOptions": {
+          "type": "array",
+          "default": "[]"
+        },
+        "dbversion": {
+          "type": "string"
+        },
+        "conn_dbname": {
+          "type": "string",
+          "readOnly": true,
+          "default": "Unset"
+        },
+        "infraPolicy": {
+          "type": "string"
+        },
+        "databaseName": {
+          "type": "string"
+        },
+        "storageSpace": {
+          "type": "number"
+        },
+        "adminUsername": {
+          "type": "string"
+        },
+        "conn_username": {
+          "type": "string",
+          "readOnly": true,
+          "default": "Unset"
+        },
+        "enableBackups": {
+          "type": "boolean"
+        },
+        "storagePolicy": {
+          "type": "string"
+        },
+        "backupLocation": {
+          "type": "string",
+          "default": "Unset"
+        },
+        "deploymentName": {
+          "type": "string"
+        },
+        "enableDbOptions": {
+          "type": "boolean"
+        },
+        "backupRetentionDays": {
+          "type": "number"
+        },
+        "maintenanceDuration": {
+          "type": "string"
+        },
+        "maintenanceDayOfWeek": {
+          "type": "string"
+        },
+        "maintenanceWindowMins": {
+          "type": "string"
+        },
+        "maintenanceWindowHours": {
+          "type": "string"
+        },
+        "enableMaintenanceWindow": {
+          "type": "boolean"
+        },
+        "enableDirectoryServiceAuthentication": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enableDirectoryServiceAuthentication",
+        "vmClass",
+        "maintenanceWindowMins",
+        "databaseName",
+        "enableDbOptions",
+        "topology",
+        "enableBackups",
+        "storagePolicy",
+        "backupRetentionDays",
+        "dbengine",
+        "adminUsername",
+        "maintenanceWindowHours",
+        "infraPolicy",
+        "storageSpace",
+        "enableMaintenanceWindow",
+        "maintenanceDayOfWeek",
+        "dbversion",
+        "maintenanceDuration",
+        "deploymentName"
+      ]
+    },
+    "schemaType": "ABX_USER_DEFINED"
+  }
+}

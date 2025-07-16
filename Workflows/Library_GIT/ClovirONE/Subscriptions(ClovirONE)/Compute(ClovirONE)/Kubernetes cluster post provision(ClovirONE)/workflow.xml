@@ -1,0 +1,85 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item1" object-name="workflow:name=generic" id="cbc43c94-25db-4583-90e3-17e193b534dd" version="0.0.0" api-version="6.0.0" allowed-operations="vfe" editor-version="2.0" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[ Kubernetes cluster post provision(ClovirONE)]]></display-name>
+  <position y="50.0" x="100.0"/>
+  <workflow-item name="item0" type="end" end-mode="0">
+    <in-binding/>
+    <position y="50.0" x="880.0"/>
+  </workflow-item>
+  <workflow-item name="item1" out-name="item0" type="task">
+    <display-name><![CDATA[Scriptable task]]></display-name>
+    <script encoded="false"><![CDATA[var clusterId = "6154fa7e-8236-46c6-b5fd-4645386f9708";
+// var clusterId = "c394bfaf-c3ad-4101-ab32-92515743f91b";
+var kubeAuth = System.getModule("com.test.goodmit.clovir").getKubeAuth(clusterId);
+
+var serverUrl = kubeAuth.serverUrl;
+var caCert = kubeAuth.caCertificate;
+var clientCert = kubeAuth.clientCertificate;
+var clientKey = kubeAuth.clientKey;
+
+var rest = System.getModule("com.ecs").RestManager(serverUrl);
+
+// Envoy 서비스의 EXTERNAL-IP 가져오기
+var namespaceIngress = "tanzu-system-ingress";
+var serviceNameIngress = "envoy";
+var envoyExternalIP = "N/A";
+
+var serviceResponse = rest.getKube("/api/v1/namespaces/" + namespaceIngress + "/services/" + serviceNameIngress, clientCert, clientKey, caCert);
+if (serviceResponse && serviceResponse.status && serviceResponse.status.loadBalancer && serviceResponse.status.loadBalancer.ingress && serviceResponse.status.loadBalancer.ingress.length > 0) {
+    envoyExternalIP = serviceResponse.status.loadBalancer.ingress[0].ip;
+}
+
+// Prometheus-httpproxy의 FQDN 가져오기
+var namespaceMonitoring = "tanzu-system-monitoring";
+var httpProxyName = "prometheus-httpproxy";
+var prometheusFQDN = "N/A";
+
+var httpProxyResponse = rest.getKube("/apis/projectcontour.io/v1/namespaces/" + namespaceMonitoring + "/httpproxies/" + httpProxyName, clientCert, clientKey, caCert);
+if (httpProxyResponse && httpProxyResponse.spec && httpProxyResponse.spec.virtualhost && httpProxyResponse.spec.virtualhost.fqdn) {
+    prometheusFQDN = httpProxyResponse.spec.virtualhost.fqdn;
+}
+
+// Clovir-admin의 ServiceAccount 토큰 가져오기
+var namespaceKube = "kube-system";
+var secretName = "clovir-admin-token";
+var clovirAdminToken = "N/A";
+
+var secretResponse = rest.getKube("/api/v1/namespaces/" + namespaceKube + "/secrets/" + secretName, clientCert, clientKey, caCert);
+if (secretResponse && secretResponse.data && secretResponse.data.token) {
+    clovirAdminToken = System.getModule("com.gvp").base64Decode(secretResponse.data.token);
+}
+
+System.log("Envoy External IP: " + envoyExternalIP);
+System.log("Prometheus HTTPProxy FQDN: " + prometheusFQDN);
+System.log("Clovir-admin Token: " + clovirAdminToken);
+
+//customProperties에 넣기
+var aa = System.getModule("com.ecs").AaManager(true);
+var clusterInfo = aa.get("/cmx/api/resources/k8s/clusters/" + clusterId);
+
+if (!clusterInfo) {
+    throw "Error: clusterInfo is null or undefined";
+}
+
+if (!clusterInfo.customProperties || typeof clusterInfo.customProperties !== "object") {
+    clusterInfo.customProperties = {};
+}
+
+clusterInfo.customProperties["Clovir_envoyExternalIP"] = envoyExternalIP;
+clusterInfo.customProperties["Clovir_prometheusFQDN"] = prometheusFQDN;
+clusterInfo.customProperties["Clovir_clovirAdminToken"] = clovirAdminToken;
+
+try {
+    var response = aa.put("/cmx/api/resources/k8s/clusters/" + clusterId, clusterInfo);
+} catch (e) {
+    throw e;
+}
+
+]]></script>
+    <in-binding/>
+    <out-binding/>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.0" x="360.0"/>
+  </workflow-item>
+  <presentation/>
+</workflow>

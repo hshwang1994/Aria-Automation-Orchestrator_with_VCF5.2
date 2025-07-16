@@ -1,0 +1,105 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item1" object-name="workflow:name=generic" id="aa749384-c010-4707-ad2d-78cba26d4972" version="0.0.1" api-version="6.0.0" allowed-operations="vfe" editor-version="2.0" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[Copy of Compute Post Provision]]></display-name>
+  <position y="50.0" x="100.0"/>
+  <input>
+    <param name="inputProperties" type="Properties"/>
+  </input>
+  <workflow-item name="item0" type="end" end-mode="0">
+    <in-binding/>
+    <position y="50.0" x="340.0"/>
+  </workflow-item>
+  <workflow-item name="item1" out-name="item0" type="task">
+    <display-name><![CDATA[Scriptable task]]></display-name>
+    <script encoded="false"><![CDATA[var computeId = inputProperties.resourceIds[0];
+if (computeId && computeId != "N/A") {
+    var aa = System.getModule("com.ecs").AaManager(true);
+    var endpointId = inputProperties.endpointId;
+    var endpointLink = "/resources/endpoints/" + endpointId;
+    var endpointName = aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0];
+    var customProperties = inputProperties.customProperties;
+    var rootPassword = customProperties.rootPassword ? customProperties.rootPassword : null;
+    var rootPasswordNew = customProperties.rootPasswordNew ? customProperties.rootPasswordNew : null;
+    var adminUsername = customProperties.adminUsername ? customProperties.adminUsername : null;
+    var adminPassword = customProperties.adminPassword ? customProperties.adminPassword : null;
+    var computeLink = "/resources/compute/" + computeId;
+    var compute = aa.getUerp(computeLink);
+    var computeName = compute.name;
+    var addressType = compute.customProperties.vpc ? (compute.customProperties.addressType ? compute.customProperties.addressType : "permanent") : "permanent";
+    var nsx = null;
+    if (compute.customProperties.vpc) {
+        var vpc = aa.getUerp(compute.customProperties.vpc);
+        for each(var intfLink in compute.networkInterfaceLinks) {
+            var interfaceId = intfLink.split("/network-interfaces/")[1];
+            var interface = aa.getUerp(intfLink);
+            var macAddress = interface.customProperties.mac_address;
+            var subnet = aa.getUerp(interface.subnetLink);
+            if (!nsx) { nsx = System.getModule("com.ecs").NsxManager(aa.getUerp(subnet.endpointLink).endpointProperties.hostName.split(".")[0]);}
+            nsx.put("/policy/api/v1" + subnet.customProperties.__path + "/dhcp-static-binding-configs/" + interfaceId, {
+                resource_type: "DhcpV4StaticBindingConfig",
+                display_name: computeName + "-" + macAddress,
+                host_name: computeName,
+                ip_address: interface.address,
+                mac_address: macAddress,
+                gateway_address: interface.customProperties.gateways,
+                options: {}
+            });
+        }
+        if (nsx) {
+            nsx.put("/policy/api/v1" + vpc.customProperties.vpcManagedTier1Path + "/nat/USER/nat-rules/" + compute.id, {
+                action: "DNAT",
+                enabled: true,
+                display_name: compute.name,
+                destination_network: vpc.customProperties.vpcTransitAddress,
+                translated_network: compute.address,
+                service: "/infra/services/SSH",
+                translated_ports: (parseInt(compute.customProperties.__moref.split(":vm-")[1]) % 55000) + 10000,
+                firewall_match: "MATCH_INTERNAL_ADDRESS",
+                policy_based_vpn_mode: "BYPASS",
+                sequence_number: 0,
+                id: compute.id
+            });
+        }
+    }
+    if (rootPassword) {
+        var scripts = "/usr/bin/cloud-init clean -s -l -c all\n";
+        if (addressType == "permanent") {
+            scripts += 'echo "network: {config: disabled}" > /etc/cloud/cloud.cfg.d/99_network_disabled.cfg\n';
+        } else {
+            scripts += "rm -rf /etc/sysconfig/network-scripts/ifcfg-*\n"; // redhat, fedora, centos, locky
+            scripts += "rm -rf /etc/network/interfaces\n"; // devian(ubuntu) older
+            scripts += "rm -rf /etc/netplan/*\n"; // devian(ubuntu) newer
+        }
+        scripts += "/usr/bin/cloud-init init --local\n";
+        scripts += "/usr/bin/cloud-init init\n";
+        scripts += "/usr/bin/cloud-init modules --mode=config\n";
+        scripts += "/usr/bin/cloud-init modules --mode=final\n";
+        var vcConf = System.getModule("com.ecs").ConfManager().load("/Endpoint/" + endpointName);
+        var execScripts = System.getModule("com.ecs.common").execScripts;
+        execScripts(vcConf.hostname, vcConf.username, vcConf.password, computeName, "root", rootPassword, scripts);
+        if (adminUsername && adminPassword && rootPasswordNew) {
+            execScripts(vcConf.hostname, vcConf.username, vcConf.password, computeName, adminUsername, adminPassword, "sudo -u root bash -c '(echo \"" + rootPasswordNew + "\"; echo \"" + rootPasswordNew + "\") | passwd'");
+        }
+        if (addressType != "permanent") {
+            while (true) {
+                System.sleep(1000);
+                System.log("try reboot");
+                try {
+                    aa.post("/iaas/api/machines/" + computeId + "/operations/reboot", {});
+                    break;
+                } catch (e) {
+                    System.log("reboot error : " + e);
+                }
+            }
+        }
+    }
+}]]></script>
+    <in-binding>
+      <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.5" x="180.0"/>
+  </workflow-item>
+  <presentation/>
+</workflow>

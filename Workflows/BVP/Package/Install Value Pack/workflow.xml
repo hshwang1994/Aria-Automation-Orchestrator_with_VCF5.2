@@ -1,0 +1,566 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item3" object-name="workflow:name=generic" id="48fd162e-3881-4b23-9f5a-5a57cf1795e3" version="0.0.2" api-version="6.0.0" allowed-operations="vfe" editor-version="2.0" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[Install Value Pack]]></display-name>
+  <position y="50.0" x="100.0"/>
+  <input>
+    <param name="aaUsername" type="string"/>
+    <param name="aaPassword" type="SecureString"/>
+    <param name="orbHostname" type="string"/>
+    <param name="orbAccessKey" type="SecureString"/>
+    <param name="orbSecretKey" type="SecureString"/>
+    <param name="adminProjectName" type="string"/>
+    <param name="primeProjectName" type="string"/>
+    <param name="backupTimeStr" type="string"/>
+  </input>
+  <attrib name="aaUrl" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="aaIgnoreWarning" type="boolean" read-only="false">
+    <value encoded="n"><![CDATA[true]]></value>
+  </attrib>
+  <attrib name="aaSessionMode" type="string" read-only="false">
+    <value encoded="n"><![CDATA[Shared Session]]></value>
+  </attrib>
+  <attrib name="aaConnectionType" type="string" read-only="false">
+    <value encoded="n"><![CDATA[vra-onprem]]></value>
+  </attrib>
+  <attrib name="aaInvName" type="string" read-only="false">
+    <value encoded="n"><![CDATA[Admin]]></value>
+  </attrib>
+  <attrib name="orbSelfEndpoint" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="adminProjectId" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="error" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <attrib name="primeProjectId" type="string" read-only="false">
+    <value encoded="n"><![CDATA[]]></value>
+  </attrib>
+  <workflow-item name="item0" type="end" end-mode="0">
+    <in-binding/>
+    <position y="50.0" x="700.0"/>
+  </workflow-item>
+  <workflow-item name="item1" out-name="item4" type="task">
+    <display-name><![CDATA[Register System Settings]]></display-name>
+    <script encoded="false"><![CDATA[var aa = System.getModule("com.bvp").AaManager(true);
+var cf = System.getModule("com.bvp").ConfManager();
+
+// register configurations
+for each(var content in aa.get("/iaas/api/cloud-accounts").content) {
+    try {
+        var hostname = content.cloudAccountProperties.hostName.split(".")[0];
+        var username = content.cloudAccountProperties.privateKeyId;
+        cf.save("BVP/Endpoint/" + hostname, {
+            hostname: content.cloudAccountProperties.hostName,
+            username: username,
+            password: "change_me"
+        });
+        System.log("register BVP/Endpoint/" + hostname);
+    } catch (e) { System.log("already registered BVP/Endpoint/" + hostname); }
+}
+try {
+    cf.save("BVP/Endpoint/Orbrium", {
+        hostname: orbHostname,
+        accessKey: orbAccessKey,
+        secretKey: orbSecretKey,
+        selfEndpoint: orbSelfEndpoint
+    });
+    System.log("register BVP/Endpoint/Orbrium");
+} catch (e) { System.log("already registered BVP/Endpoint/Orbrium"); }
+
+// register custom naming rules
+try {
+    aa.post("/provisioning/naming", {
+        name: "BVP",
+        description: "Broadcom Value Pack Default Naming",
+        scope: "organization",
+        templates: [
+            {resourceType: "COMPUTE", resourceTypeName: "Machine", name: null, pattern: "${resource.name}", startCounter: 1, incrementStep: 1, resourceDefault: true, uniqueName: true, staticPattern: "", counters: []},
+            {resourceType: "NETWORK", resourceTypeName: "Network", name: null, pattern: "${resource.name}", startCounter: 1, incrementStep: 1, resourceDefault: true, uniqueName: false, staticPattern: "", counters: []},
+            {resourceType: "COMPUTE_STORAGE", resourceTypeName: "Storage", name: null, pattern: "${resource.name}", startCounter: 1, incrementStep: 1, resourceDefault: true, uniqueName: false, staticPattern: "", counters: []},
+            {resourceType: "LOAD_BALANCER", resourceTypeName: "Load Balancer", name: null, pattern: "${resource.name}", startCounter: 1, incrementStep: 1, resourceDefault: true, uniqueName: false, staticPattern: "", counters: []},
+            {resourceType: "RESOURCE_GROUP", resourceTypeName: "Resource Group", name: null, pattern: "${resource.name}", startCounter: 1, incrementStep: 1, resourceDefault: true, uniqueName: false, staticPattern: "", counters: []},
+            {resourceType: "GATEWAY", resourceTypeName: "Gateway", name: null, pattern: "${resource.name}", startCounter: 1, incrementStep: 1, resourceDefault: true, uniqueName: false, staticPattern: "", counters: []},
+            {resourceType: "NAT", resourceTypeName: "NAT", name: null, pattern: "${resource.name}", startCounter: 1, incrementStep: 1, resourceDefault: true, uniqueName: false, staticPattern: "",counters: []},
+            {resourceType: "SECURITY_GROUP", resourceTypeName: "Security Group", name: null, pattern: "${resource.name}", startCounter: 1, incrementStep: 1, resourceDefault: true, uniqueName: false, staticPattern: "",counters: []},
+            {resourceType: "GENERIC", resourceTypeName: "Generic", name: "Generic", pattern: "${resource.name}", startCounter: 1, incrementStep: 1, resourceDefault: true, uniqueName: false, staticPattern: "",counters: []}
+        ],
+        projects: [{projectId: "*", projectName: "*",}]
+    });
+    System.log("register custom naming");
+} catch (e) { System.log("already registered custom naming"); }
+
+// create admin management project
+var cloudZones = [];
+for each(var zone in aa.get("/iaas/api/zones/").content) { cloudZones.push({zoneId: zone.id}); }
+try {
+    var adminProject = aa.post("/iaas/api/projects", {
+        name: adminProjectName,
+        description: "BVP System Project for Cloud Administrators",
+        sharedResources: true,
+        zoneAssignmentConfigurations: cloudZones,
+        placementPolicy: "DEFAULT"
+    });
+    adminProjectId = adminProject.id;
+} catch (e) {
+    System.log("project[" + adminProjectName + "] is exists");
+    for each(var adminProject in aa.get("/iaas/api/projects?$filter=(name eq '" + adminProjectName + "')").content) {
+        if (adminProject.name == adminProjectName) {
+            adminProjectId = adminProject.id;
+            break;
+        }
+    }
+}
+if (!adminProjectId) { throw "could not found admin project"; }
+
+// create project management project
+try {
+    var primeProject = aa.post("/iaas/api/projects", {
+        name: primeProjectName,
+        description: "BVP System Project for Project Owners",
+        sharedResources: false,
+        zoneAssignmentConfigurations: [],
+        placementPolicy: "DEFAULT"
+    });
+    primeProjectId = primeProject.id;
+} catch (e) {
+    System.log("project[" + primeProjectName + "] is exists");
+    for each(var primeProject in aa.get("/iaas/api/projects?$filter=(name eq '" + primeProjectName + "')").content) {
+        if (primeProject.name == primeProjectName) {
+            primeProjectId = primeProject.id;
+            break;
+        }
+    }
+}
+if (!adminProjectId) { throw "could not found prime project"; }
+]]></script>
+    <in-binding>
+      <bind name="orbSelfEndpoint" type="string" export-name="orbSelfEndpoint"/>
+      <bind name="orbHostname" type="string" export-name="orbHostname"/>
+      <bind name="orbAccessKey" type="SecureString" export-name="orbAccessKey"/>
+      <bind name="orbSecretKey" type="SecureString" export-name="orbSecretKey"/>
+      <bind name="adminProjectName" type="string" export-name="adminProjectName"/>
+      <bind name="primeProjectName" type="string" export-name="primeProjectName"/>
+    </in-binding>
+    <out-binding>
+      <bind name="adminProjectId" type="string" export-name="adminProjectId"/>
+      <bind name="primeProjectId" type="string" export-name="primeProjectId"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.0" x="420.0"/>
+  </workflow-item>
+  <workflow-item name="item2" out-name="item1" catch-name="item1" throw-bind-name="error" type="link" linked-workflow-id="e602d7e7-e9e6-4e5d-8459-69c9202a2fb1">
+    <display-name><![CDATA[Add vRA Host]]></display-name>
+    <in-binding>
+      <bind name="password" type="SecureString" export-name="aaPassword">
+        <description><![CDATA[VMware Aria Automation Host Password]]></description>
+      </bind>
+      <bind name="user" type="string" export-name="aaUsername">
+        <description><![CDATA[VMware Aria Automation Host Username]]></description>
+      </bind>
+      <bind name="connectionType" type="string" export-name="aaConnectionType">
+        <description><![CDATA[VMware Aria Automation Connection Type(vra-onprem)]]></description>
+      </bind>
+      <bind name="name" type="string" export-name="aaInvName">
+        <description><![CDATA[VMware Aria Automation Host Connection Name]]></description>
+      </bind>
+      <bind name="vraHost" type="string" export-name="aaUrl">
+        <description><![CDATA[VMware Aria Automation Host URL]]></description>
+      </bind>
+      <bind name="ignoreWarnings" type="boolean" export-name="aaIgnoreWarning">
+        <description><![CDATA[Check to ignore SSL certification import warning]]></description>
+      </bind>
+      <bind name="sessionMode" type="string" export-name="aaSessionMode">
+        <description><![CDATA[VMware Aria Automation connection session mode.]]></description>
+      </bind>
+    </in-binding>
+    <out-binding>
+      <bind name="host" type="VRA:Host" export-name="">
+        <description><![CDATA[VMware Aria Automation Host Connection object]]></description>
+      </bind>
+    </out-binding>
+    <description><![CDATA[ ]]></description>
+    <position y="60.0" x="300.0"/>
+  </workflow-item>
+  <workflow-item name="item3" out-name="item2" type="task">
+    <display-name><![CDATA[Get Self Endpoint]]></display-name>
+    <script encoded="false"><![CDATA[for each(var host in VraHostManager.findHostsByType(aaConnectionType)) {
+    if (host.name == "Default") {
+        aaUrl = host.vraHost;
+        orbSelfEndpoint = host.vraHost.split("://")[1];
+        break;
+    }
+}
+if (!orbSelfEndpoint) { throw "could not found automation endpoint"; }]]></script>
+    <in-binding>
+      <bind name="aaConnectionType" type="string" export-name="aaConnectionType"/>
+    </in-binding>
+    <out-binding>
+      <bind name="orbSelfEndpoint" type="string" export-name="orbSelfEndpoint"/>
+      <bind name="aaUrl" type="string" export-name="aaUrl"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.0" x="180.0"/>
+  </workflow-item>
+  <workflow-item name="item4" out-name="item0" type="task">
+    <display-name><![CDATA[Install Assets]]></display-name>
+    <script encoded="false"><![CDATA[var com = System.getModule("com.bvp").Common();
+var currTimeStr = com.getDateTimeString();
+var description = "BVP from [" + backupTimeStr + "] to [" + currTimeStr + "]";
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var rm = System.getModule("com.bvp").ResourceManager();
+
+var adminProject = aa.get("/iaas/api/projects/" + adminProjectId);
+
+// abx ////////////////////////////////////////////////////////////////////////////////////////////////////////
+System.log("start to install abx actions");
+var abx = {};
+for each(var back in rm.loadJson("BVP/Backup/" + backupTimeStr + "/abx.json")) {
+    var action = null;
+    for each(var curr in aa.get("/abx/api/resources/actions?$filter=name eq '" + back.name + "'").content) {
+        if (curr.name == back.name && curr.projectId == adminProjectId) {
+            curr.description = description;
+            curr.runtime = back.runtime;
+            curr.runtimeVersion = back.runtimeVersion;
+            curr.source = back.source;
+            curr.entrypoint = back.entrypoint;
+            curr.inputs = back.inputs;
+            curr.cpuShares = back.cpuShares;
+            curr.memoryInMB = back.memoryInMB;
+            curr.timeoutSeconds = back.timeoutSeconds;
+            curr.deploymentTimeoutSeconds = back.deploymentTimeoutSeconds;
+            curr.actionType = back.actionType;
+            curr.provider = back.provider;
+            curr.system = back.system;
+            curr.shared = back.shared;
+            curr.asyncDeployed = back.asyncDeployed;
+            curr.configuration = back.configuration ? back.configuration : {};
+            curr.metadata = back.metadata ? back.metadata : {};
+            action = aa.put("/abx/api/resources/actions/" + curr.id, curr);
+        }
+    }
+    if (!action) {
+        action = aa.post("/abx/api/resources/actions", {
+            name: back.name,
+            projectId: adminProjectId,
+            description: description,
+            runtime: back.runtime,
+            runtimeVersion: back.runtimeVersion,
+            source: back.source,
+            entrypoint: back.entrypoint,
+            inputs: back.inputs,
+            cpuShares: back.cpuShares,
+            memoryInMB: back.memoryInMB,
+            timeoutSeconds: back.timeoutSeconds,
+            deploymentTimeoutSeconds: back.deploymentTimeoutSeconds,
+            actionType: back.actionType,
+            provider: back.provider,
+            system: back.system,
+            shared: back.shared,
+            asyncDeployed: back.asyncDeployed,
+            configuration: back.configuration ? back.configuration : {},
+            metadata: back.metadata ? back.metadata : {}
+        });
+    }
+    abx[action.name] = action;
+}
+
+// custom resources ///////////////////////////////////////////////////////////////////////////////////////////
+System.log("start to install custom resources");
+for each(var back in rm.loadJson("BVP/Backup/" + backupTimeStr + "/cr.json")) {
+    var cr = null;
+    for each(var curr in aa.get("/form-service/api/custom/resource-types?$filter=resourceType eq '" + back.resourceType + "'").content) {
+        if (curr.resourceType == back.resourceType) {
+            var additionalActions = [];
+            for each(var action in back.additionalActions) {
+                action.orgId = null;
+                if (action.runnableItem.type == "vro.workflow") {
+                    action.runnableItem.endpointLink = aa.get("/vro/workflows/" + action.runnableItem.id).integration.endpointConfigurationLink;
+                } else {
+                    action.runnableItem.id = abx[action.runnableItem.name].id;
+                    action.runnableItem.projectId = adminProjectId;
+                }
+                action.formDefinition.id = null;
+                action.formDefinition.tenant = null;
+                action.formDefinition.externalSourceFormSchemas = null;
+                action = aa.post("/form-service/api/custom/resource-actions?generateUnvalidatableExternalValuesSchema=true", action);
+                additionalActions.push(action);
+            }
+            curr.displayName = back.displayName;
+            curr.description = description;
+            curr.resourceType = back.resourceType;
+            curr.status = back.status;
+            curr.schemaType = back.schemaType;
+            curr.properties = back.properties;
+            curr.additionalActions = additionalActions;
+            curr.mainActions.create = {
+                id: abx[back.mainActions.create.name].id,
+                name: back.mainActions.create.name,
+                type: back.mainActions.create.type,
+                inputParameters: back.mainActions.create.inputParameters,
+                projectId: adminProjectId
+            }
+            curr.mainActions.read = {
+                id: abx[back.mainActions.read.name].id,
+                name: back.mainActions.read.name,
+                type: back.mainActions.read.type,
+                inputParameters: back.mainActions.read.inputParameters,
+                projectId: adminProjectId
+            }
+            curr.mainActions.delete = {
+                id: abx[back.mainActions.delete.name].id,
+                name: back.mainActions.delete.name,
+                type: back.mainActions.delete.type,
+                inputParameters: back.mainActions.delete.inputParameters,
+                projectId: adminProjectId
+            }
+            if (back.mainActions.update) {
+                curr.mainActions.update = {
+                    id: abx[back.mainActions.update.name].id,
+                    name: back.mainActions.update.name,
+                    type: back.mainActions.update.type,
+                    inputParameters: back.mainActions.update.inputParameters,
+                    projectId: adminProjectId
+                }
+            } else {
+                back.mainActions.update = null;
+            }
+            cr = aa.post("/form-service/api/custom/resource-types", curr);
+            break;
+        }
+    }
+    if (!cr) {
+        back.id = null;
+        back.orgId = null;
+        back.description = description;
+        for each(var action in back.additionalActions) {
+            action.orgId = null;
+            if (action.runnableItem.type == "vro.workflow") {
+                action.runnableItem.endpointLink = aa.get("/vro/workflows/" + action.runnableItem.id).integration.endpointConfigurationLink;
+            } else {
+                action.runnableItem.id = abx[action.runnableItem.name].id;
+                action.runnableItem.projectId = adminProjectId;
+            }
+            action.runnableItem.projectId = adminProjectId;
+            action.formDefinition.id = null;
+            action.formDefinition.tenant = null;
+            action.formDefinition.externalSourceFormSchemas = null;
+        }
+        back.mainActions.create = {
+            id: abx[back.mainActions.create.name].id,
+            name: back.mainActions.create.name,
+            type: back.mainActions.create.type,
+            inputParameters: back.mainActions.create.inputParameters,
+            projectId: adminProjectId
+        }
+        back.mainActions.read = {
+            id: abx[back.mainActions.read.name].id,
+            name: back.mainActions.read.name,
+            type: back.mainActions.read.type,
+            inputParameters: back.mainActions.read.inputParameters,
+            projectId: adminProjectId
+        }
+        back.mainActions.delete = {
+            id: abx[back.mainActions.delete.name].id,
+            name: back.mainActions.delete.name,
+            type: back.mainActions.delete.type,
+            inputParameters: back.mainActions.delete.inputParameters,
+            projectId: adminProjectId
+        }
+        if (back.mainActions.update) {
+            back.mainActions.update = {
+                id: abx[back.mainActions.update.name].id,
+                name: back.mainActions.update.name,
+                type: back.mainActions.update.type,
+                inputParameters: back.mainActions.update.inputParameters,
+                projectId: adminProjectId
+            }
+        } else {
+            back.mainActions.update = null;
+        }
+        cr = aa.post("/form-service/api/custom/resource-types", back);
+    }
+}
+
+// blueprint //////////////////////////////////////////////////////////////////////////////////////////////////
+System.log("start to install blueprints");
+for each(var back in rm.loadJson("BVP/Backup/" + backupTimeStr + "/blueprint.json")) {
+    var blueprint = null;
+    for each(var curr in aa.get("/blueprint/api/blueprints?projects=" + adminProjectId + "&name=" + back.name).content) {
+        if (curr.name == back.name) {
+            curr.description = back.description;
+            curr.content = back.content;
+            curr.requestScopeOrg = true;
+            // curr.iconId
+            blueprint = aa.put("/blueprint/api/blueprints/" + curr.id, curr);
+            break;
+        }
+    }
+    if (!blueprint) {
+        blueprint = aa.post("/blueprint/api/blueprints", {
+            projectId: adminProjectId,
+            name: back.name,
+            description: back.description,
+            content: back.content,
+            requestScopeOrg: true
+        });
+    }
+    for each(var item in aa.get("/blueprint/api/blueprints/" + blueprint.id + "/versions").content) {
+        if (item.status == "RELEASED") {
+            item.status = "VERSIONED";
+            aa.post("/blueprint/api/blueprints/" + blueprint.id + "/versions/" + item.id + "/actions/unrelease", item);
+        }
+    }
+    var version = aa.post("/blueprint/api/blueprints/" + blueprint.id + "/versions", {
+        version: currTimeStr,
+        description: description,
+        release: true
+    });
+}
+var contentSource = null;
+for each(var source in aa.get("/catalog/api/admin/sources").content) {
+    if (source.projectId == adminProjectId) {
+        contentSource = aa.post("/catalog/api/admin/sources", source);
+        break;
+    }
+}
+if (!contentSource) {
+    contentSource = aa.post("/catalog/api/admin/sources", {
+        name: adminProject.name,
+        typeId: "com.vmw.blueprint",
+        config: {sourceProjectId: adminProjectId}
+    });
+}
+
+// resource actions ///////////////////////////////////////////////////////////////////////////////////////////
+System.log("start to install resource actions");
+for each(var back in rm.loadJson("BVP/Backup/" + backupTimeStr + "/ra.json")) {
+    back.description = description;
+    back.orgId = null;
+    if (back.runnableItem.type == "vro.workflow") {
+        back.runnableItem.endpointLink = aa.get("/vro/workflows/" + back.runnableItem.id).integration.endpointConfigurationLink;
+    } else {
+        back.runnableItem.id = abx[back.runnableItem.name].id;
+        back.runnableItem.projectId = adminProjectId;
+    }
+    back.formDefinition.id = null;
+    back.formDefinition.tenant = null;
+    back.formDefinition.externalSourceFormSchemas = null;
+    aa.post("/form-service/api/custom/resource-actions?generateUnvalidatableExternalValuesSchema=true", back);
+}
+
+// subscriptions //////////////////////////////////////////////////////////////////////////////////////////////
+System.log("start to install subscriptions");
+for each(var back in rm.loadJson("BVP/Backup/" + backupTimeStr + "/sub.json")) {
+    var sub = null;
+    for each(var curr in aa.get("/event-broker/api/subscriptions?$filter=name eq '" + back.name + "'").content) {
+        if (curr.name == back.name) {
+
+            // System.log(aa.get("/vro/workflows/" + back.runnableId).integration.endpointConfigurationLink);
+
+            // System.log(JSON.stringify(aa.get("/vro/workflows/" + back.runnableId), null, 2));
+
+            // System.log(JSON.stringify(aa.getUerp(aa.get("/vro/workflows/" + back.runnableId).integration.endpointConfigurationLink), null, 2))
+
+            curr.description = description;
+            curr.type = back.type;
+            curr.disabled = false;
+            curr.eventTopicId = back.eventTopicId;
+            curr.blocking = back.blocking;
+            curr.contextual = back.contextual;
+            curr.criteria = back.criteria;
+            curr.runnableType = back.runnableType;
+            curr.runnableId = back.runnableId;            
+            curr.timeout = back.timeout;
+            curr.priority = back.priority;
+            curr.recoverRunnableType = back.recoverRunnableType;
+            curr.recoverRunnableId = back.recoverRunnableId;
+            curr.constraints = back.constraints;
+            aa.post("/event-broker/api/subscriptions", curr);
+            sub = true;
+            break;
+        }
+    }
+    if (!sub) {
+        back.orgId = null;
+        back.subscriberId = null;
+        back.description = description;
+        aa.post("/event-broker/api/subscriptions", back);
+    }
+}
+
+// form ///////////////////////////////////////////////////////////////////////////////////////////////////////
+System.log("start to install catalog forms");
+for each(var back in rm.loadJson("BVP/Backup/" + backupTimeStr + "/form.json")) {
+    for each(var catalog in aa.get("/catalog/api/admin/items?search=" + back.formName).content) {
+        if (back.formName == catalog.name) {
+            aa.post("/form-service/api/forms?generateUnvalidatableExternalValuesSchema=true", {
+                name: back.formName,
+                type: "requestForm",
+                sourceId: catalog.id,
+                sourceType: back.sourceType,
+                status: "ON",
+                form: JSON.stringify(back.form)
+            });
+            break;
+        }
+    }
+}
+
+// project policy /////////////////////////////////////////////////////////////////////////////////////////////
+System.log("start to register project policy");
+var projectCatalogId = null;
+for each(var catalog in aa.get("/catalog/api/admin/items?search=Project").content) {
+    if (catalog.name == "Project") {
+        projectCatalogId = catalog.id;
+        break;
+    }
+}
+if (!projectCatalogId) { throw "could not found project catalog"; }
+
+var projectSharing = null;
+for each(var policy in aa.get("/policy/api/policies?search=project-sharing").content) {
+    if (policy.name == "project-sharing") {
+        projectSharing = policy;
+        break;
+    }
+}
+if (!projectSharing) {
+    aa.post("/policy/api/policies", {
+        projectId: primeProjectId,
+        name: "project-sharing",
+        description: "BVP System Project Policy for Project Owners",
+        typeId: "com.vmware.policy.catalog.entitlement",
+        enforcementType: "HARD",
+        definition: {
+            entitledUsers: [{
+                userType: "USER",
+                principals: [{
+                    type: "PROJECT",
+                    referenceId: ""
+                }],
+                items: [{
+                    id: projectCatalogId,
+                    type: "CATALOG_ITEM_IDENTIFIER"
+                }]
+            }]
+        }
+    });
+}
+
+]]></script>
+    <in-binding>
+      <bind name="adminProjectId" type="string" export-name="adminProjectId"/>
+      <bind name="primeProjectId" type="string" export-name="primeProjectId"/>
+      <bind name="backupTimeStr" type="string" export-name="backupTimeStr"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.0" x="540.0"/>
+  </workflow-item>
+  <presentation/>
+</workflow>

@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="detachAccessIp" result-type="string" api-version="6.0.0" id="6136d470-8123-41f3-92b9-0c5605531f51" version="0.0.1" category-name="com.gvp.bp.aip">
+  <param n="interfaceLink" t="string"><![CDATA[]]></param>
+  <param n="accessIpId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[
+if (!interfaceLink) { throw "interfaceLink cannot be null"; }
+if (!accessIpId)    { throw "accessIpId cannot be null"; }
+
+var aa    = System.getModule("com.bvp").AaManager(true);
+var iface = aa.getUerp(interfaceLink);
+
+var subnetLink =
+      iface.subnetLink                                      // VM NIC
+   || (Array.isArray(iface.subnetLinks) && iface.subnetLinks[0]);  // LB
+if (!subnetLink) throw "subnetLink not found";
+
+var subnet       = aa.getUerp(subnetLink);
+var tier1Path    = subnet.customProperties.vpcManagedTier1Path;
+if (!tier1Path) throw "vpcManagedTier1Path not found";
+
+var endpoint = aa.getUerp(subnet.endpointLink);
+var host     = endpoint.endpointProperties.hostName.split(".")[0];
+var nsx      = System.getModule("com.bvp").NsxManager(host);
+
+nsx.delete(
+  "/policy/api/v1" + tier1Path + "/nat/USER/nat-rules/" + accessIpId
+);
+
+return "";
+]]></script>
+</dunes-script-module>

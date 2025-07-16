@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:workflow xmlns:ns2="http://vmware.com/vco/workflow" root-name="item2" object-name="workflow:name=generic" id="09c41d78-5a98-419e-ad9d-ffb1470853a9" editor-version="2.0" version="0.0.0" api-version="6.0.0" restartMode="1" resumeFromFailedMode="0">
+    <display-name>Get GPU Host</display-name>
+    <position y="50.0" x="100.0"/>
+    <input>
+        <param name="vpc" type="string"/>
+        <param name="gpuModel" type="string"/>
+        <param name="gpuSize" type="number"/>
+        <param name="projectId" type="string"/>
+    </input>
+    <output>
+        <param name="computeTagValue" type="string"/>
+        <param name="gpuHostName" type="string"/>
+    </output>
+    <attrib name="gpuInfo" type="Array/Properties">
+        <value encoded="n">[]</value>
+    </attrib>
+    <workflow-item name="item0" type="end" end-mode="0" comparator="0">
+        <in-binding/>
+        <out-binding/>
+        <position y="50.0" x="680.0"/>
+    </workflow-item>
+    <workflow-item name="item2" out-name="item3" type="link" linked-workflow-id="766d8c20-54af-4662-8a79-11abf900a1bf" comparator="0">
+        <display-name>Batch Get GPU Info</display-name>
+        <script encoded="false"></script>
+        <in-binding/>
+        <out-binding>
+            <bind name="output" type="Array/Properties" export-name="gpuInfo"/>
+        </out-binding>
+        <description> </description>
+        <position y="60.0" x="220.0"/>
+    </workflow-item>
+    <workflow-item name="item3" out-name="item0" type="task" comparator="0">
+        <display-name>Scriptable task</display-name>
+        <script encoded="false">var aa = System.getModule("com.bvp").AaManager(true);
+
+// vpc가 위치한 region 링크 정보 가져오기 (UERP)
+var regionLink = aa.getUerp(vpc).provisioningRegionLink;
+
+// region 이름 정보 가져오기 (UERP)
+var regionName = aa.getUerp(regionLink).regionName;
+
+// region ID 가져오기 (IAAS)
+var region = aa.get("/iaas/api/regions?$filter=name eq '" + regionName + "'").content[0].id;
+var regionId = region.id;
+
+
+// 프로젝트에 할당된 zone 들 중 vpc가 위치한 region 정보를 가지고 있는 Zone을 필터링
+var project = aa.get("/iaas/api/projects/" + projectId);
+for each (var z in project.zones) {
+    var zone = aa.get("/iaas/api/zones/" + z.zoneId);
+    if(zone._links.region.href == "/iaas/api/regions/" + regionId){
+        var zoneId = zone.zoneId;
+    } else {
+        throw "Zone not Found"
+    }
+}
+
+// vCenter 호스트 네임 가져오기
+var cloudAccountId = region.cloudAccountId;
+var vcsaHostName = aa.get("/iaas/api/cloud-accounts/" + cloudAccountId).cloudAccountProperties.hostName;
+
+// vCenter호스트 이름으로 sdk  가져오기
+var vim = VcPlugin.allSdkConnections.filter(function(item){return item.id  == vcsaHostName})[0]
+
+var vcsaGpuInfo = gpuInfo.filter(function(item){return item.vcenter.name == vcsaHostName})[0];
+var clusters = vcsaGpuInfo.vcenter.clusters;
+var minCluster = clusters[0];
+for (var i in clusters){
+    if(clusters[i].summary.utilization_percentage &lt; minCluster.summary.utilization_percentage){
+        minCluster = clusters[i];
+    }
+}
+
+var hosts = minCluster.hosts;
+var minHost = hosts[0];
+for (var h in hosts){
+    if((hosts[h].summary.total_gpu_memory_gb - hosts[h].summary.allocated_gpu_memory_gb) &lt; (minHost.summary.total_gpu_memory_gb - minHost.summary.allocated_gpu_memory_gb)){
+        minHost = hosts[h];
+    }
+}
+
+var compute = aa.get("/iaas/api/zones/" + zoneId + "/computes").content.filter(function(item){return item.name == minCluster.name})[0];
+var tag = compute.tags.filter(function(item){return item.key == "compute"})[0];
+
+computeTagValue = tag.value;
+gpuHostName = minHost.name;</script>
+        <in-binding>
+            <bind name="gpuInfo" type="Array/Properties" export-name="gpuInfo"/>
+            <bind name="vpc" type="string" export-name="vpc"/>
+            <bind name="gpuModel" type="string" export-name="gpuModel"/>
+            <bind name="gpuSize" type="number" export-name="gpuSize"/>
+            <bind name="projectId" type="string" export-name="projectId"/>
+        </in-binding>
+        <out-binding>
+            <bind name="computeTagValue" type="string" export-name="computeTagValue"/>
+            <bind name="gpuHostName" type="string" export-name="gpuHostName"/>
+        </out-binding>
+        <description>Simple task with custom script capability.</description>
+        <position y="60.0" x="400.0"/>
+    </workflow-item>
+</ns2:workflow>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:workflow xmlns:ns2="http://vmware.com/vco/workflow" root-name="item1" object-name="workflow:name=generic" id="f28928ba-c646-411b-a38e-6ad9849c0394" editor-version="2.0" version="0.0.0" api-version="6.0.0" restartMode="1" resumeFromFailedMode="0">
+    <display-name>VM 만료</display-name>
+    <position y="50.0" x="100.0"/>
+    <input>
+        <param name="_metadata_main_catalog" type="string"/>
+        <param name="_metadata_catalog" type="string"/>
+        <param name="deploymentId" type="string"/>
+        <param name="resourceId" type="string"/>
+        <param name="requestMessage" type="string"/>
+    </input>
+    <output/>
+    <workflow-item name="item0" type="end" end-mode="0" comparator="0">
+        <in-binding/>
+        <out-binding/>
+        <position y="50.0" x="440.0"/>
+    </workflow-item>
+    <workflow-item name="item1" out-name="item0" type="task" comparator="0">
+        <display-name>Scriptable task</display-name>
+        <script encoded="false">var aa = System.getModule("com.bvp").AaManager(true);
+var resourcesLink = "/deployment/api/deployments/" + deploymentId + "/resources/" + resourceId;
+var requestsLink = "/deployment/api/resources/" + resourceId + "/requests";
+var powerState = aa.get("/deployment/api/resources/" + resourceId).properties.powerState;
+if( powerState != "OFF"){
+    var data = {
+    actionId: "Cloud.vSphere.Machine.PowerOff",
+    reason: "VM 만료",
+    inputs: {}
+    };
+}
+var computeLink = aa.get(resourcesLink);
+var requests = aa.post(requestsLink, data);
+var endpointId = computeLink.properties.endpointId
+var vmName = computeLink.properties.name;
+var folderName = "Deleted";
+var endpointLink = "/resources/endpoints/" + endpointId;
+var endpointName = aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0];
+var vcConf = System.getModule("com.bvp").ConfManager().load("BVP/Endpoint/" + endpointName);
+var vmDirectoryMoveinvCenter = System.getModule("com.gvp").vmDirectoryMoveinvCenter;
+
+vmDirectoryMoveinvCenter(vcConf.hostname, vcConf.username, vcConf.password, vmName, folderName);</script>
+        <in-binding>
+            <bind name="resourceId" type="string" export-name="resourceId"/>
+            <bind name="deploymentId" type="string" export-name="deploymentId"/>
+        </in-binding>
+        <out-binding/>
+        <description>Simple task with custom script capability.</description>
+        <position y="60.0" x="220.0"/>
+    </workflow-item>
+</ns2:workflow>

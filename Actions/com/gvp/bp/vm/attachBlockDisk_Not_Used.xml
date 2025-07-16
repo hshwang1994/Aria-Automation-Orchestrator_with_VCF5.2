@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="attachBlockDisk_Not_Used" result-type="string" api-version="6.0.0" id="547e7499-4844-44ee-a551-d54c7da99ef0" version="0.0.1" category-name="com.gvp.bp.vm">
+  <param n="vmName" t="string"><![CDATA[]]></param>
+  <param n="diskId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!vmName) { throw "vmName cannot be null"; }
+if (!diskId) { throw "diskId cannot be null"; }
+
+
+var vraHosts = Server.findAllForType("VRA:Host"); 
+for each(var host in vraHosts) {
+    if(host.name == "Admin"){
+        var vraHost = host;
+    }
+}
+
+
+var machine = VraEntitiesFinder.getMachines(vraHost,"name eq '"+vmName+"'")[0]; // VRA:Machine
+var blockDevice = VraEntitiesFinder.getBlockDevice(vraHost, diskId); // VRA:BlockDevice
+var unitNumber = null; // string Deprecated
+var scsiController = null; // string Deprecated
+var diskAttachmentProperties = null; // Properties
+var requestTracker = null; // VRA:RequestTracker
+
+if(blockDevice.blockDeviceStatus != "AVAILABLE"){	
+    throw "Disk should be in available state"
+}
+var machineService = machine.host.createInfrastructureClient().createMachineService();
+var diskAttachmentSpecification = new VraDiskAttachmentSpecification();
+diskAttachmentSpecification.name = blockDevice.name;
+diskAttachmentSpecification.description = blockDevice.description;
+diskAttachmentSpecification.unitNumber = unitNumber;
+diskAttachmentSpecification.blockDeviceId = blockDevice.id;
+diskAttachmentSpecification.scsiController = scsiController;
+for(var key in diskAttachmentProperties){
+    diskAttachmentSpecification.putDiskAttachmentPropertiesItem(key, diskAttachmentProperties[key])
+}
+requestTracker = machineService.attachMachineDisk(diskAttachmentSpecification, machine.id);
+System.log("Attach machine disk request for device - " + blockDevice.name + ", machine - " + machine.name + " has been successfully placed with request tracker id " + requestTracker.id)]]></script>
+</dunes-script-module>

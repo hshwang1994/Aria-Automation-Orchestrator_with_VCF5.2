@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="checkRequestDisk" result-type="boolean" api-version="6.0.0" id="be2c05ab-cb17-47f2-b29e-e5cec4a93fcd" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <param n="diskProperty" t="Array/CompositeType(mount:string,size:number):diskProperties"><![CDATA[]]></param>
+  <param n="machineId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if(diskProperty == null || machineId == null){
+    return false;
+}
+var aa = System.getModule("com.ecs").AaManager(true);
+
+var machineDisk = aa.get("/iaas/api/machines/"+machineId).customProperties.mountDisk;
+
+if(machineDisk == JSON.stringify(diskProperty)){
+    return false;
+} else{ return true;};]]></script>
+</dunes-script-module>

@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getVpcSubnetsByProjectId_Copy" result-type="Array/Properties" api-version="6.0.0" id="b0be82f1-078c-4b88-84b9-7cff155e153e" version="0.0.0" allowed-operations="vfe" category-name="com.test.ecs.action.backup">
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <param n="except" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.ecs").AaManager(true);
+var subnets = null;
+if (except) {
+    var exceptSubnetLink = except;
+    var exceptSubnet = aa.getUerp(exceptSubnetLink);
+    var exceptProfileLink = exceptSubnet.customProperties.vpc;
+    subnets = aa.getUerp("/resources/sub-networks?expand&$filter=(customProperties.vpcProjectId eq '" + projectId + "') and (customProperties.vpc ne '" + exceptProfileLink + "')");
+} else {
+    subnets = aa.getUerp("/resources/sub-networks?expand&$filter=customProperties.vpcProjectId eq '" + projectId + "'");
+}
+var result = [];
+for each(var subnetLink in subnets.documentLinks) {
+    var subnet = subnets.documents[subnetLink];
+    result.push({
+        label: subnet.customProperties.displayName ? subnet.customProperties.displayName : subnet.name,
+        value: subnetLink
+    });
+}
+return result.sort(function (a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});]]></script>
+</dunes-script-module>

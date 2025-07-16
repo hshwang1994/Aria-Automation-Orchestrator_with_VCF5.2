@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getViewersByProjectId" result-type="Array/string" api-version="6.0.0" id="99c56de3-1264-4495-a901-51ed2847ad0f" version="0.0.1" allowed-operations="vfe" category-name="com.bvp.bp.prj">
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!projectId) { return []; }
+var aa = System.getModule("com.bvp").AaManager(true);
+var result = [];
+for each(var user in aa.get("/iaas/api/projects/" + projectId).viewers) { result.push(user.email); }
+return result;]]></script>
+</dunes-script-module>

@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="vpcRemoval_Copy" result-type="string" api-version="6.0.0" id="7efdf77b-acb4-4cea-870e-f1fecacd08a6" version="0.0.0" allowed-operations="vfe" category-name="com.test.ecs.event.backup">
+  <param n="endpointLink" t="string"><![CDATA[]]></param>
+  <param n="managedRouterLink" t="string"><![CDATA[]]></param>
+  <param n="managedTier1Path" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.ecs").AaManager(true);
+var nsx = System.getModule("com.ecs").NsxManager(aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0]);
+var managedRouterId = managedRouterLink.split("/routers/")[1];
+var localeServiceId = nsx.get("/policy/api/v1" + managedTier1Path + "/locale-services").results[0].id;
+nsx.delete("/policy/api/v1" + managedTier1Path + "/locale-services/" + localeServiceId + "/interfaces/" + managedRouterId);
+return "";]]></script>
+</dunes-script-module>

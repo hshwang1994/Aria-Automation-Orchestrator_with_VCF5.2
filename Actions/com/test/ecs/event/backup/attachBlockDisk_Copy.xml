@@ -1,0 +1,80 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="attachBlockDisk_Copy" result-type="string" api-version="6.0.0" id="4738bf6d-f72e-4bd4-866d-b350f64e1b44" version="0.0.0" allowed-operations="vfe" category-name="com.test.ecs.event.backup">
+  <param n="vmName" t="string"><![CDATA[]]></param>
+  <param n="diskFile" t="string"><![CDATA[]]></param>
+  <param n="diskSizeGb" t="number"><![CDATA[]]></param>
+  <param n="busNumber" t="number"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var adjustBusNumberToCtrlNumber = 3;
+var controllerKey = null;
+var lastUnitNumber = null;
+for each(var vm in VcPlugin.getAllVirtualMachines(null, vmName)) {
+    if (vm.name == vmName) {
+        var devices = vm.config.hardware.device;
+        var deviceMap = {};
+        if (devices != null)  {
+            for (var key in devices)  {
+                var device = devices[key];
+                deviceMap[device.key] = device;
+            }
+            for (var key in devices)  {
+                var device = devices[key];
+                if (device instanceof VcVirtualBusLogicController
+                || device instanceof VcVirtualLsiLogicController 
+                || device instanceof VcParaVirtualSCSIController
+                || device instanceof VcVirtualLsiLogicSASController)  {
+                    if (device.busNumber == busNumber) {
+                        controllerKey = device.key;
+                        lastUnitNumber = -1;
+                        for each(var un in device.device) {
+                            var child = deviceMap[un];
+                            if (lastUnitNumber < child.unitNumber) { lastUnitNumber = child.unitNumber; }
+                        }
+                    }
+                }
+            }
+            var deviceChange = new Array();
+            deviceChange[0] = new VcVirtualDeviceConfigSpec();
+            deviceChange[0].device = new VcVirtualDisk();
+            deviceChange[0].device.capacityInBytes = diskSizeGb * 1073741824;
+            deviceChange[0].device.storageIOAllocation = new VcStorageIOAllocationInfo();
+            deviceChange[0].device.storageIOAllocation.shares = new VcSharesInfo();
+            deviceChange[0].device.storageIOAllocation.shares.shares = 1000;
+            deviceChange[0].device.storageIOAllocation.shares.level = VcSharesLevel.normal;
+            deviceChange[0].device.storageIOAllocation.limit = -1;
+            deviceChange[0].device.backing = new VcVirtualDiskFlatVer2BackingInfo();
+            deviceChange[0].device.backing.fileName = diskFile;
+            deviceChange[0].device.backing.eagerlyScrub = false;
+            deviceChange[0].device.backing.thinProvisioned = true;
+            deviceChange[0].device.backing.diskMode = "independent_persistent";
+            deviceChange[0].device.backing.sharing = "sharingMultiWriter";
+            deviceChange[0].device.controllerKey = controllerKey ? controllerKey : -102;
+            deviceChange[0].device.unitNumber = lastUnitNumber != null && lastUnitNumber > -1 ? lastUnitNumber + 1 : 0;
+            deviceChange[0].device.capacityInKB = diskSizeGb * 1048576;
+            deviceChange[0].device.deviceInfo = new VcDescription();
+            deviceChange[0].device.deviceInfo.summary = "new block disk";
+            deviceChange[0].device.deviceInfo.label = "new block disk";
+            deviceChange[0].device.key = controllerKey ? -102 : -103;
+            deviceChange[0].operation = VcVirtualDeviceConfigSpecOperation.add;
+            if (!controllerKey) {
+                deviceChange[1] = new VcVirtualDeviceConfigSpec();
+                deviceChange[1].device = new VcParaVirtualSCSIController();
+                deviceChange[1].device.sharedBus = VcVirtualSCSISharing.noSharing;
+                deviceChange[1].device.scsiCtlrUnitNumber = busNumber + adjustBusNumberToCtrlNumber;
+                deviceChange[1].device.deviceInfo = new VcDescription();
+                deviceChange[1].device.deviceInfo.summary = "new scsi controller";
+                deviceChange[1].device.deviceInfo.label = "new scsi controller";
+                deviceChange[1].device.key = -102;
+                deviceChange[1].device.busNumber = busNumber;
+                deviceChange[1].operation = VcVirtualDeviceConfigSpecOperation.add;
+            }
+            var spec = new VcVirtualMachineConfigSpec();
+            spec.deviceChange = deviceChange;
+            var task = vm.reconfigVM_Task(spec);
+            System.getModule("com.vmware.library.vc.basic").vim3WaitTaskEnd(task, false, 1) ;
+            return "";
+        }
+        break;
+    }
+}
+throw "could not attach block disk";]]></script>
+</dunes-script-module>

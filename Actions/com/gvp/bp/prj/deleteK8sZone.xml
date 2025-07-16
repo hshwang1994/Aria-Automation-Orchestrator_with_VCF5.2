@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="deleteK8sZone" result-type="Array/Any" api-version="6.0.0" id="bb776a23-5173-4912-8d50-849ed4462066" version="0.0.0" category-name="com.gvp.bp.prj">
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.bvp").AaManager(true);
+
+var kzs = aa.get("/cmx/api/resources/k8s-zones").content;
+
+var result = [];
+for each(var kz in kzs){
+    kzProjects = kz.projects;
+    for each( var kzProject in kzProjects){
+        if(kzProject.projectId == projectId){
+            kzProjects.pop(kzProject);
+            result.push(aa.put("/cmx/api/resources/k8s-zones/"+kz.id+"/projects",kzProjects));
+        }
+    }
+}
+return result;]]></script>
+</dunes-script-module>

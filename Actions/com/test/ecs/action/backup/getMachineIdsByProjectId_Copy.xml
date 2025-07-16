@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getMachineIdsByProjectId_Copy" result-type="Array/Properties" api-version="6.0.0" id="0106c719-9ddc-4389-ade9-56aa7a02109a" version="0.0.0" allowed-operations="vfe" category-name="com.test.ecs.action.backup">
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.ecs").AaManager(true);
+var result = [];
+for each(var machine in aa.get("/iaas/api/machines?$filter=projectId eq '" + projectId + "'").content) {
+    result.push({
+        label: machine.customProperties.displayName ? machine.customProperties.displayName : machine.name,
+        value: machine.id,
+    });
+}
+return result.sort(function (a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});]]></script>
+</dunes-script-module>

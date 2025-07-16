@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="vpcRemoval" result-type="string" api-version="6.0.0" id="cf1ce1e6-94af-4f11-b75a-3fd2de409e53" version="0.0.1" allowed-operations="vfe" category-name="com.bvp.bp.vpc">
+  <param n="endpointLink" t="string"><![CDATA[]]></param>
+  <param n="managedRouterLink" t="string"><![CDATA[]]></param>
+  <param n="managedTier1Path" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!endpointLink) { throw "endpointLink cannot be null"; }
+if (!managedRouterLink) { throw "managedRouterLink cannot be null"; }
+if (!managedTier1Path) { throw "managedTier1Path cannot be null"; }
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var nsx = System.getModule("com.bvp").NsxManager(aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0]);
+var managedRouterId = managedRouterLink.split("/routers/")[1];
+var localeServiceId = nsx.get("/policy/api/v1" + managedTier1Path + "/locale-services").results[0].id;
+nsx.delete("/policy/api/v1" + managedTier1Path + "/locale-services/" + localeServiceId + "/interfaces/" + managedRouterId);
+return "";]]></script>
+</dunes-script-module>

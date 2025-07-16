@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="execScripts_Copy" result-type="string" api-version="6.0.0" id="e5e97c51-138c-4607-9855-7246eec3d286" version="0.0.0" allowed-operations="vfe" category-name="com.test.ecs.common.backup" memory-limit="512000000">
+  <runtime><![CDATA[powercli:13-powershell-7.4]]></runtime>
+  <param n="vcHostname" t="string"><![CDATA[]]></param>
+  <param n="vcUsername" t="string"><![CDATA[]]></param>
+  <param n="vcPassword" t="SecureString"><![CDATA[]]></param>
+  <param n="vmName" t="string"><![CDATA[]]></param>
+  <param n="vmUsername" t="string"><![CDATA[]]></param>
+  <param n="vmPassword" t="SecureString"><![CDATA[]]></param>
+  <param n="scripts" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[function Handler($context, $inputs) {
+    $vcHostname = $inputs.vcHostname
+    $vcUsername = $inputs.vcUsername
+    $vcPassword = $inputs.vcPassword
+    $vmName = $inputs.vmName
+    $vmUsername = $inputs.vmUsername
+    $vmPassword = $inputs.vmPassword
+    $scripts = $inputs.scripts
+
+    Set-PowerCLIConfiguration -InvalidCertificateAction Ignore -Confirm:$false | Out-Null
+    Connect-VIServer $vcHostname -User $vcUsername -Password $vcPassword | Out-Null
+    $vm = Get-vm -name $vmName
+
+    $tries = 0
+    while ($tries -lt 3) {
+        Wait-Tools -VM $vm -TimeoutSeconds 60 | Out-Null
+        $invokeOutput = Invoke-VMScript -VM $vm -ScriptText $scripts -GuestUser $vmUsername -GuestPassword $vmPassword -ToolsWaitSecs 3600
+        if ($?) {
+            return $invokeOutput.ScriptOutput
+        }
+        $tries++
+        Start-Sleep -Milliseconds 5000 | Out-Null
+    }
+    throw "Error [execScripts] : could not execute scripts"
+}]]></script>
+</dunes-script-module>

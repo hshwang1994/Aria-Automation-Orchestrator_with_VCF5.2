@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getList" result-type="Array/string" api-version="6.0.0" id="c28a91be-436b-42e1-bc7a-0f4de5189af4" version="0.0.1" allowed-operations="vfe" category-name="com.bvp.test">
+  <param n="count" t="number"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var arr = [];
+
+for (var i = 0; i < count; i++) {
+    arr.push("" + i);
+}
+
+return arr;]]></script>
+</dunes-script-module>

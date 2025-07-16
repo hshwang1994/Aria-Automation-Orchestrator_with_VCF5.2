@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getMembersByProjectId_Copy" result-type="Array/string" api-version="6.0.0" id="0d2a3f55-8d08-4b9f-92cf-969fc5b8f8ec" version="0.0.0" allowed-operations="vfe" category-name="com.test.ecs.action.backup">
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!projectId) { return []; }
+var aa = System.getModule("com.ecs").AaManager(true);
+var result = [];
+for each(var user in aa.get("/iaas/api/projects/" + projectId).members) { result.push(user.email); }
+return result;]]></script>
+</dunes-script-module>

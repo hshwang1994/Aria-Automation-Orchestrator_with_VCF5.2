@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getSupervisorsByProjectId_Copy" result-type="Array/string" api-version="6.0.0" id="b2a1c1d5-abfb-48b0-b815-6534192fb165" version="0.0.0" allowed-operations="vfe" category-name="com.test.ecs.action.backup">
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!projectId) { return []; }
+var aa = System.getModule("com.ecs").AaManager(true);
+var result = [];
+for each(var user in aa.get("/iaas/api/projects/" + projectId).supervisors) { result.push(user.email); }
+return result;]]></script>
+</dunes-script-module>

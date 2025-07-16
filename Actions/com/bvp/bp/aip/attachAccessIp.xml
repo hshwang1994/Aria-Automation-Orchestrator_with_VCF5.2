@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="attachAccessIp" result-type="string" api-version="6.0.0" id="bb419d6d-8842-4356-9362-038e938af92e" version="0.0.1" allowed-operations="vfe" category-name="com.bvp.bp.aip">
+  <param n="interfaceLink" t="string"><![CDATA[]]></param>
+  <param n="accessIpId" t="string"><![CDATA[]]></param>
+  <param n="resourceId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!interfaceLink) { throw "interfaceLink cannot be null"; }
+if (!accessIpId) { throw "accessIpId cannot be null"; }
+if (!resourceId) { throw "resourceId cannot be null"; }
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var interface = aa.getUerp(interfaceLink);
+var subnetLink = interface.subnetLink;
+var subnet = aa.getUerp(subnetLink);
+var vpcManagedTier1Path = subnet.customProperties.vpcManagedTier1Path;
+var accessIp = aa.get("/deployment/api/resources/" + resourceId);
+var destinationIp = accessIp.properties.address;
+var translatedIp = interface.address;
+var nsx = System.getModule("com.bvp").NsxManager(aa.getUerp(subnet.endpointLink).endpointProperties.hostName.split(".")[0]);
+var natRule = nsx.put("/policy/api/v1" + vpcManagedTier1Path + "/nat/USER/nat-rules/" + accessIpId, {
+    display_name: accessIpId,
+    action: "DNAT",
+    destination_network: destinationIp,
+    translated_network: translatedIp,
+    sequence_number: 10,
+    enabled: true,
+    logging: false,
+    firewall_match: "MATCH_EXTERNAL_ADDRESS"
+});
+return interface.address;]]></script>
+</dunes-script-module>

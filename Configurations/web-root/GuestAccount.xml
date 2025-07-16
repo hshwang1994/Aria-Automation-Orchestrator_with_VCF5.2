@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<config-element id="8fd52cf1-d098-4d3a-933b-3a7116371bf5" version="0.0.0" allowed-operations="vfe">
+  <display-name><![CDATA[GuestAccount]]></display-name>
+  <atts>
+    <att name="guest_lin_id" type="string" read-only="false">
+      <value encoded="n"><![CDATA[operadmin]]></value>
+    </att>
+    <att name="guest_win_pwd" type="SecureString" read-only="false">
+      <value encoded="n"><![CDATA[__NULL__]]></value>
+    </att>
+    <att name="guest_win_id" type="string" read-only="false">
+      <value encoded="n"><![CDATA[Administrator]]></value>
+    </att>
+    <att name="guest_lin_pwd" type="SecureString" read-only="false">
+      <value encoded="n"><![CDATA[__NULL__]]></value>
+    </att>
+    <att name="imsi_win_id" type="string" read-only="false">
+      <value encoded="n"><![CDATA[ujmoon]]></value>
+    </att>
+  </atts>
+</config-element>

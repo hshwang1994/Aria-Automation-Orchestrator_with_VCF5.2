@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="hshwang_apitest" result-type="Properties" api-version="6.0.0" id="0048f96f-6823-4f84-a1c6-0646de7a0012" version="0.0.0" category-name="com.gvp.test">
+  <script encoded="false"><![CDATA[// AaManager 초기화
+var aa = System.getModule("com.bvp").AaManager(true);
+
+try {
+    // 프로젝트 목록 조회
+    var response = aa.get("/project-service/api/projects");
+
+    // 응답 결과 로깅 (예쁘게 출력)
+    System.log("프로젝트 목록 조회 결과:");
+    System.log(JSON.stringify(response, null, 2));
+
+    // 예시: 프로젝트 이름과 ID만 추출해서 배열로 반환
+    var result = [];
+    for each (var project in response.content) {
+        result.push({
+            name: project.name,
+            id: project.id
+        });
+    }
+
+    // 정렬해서 출력
+    result.sort(function(a, b) {
+        return a.name.toUpperCase() < b.name.toUpperCase() ? -1 : 1;
+    });
+
+    System.log("정렬된 프로젝트 목록:");
+    System.log(JSON.stringify(result, null, 2));
+
+    return result;
+
+} catch (e) {
+    System.error("프로젝트 조회 중 오류 발생: " + e);
+    throw e;
+}
+]]></script>
+</dunes-script-module>

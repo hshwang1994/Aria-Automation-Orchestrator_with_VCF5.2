@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getVpcManagedGatewayLinkByVpcProfileLinks" result-type="string" api-version="6.0.0" id="157e2bc8-9268-4338-ad6e-7d00ef3e6336" version="0.1.1" category-name="com.gvp.bp.nlb">
+  <param n="profileLink" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[
+if (!profileLink) {
+    throw "profileLink cannot be null";
+}
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var profile;
+try {
+    profile = aa.getUerp(profileLink);
+} catch (e) {
+    throw "Failed to retrieve NetworkProfile at [" + profileLink + "]: " + e;
+}
+
+if (profile.customProperties && profile.customProperties.vpcManagedGatewayLink) {
+    return profile.customProperties.vpcManagedGatewayLink;
+}
+
+return null;
+]]></script>
+</dunes-script-module>

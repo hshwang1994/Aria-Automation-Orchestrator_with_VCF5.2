@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:workflow xmlns:ns2="http://vmware.com/vco/workflow" root-name="item1" object-name="workflow:name=generic" id="d101bce0-7817-4fb8-b666-825a6e15b3d5" editor-version="2.0" version="0.0.2" api-version="6.0.0" allowed-operations="vfe" restartMode="1" resumeFromFailedMode="0">
+    <display-name>Compute Removal</display-name>
+    <position y="50.0" x="100.0"/>
+    <input>
+        <param name="inputProperties" type="Properties"/>
+    </input>
+    <output/>
+    <workflow-item name="item0" type="end" end-mode="0" comparator="0">
+        <in-binding/>
+        <out-binding/>
+        <position y="50.0" x="340.0"/>
+    </workflow-item>
+    <workflow-item name="item1" out-name="item0" type="task" comparator="0">
+        <display-name>Scriptable task</display-name>
+        <script encoded="false">var computeId = inputProperties.resourceIds[0];
+if (computeId &amp;&amp; computeId != "N/A") {
+    var aa = System.getModule("com.bvp").AaManager(true);
+    var projectId = inputProperties.projectId;
+    var computeLink = "/resources/compute/" + computeId;
+    var compute = aa.getUerp(computeLink);
+    for each(var aip in aa.get("/deployment/api/resources?resourceTypes=Custom.AIP&amp;projects=" + projectId).content) {
+        if (aip.properties.compute == computeLink) { throw "compute interface has access ip"; }
+    }
+    if (compute.customProperties.vpc) {
+        var nsx = null;
+        for each(var intfLink in compute.networkInterfaceLinks) {
+            var interfaceId = intfLink.split("/network-interfaces/")[1];
+            var interface = aa.getUerp(intfLink);
+            if (interface.subnetLink) {
+                var subnet = aa.getUerp(interface.subnetLink);
+                if (!nsx) { nsx = System.getModule("com.bvp").NsxManager(aa.getUerp(subnet.endpointLink).endpointProperties.hostName.split(".")[0]);}
+                nsx.delete("/policy/api/v1" + subnet.customProperties.__path + "/dhcp-static-binding-configs/" + interfaceId);
+            }
+        }
+        if (nsx) {
+            var vpc = aa.getUerp(compute.customProperties.vpc);
+            try { nsx.delete("/policy/api/v1" + vpc.customProperties.vpcManagedTier1Path + "/nat/USER/nat-rules/" + compute.id) } catch (e) { }
+        }
+    }
+    // telegraf inventory delete
+    var endpointId = inputProperties.endpointId;
+    var endpointLink = "/resources/endpoints/" + endpointId;
+    var endpointName = aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0];
+    var vcConf = System.getModule("com.bvp").ConfManager().load("BVP/Endpoint/" + endpointName);
+    var opsName = aa.get("/iaas/api/integrations?apiVersion=2025-04-23&amp;$filter=integrationType eq 'vrops'").content[0].name;
+    var opsConf = System.getModule("com.bvp").ConfManager().load("GVP/Endpoint/" + opsName);
+    var guestConf = System.getModule("com.bvp").ConfManager().load("GVP/GuestAccount");
+    var vrops = System.getModule("com.gvp").OpsManager(opsName);
+    var hostname = inputProperties.resourceNames[0].split(".")[0]
+    var resourceList = vrops.get("/api/resources?propertyName=Guest%20Info%7CBootstrap%20Fqdn&amp;propertyValue=" + inputProperties.resourceNames[0] ).resourceList
+    for (var i=0; i &lt; resourceList.length; i++){
+        vrops.put("/api/resources/" + resourceList[i].identifier + "/maintained")
+    }
+
+/*    var execScripts = System.getModule("com.bvp").execScripts;
+    var scripts = "sudo systemctl stop telegraf"
+    execScripts(vcConf.hostname, vcConf.username, vcConf.password, inputProperties.resourceNames[0], guestConf.guest_lin_id, guestConf.guest_lin_pwd, scripts);
+    System.sleep(1000)
+    for (var i=0; i &lt; resourceList.length; i++){
+        vrops.delete("/api/resources/" + resourceList[i].identifier);
+    }*/
+/*
+    var allSuccessful = false;
+    var count = 0;
+    while (!allSuccessful) {
+        allSuccessful = true; // 매 루프마다 초기화
+        
+        var resourceList = vrops.get("/api/resources?resourceStatus=NO_DATA_RECEIVING&amp;propertyName=Guest%20Info%7CBootstrap%20Fqdn&amp;propertyValue=" + inputProperties.resourceNames[0] ).resourceList
+        if(resourceList.length === 0){
+            allSuccessful = false
+        } else {
+            for (var i=0; i &lt; resourceList.length; i++){
+                vrops.delete("/api/resources/" + resourceList[i].identifier);
+            }
+        }
+        count++;
+        if (count &gt; 20) {
+            throw "Waiting Time out"
+        }
+        // Optional: 너무 빠른 루프 방지
+        System.sleep(5000); // 5초 대기 (아래에 sleep 함수 있음)
+        
+    } */
+}</script>
+        <in-binding>
+            <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+        </in-binding>
+        <out-binding/>
+        <description>Simple task with custom script capability.</description>
+        <position y="60.0" x="180.0"/>
+    </workflow-item>
+</ns2:workflow>

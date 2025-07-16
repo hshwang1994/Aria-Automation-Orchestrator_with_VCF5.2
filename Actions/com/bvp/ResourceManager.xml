@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="ResourceManager" result-type="string" api-version="6.0.0" id="f31628b0-c8ed-4750-8cd2-4e18cc11723f" version="0.0.1" allowed-operations="vfe" category-name="com.bvp">
+  <script encoded="false"><![CDATA[return {
+    loadJson: function (path) {
+        var data = this.load(path)
+        return JSON.parse(data.content);
+    },
+    load: function (path) {
+        try {
+            var category = Server.getResourceElementCategoryWithPath(path);
+            if (category == null) { throw "could not find path"; }
+            var element = category.allResourceElements[0];
+            if (element == null) { throw "could not find data"; }
+            return element.getContentAsMimeAttachment();
+        } catch (e) {
+            throw "Error [ResourceManager.load(" + path + ")] : " + e;
+        }
+    },
+    saveJson: function (path, data) {
+        this.save(path, JSON.stringify(data, null, 2), "application/json");
+    },
+    save: function (path, data, mimeType) {
+        LockingSystem.lockAndWait(path, "ResourceManager");
+        try {
+            var element;
+            try { element = Server.createResourceElement(path, "data"); }
+            catch (e) { element = Server.getResourceElementCategoryWithPath(path).allResourceElements[0]; }
+            var fd = System.createTempFile();
+            fd.write(data);
+            element.setContentFromFile(fd.path, mimeType);
+        } catch (e) {
+            LockingSystem.unlock(path, "ResourceManager");
+            throw "Error [ResourceManager.save(" + path + ")] : " + e;
+        }
+        LockingSystem.unlock(path, "ResourceManager");
+    },
+    delete: function (path) {
+        LockingSystem.lockAndWait(path, "ResourceManager");
+        try {
+            var category = Server.getResourceElementCategoryWithPath(path);
+            var element = category.allResourceElements[0];
+            Server.removeResourceElement(element);
+        } catch (e) {
+            LockingSystem.unlock(path, "ResourceManager");
+            throw "Error [ResourceManager.delete(" + path + ")] : " + e;
+        }
+        LockingSystem.unlock(path, "ResourceManager");
+        return true;
+    }
+}
+]]></script>
+</dunes-script-module>

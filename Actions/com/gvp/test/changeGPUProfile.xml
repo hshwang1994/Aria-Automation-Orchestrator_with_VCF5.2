@@ -1,0 +1,77 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="changeGPUProfile" result-type="string" api-version="6.0.0" id="90bd4cbb-38c1-449a-965d-6ede5b5118b8" version="0.0.0" category-name="com.gvp.test">
+  <param n="inputProperties" t="string"/>
+  <param n="vm" t="string"/>
+  <script encoded="false"><![CDATA[var devices = vm.config.hardware.device;  
+var gpu_size = 1*inputProperties.customProperties.gpu_size
+var _gpu_model =   inputProperties.customProperties.gpu_model
+
+System.log("gpu_model: " + _gpu_model);
+if (_gpu_model == "v100-pcie-32gb") {
+    _gpu_model = "v100d";
+}
+System.log("gpu_model: " + _gpu_model);
+
+var _gpu_model_max =  1*inputProperties.customProperties.gpu_model_max
+var changeList = [];   
+var firstVGPU = null; 
+for (var i in devices) {  
+     
+  var vmspec = new VcVirtualMachineConfigSpec();
+      var confSpec = new VcVirtualDeviceConfigSpec();  // Builds config spec object for VirtualMachine
+    if(/VcVirtualPCIPassthrough/.test(devices[i] )){ // devices[i] is VcVirtualPCIPassthrough 이면
+        System.log(devices[i].backing.vgpu )  ;
+        if(firstVGPU == null){
+            firstVGPU = devices[i] ;
+        }
+        else{
+            var confSpec = new VcVirtualDeviceConfigSpec(); 
+            confSpec.operation = VcVirtualDeviceConfigSpecOperation.remove; 
+            confSpec.device = devices[i];
+            changeList.push(confSpec);
+        }
+        
+
+    }
+
+}  
+var size = gpu_size;
+if(size>_gpu_model_max){
+    var cnt = gpu_size / _gpu_model_max;
+    var confSpec = new VcVirtualDeviceConfigSpec(); 
+    confSpec.operation = VcVirtualDeviceConfigSpecOperation.edit;  
+    firstVGPU.backing.vgpu = "grid_" + _gpu_model + "-" + _gpu_model_max + "q";
+    confSpec.device = firstVGPU;
+    changeList.push(confSpec);
+    for(var i=1; i < cnt ; i++){
+        var confSpec2 = new VcVirtualDeviceConfigSpec(); 
+        confSpec2.operation = VcVirtualDeviceConfigSpecOperation.add;  
+        var gpu = new VcVirtualPCIPassthrough();
+        var backing = new VcVirtualPCIPassthroughVmiopBackingInfo();
+        var slot = new VcVirtualDevicePciBusSlotInfo();
+        backing.vgpu = "grid_" + _gpu_model + "-" + _gpu_model_max + "q";
+        gpu.key = firstVGPU.key + i;
+        gpu.unitNumber = firstVGPU.unitNumber + i;
+        slot.pciSlotNumber = firstVGPU.slotInfo.pciSlotNumber + i;
+        
+       
+        gpu.backing= backing;
+        gpu.slotInfo = slot;
+        confSpec2.device = gpu;
+        changeList.push(confSpec2);
+    }
+}
+else{
+    var confSpec = new VcVirtualDeviceConfigSpec(); 
+    confSpec.operation = VcVirtualDeviceConfigSpecOperation.edit;  
+    firstVGPU.backing.vgpu = "grid_" + _gpu_model + "-" + size + "q";
+    confSpec.device = firstVGPU;
+    changeList.push(confSpec);
+}
+ 
+var spec = new VcVirtualMachineConfigSpec();
+spec.deviceChange = changeList;  
+vm.reconfigVM_Task(spec)
+
+]]></script>
+</dunes-script-module>

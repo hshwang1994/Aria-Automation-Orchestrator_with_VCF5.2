@@ -1,0 +1,87 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item1" object-name="workflow:name=generic" id="2567a0c3-e272-4efa-bb16-8b81f1834051" version="0.0.0" api-version="6.0.0" allowed-operations="vfe" editor-version="2.0" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[자원 삭제(ClovirONE)]]></display-name>
+  <position y="80.0" x="40.0"/>
+  <input>
+    <param name="resourceType" type="string"/>
+    <param name="resourceId" type="Array/string"/>
+    <param name="_metadata_category" type="string"/>
+    <param name="_metadata_catalog" type="string"/>
+  </input>
+  <workflow-item name="item0" type="end" end-mode="0">
+    <in-binding/>
+    <position y="80.0" x="420.0"/>
+  </workflow-item>
+  <workflow-item name="item1" out-name="item0" type="task">
+    <display-name><![CDATA[delete resource]]></display-name>
+    <script encoded="false"><![CDATA[var aa = System.getModule("com.ecs").AaManager(true);
+
+if(resourceType == "VM"){
+    for each(var resource in resourceId){
+        var machine = aa.get("/deployment/api/resources/" + resource);
+        var deploymentId = machine.deploymentId;
+        var deploymentResources = aa.get("/deployment/api/deployments/" + deploymentId + "/resources").content;
+        var count = 0;
+        for each(var deploymentResource in deploymentResources){
+            if(deploymentResource.type == "Cloud.vSphere.Machine"){
+                count += 1;
+            }
+        }
+
+        if(VcPlugin.getAllVirtualMachines(null, "xpath:name=\'"+ machine.name + "\'")[0].state == "poweredOn"){
+            throw System.warn("Cannot Delete VM. Because VM is Powered ON");
+        } else if(count >= 2) {
+            aa.delete("/deployment/api/deployments/"+ deploymentId +"/resources/"+ resource);
+        } else {
+            aa.delete("/deployment/api/deployments/" + deploymentId);
+        }
+    }
+} else {
+    for each(var resource in resourceId){
+        var deployment = aa.get("/deployment/api/resources/" + resource).deploymentId;
+        aa.delete("/deployment/api/deployments/" + deployment);
+    }
+}]]></script>
+    <in-binding>
+      <bind name="resourceType" type="string" export-name="resourceType"/>
+      <bind name="resourceId" type="Array/string" export-name="resourceId"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="90.0" x="200.0"/>
+  </workflow-item>
+  <workflow-item name="item8" out-name="item13" type="custom-condition" alt-out-name="item11">
+    <display-name><![CDATA[VM 전원 상태 확인]]></display-name>
+    <script encoded="false"><![CDATA[if (powerState === "PoweredOff") {
+    return true;
+} else {
+    return false;
+}]]></script>
+    <in-binding>
+      <bind name="powerState" type="string"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Custom decision based on a custom script.]]></description>
+    <position y="340.0" x="380.0"/>
+  </workflow-item>
+  <workflow-item name="item11" throw-bind-name="message" type="end" end-mode="1">
+    <in-binding/>
+    <position y="410.0" x="420.0"/>
+  </workflow-item>
+  <workflow-item name="item13" out-name="item14" type="link" linked-workflow-id="0ef78279-9b56-4e0b-84e7-846147d7f71e">
+    <display-name><![CDATA[Delete Resources(ClovirONE)]]></display-name>
+    <in-binding>
+      <bind name="computeId" type="string"/>
+    </in-binding>
+    <out-binding>
+      <bind name="computeStatus" type="string" export-name=""/>
+    </out-binding>
+    <description><![CDATA[ ]]></description>
+    <position y="350.0" x="560.0"/>
+  </workflow-item>
+  <workflow-item name="item14" type="end" end-mode="0">
+    <in-binding/>
+    <position y="340.0" x="960.0"/>
+  </workflow-item>
+  <presentation/>
+</workflow>

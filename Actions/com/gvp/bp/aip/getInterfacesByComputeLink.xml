@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getInterfacesByComputeLink" result-type="Array/Properties" api-version="6.0.0" id="635efb0a-51a7-4139-9f45-5ab578c82b93" version="0.1.1" category-name="com.gvp.bp.aip">
+  <param n="computeLink" t="string"><![CDATA[]]></param>
+  <param n="type" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.bvp").AaManager(true);
+
+if (!type || !computeLink) {
+    return null;
+    //throw "입력값(type 또는 computeLink)이 지정되지 않았습니다.";
+}
+
+if (type === "VM") {
+    var compute = aa.getUerp(computeLink);
+    var result = [];
+    for (var i = 0; i < compute.networkInterfaceLinks.length; i++) {
+        var iface = aa.getUerp(compute.networkInterfaceLinks[i]);
+        result.push({
+            label: "인터페이스[" + i + "] : " + iface.address,
+            value: iface.documentSelfLink
+        });
+    }
+    return result;
+
+
+} else if (type === "LB") {
+    var compute = aa.getUerp(computeLink);
+    return [{
+        label: compute.address,
+        value: compute.documentSelfLink
+    }];
+
+} else {
+    throw "지원하지 않는 type 값입니다: " + type;
+}
+]]></script>
+</dunes-script-module>

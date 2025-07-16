@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="apitest_hshwang" result-type="string" api-version="6.0.0" id="e3f0ef9f-a71f-4c44-bed2-75fae5804899" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <script encoded="false"><![CDATA[var text = "Hello World!";
+
+var encoded = System.getModule("com.test.goodmit.clovir").base64Encode(text);
+System.log("encoded: " + encoded);
+
+var decoded = System.getModule("com.gvp").base64Decode(encoded);
+System.log("Decoded: " + decoded);]]></script>
+</dunes-script-module>

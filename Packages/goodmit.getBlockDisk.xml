@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<package>
+<elm src-category='null'><![CDATA[dunes://service.dunes.ch/Action?id='88f6f91f-4473-4b2c-8da0-3310dcffe48d'&dunesName='Action'&name='getAvailableBlockDiskIdsByProjectId'&category='com.gvp.bp.vm']]></elm>
+<elm src-category='null'><![CDATA[dunes://service.dunes.ch/Action?id='ba3cf18c-84cc-4520-a749-286e9650e4bb'&dunesName='Action'&name='getAttachedBlockDiskIdsByVmName'&category='com.gvp.bp.vm']]></elm>
+</package>

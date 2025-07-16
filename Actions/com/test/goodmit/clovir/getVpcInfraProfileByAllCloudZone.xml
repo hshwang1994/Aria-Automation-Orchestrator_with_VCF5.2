@@ -1,0 +1,80 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getVpcInfraProfileByAllCloudZone" result-type="Array/Properties" api-version="6.0.0" id="93ada0bb-2db7-428d-af73-8ed4f9dcf6c8" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <param n="cloudZoneId" t="Array/string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[// API 호출 모듈 가져오기
+var aa = System.getModule("com.ecs").AaManager(true);
+
+var parsedProperties = [];
+var cloudZoneLen = cloudZoneId.length;
+for (var i = 0; i < cloudZoneLen; i++) {
+  try {
+    if (typeof cloudZoneId[i] === "string") {
+      parsedProperties.push(JSON.parse(cloudZoneId[i]));
+    } else {
+      parsedProperties.push(cloudZoneId[i]);
+    }
+  } catch (e) {
+    System.error("Invalid JSON: " + cloudZoneId[i]);
+  }
+}
+
+// CloudZone Id들로부터 Placement Zone 정보 가져오기
+var placementZoneArray = [];
+var parsedLen = parsedProperties.length;
+for (var i = 0; i < parsedLen; i++) {
+    var placementZoneLink = "/provisioning/resources/placement-zones/" + parsedProperties[i].value;
+    var placementZone = aa.getUerp(placementZoneLink);
+
+    if (placementZone) {
+        placementZoneArray.push(placementZone);
+    } else {
+        System.error("Failed to fetch placement zone for ID: " + parsedProperties[i].value);
+    }
+}
+
+// 각 Placement Zone의 vpcInfra에 해당하는 Network Profile 가져오기
+var profileArray = [];
+var placementLen = placementZoneArray.length;
+for (var i = 0; i < placementLen; i++) {
+    var prof = aa.getUerp("/provisioning/mgmt/network-profile?$filter=(provisioningRegionLink eq '" + placementZoneArray[i].provisioningRegionLink + "') and (expandedTags.item.tag eq 'vpcInfraId*')");
+
+    if (prof && prof.documentLinks) {
+        profileArray.push(prof);
+    } else {
+        System.error("No network profile found for provisioningRegionLink: " + placementZoneArray[i].provisioningRegionLink);
+    }
+}
+
+// 각 Placement Zone의 vpcInfra에 해당하는 Network Profile 정렬
+var result = [];
+var profileLen = profileArray.length;
+for (var i = 0; i < profileLen; i++) {
+    var pr = profileArray[i];
+
+    if (!pr.documents) {
+        System.error("Missing documents in profile data.");
+        continue;
+    }
+
+    var docLinksLen = pr.documentLinks.length;
+    for (var j = 0; j < docLinksLen; j++) {
+        var profileLink = pr.documentLinks[j];
+        var profile = pr.documents[profileLink];
+
+        if (profile) {
+            result.push({
+                label: profile.desc ? profile.desc : profile.name,
+                value: profileLink,
+            });
+        } else {
+            System.error("No profile found for profileLink: " + profileLink);
+        }
+    }
+}
+
+// 정렬 후 반환
+return result.sort(function (a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});
+]]></script>
+</dunes-script-module>

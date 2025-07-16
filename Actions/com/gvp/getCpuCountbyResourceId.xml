@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getCpuCountbyResourceId" result-type="number" api-version="6.0.0" id="6cefa6ff-20ce-4d03-9721-4761314c06bc" version="0.0.0" category-name="com.gvp">
+  <param n="resourceId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if(resourceId ==null){
+    return null;
+}
+var aa = System.getModule("com.bvp").AaManager(true);
+return aa.get("/iaas/api/machines/" + resourceId).customProperties.cpuCount]]></script>
+</dunes-script-module>

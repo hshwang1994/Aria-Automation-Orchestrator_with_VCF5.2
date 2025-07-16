@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:workflow xmlns:ns2="http://vmware.com/vco/workflow" root-name="item1" object-name="workflow:name=generic" id="da73c60e-4264-41d3-b9bc-37181c6edb3f" editor-version="2.0" version="0.0.0" api-version="6.0.0" allowed-operations="vef" restartMode="1" resumeFromFailedMode="0">
+    <display-name>NFS.Detach</display-name>
+    <position y="50.0" x="100.0"/>
+    <input>
+        <param name="_metadata_main_catalog" type="string"/>
+        <param name="_metadata_catalog" type="string"/>
+        <param name="vmResourceId" type="string"/>
+        <param name="nfsResourceId" type="string"/>
+        <param name="requestMessage" type="string"/>
+    </input>
+    <output/>
+    <workflow-item name="item0" type="end" end-mode="0" comparator="0">
+        <in-binding/>
+        <out-binding/>
+        <position y="60.0" x="440.0"/>
+    </workflow-item>
+    <workflow-item name="item1" out-name="item0" type="task" comparator="0">
+        <display-name>Scriptable task</display-name>
+        <script encoded="false">var aa = System.getModule("com.bvp").AaManager(true);
+var vm = aa.get("/deployment/api/resources/" + vmResourceId);
+var nfs = aa.get("/deployment/api/resources/" + nfsResourceId); 
+var machine = aa.get("/iaas/api/machines/"+ vmResourceId);
+var nfsInfo = JSON.parse(machine.customProperties.nfs);
+var attachedVm = nfs.properties.attachedVm;
+var endpointId = vm.properties.endpointId;
+var endpointLink = "/resources/endpoints/" + endpointId;
+var endpointName = aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0];
+var vcConf = System.getModule("com.bvp").ConfManager().load("BVP/Endpoint/" + endpointName);
+var guestConf = System.getModule("com.bvp").ConfManager().load("GVP/GuestAccount");
+var systemType = nfs.properties.systemType;
+
+
+
+for (var i=0;i &lt; nfsInfo.length; i++){
+    if(systemType == 'ceph'){
+        if(nfsInfo[i].subvolumeName == nfs.properties.subvolumeName){
+            var pusedo = nfsInfo[i].pusedo;
+            var umountPath = nfsInfo[i].mountPath;
+            nfsInfo.splice(i, 1);
+        }
+    }
+    else if(systemType == 'vsan') {
+        if(nfsInfo[i].volumeName == vsanfs.properties.name){
+            var pusedo = nfsInfo[i].pusedo;
+            var umountPath = nfsInfo[i].mountPath;
+            nfsInfo.splice(i, 1);
+        }
+    }
+
+}
+
+
+
+
+for (var i=0;i &lt; attachedVm.length; i++){
+    if(attachedVm[i] == vmResourceId){
+        attachedVm.splice(i, 1);
+    }
+}
+var execScripts = System.getModule("com.bvp").execScripts;
+var scripts = "sudo umount '" + umountPath + "'\n"
+scripts += "sudo sed -i '"+ pusedo + "/d' /etc/fstab  \n"; //sudo sed -i "/$TARGET_STRING/d" "$FSTAB_FILE"
+execScripts(vcConf.hostname, vcConf.username, vcConf.password, vm.properties.resourceName, guestConf.guest_lin_id, guestConf.guest_lin_pwd, scripts);
+
+aa.post("/deployment/api/resources/" + nfsResourceId + "/requests",{
+    "actionId": "Custom.NFS.custom.attachedvmcontrol",
+    "inputs": {
+        "vms": attachedVm
+    }
+})
+
+aa.patch("/iaas/api/machines/"+ vmResourceId,{
+    "customProperties": {
+        "nfs": JSON.stringify(nfsInfo)
+    }
+})
+</script>
+        <in-binding>
+            <bind name="nfsResourceId" type="string" export-name="nfsResourceId"/>
+            <bind name="vmResourceId" type="string" export-name="vmResourceId"/>
+            <bind name="mountPath" type="string"/>
+        </in-binding>
+        <out-binding/>
+        <description>Simple task with custom script capability.</description>
+        <position y="80.0" x="180.0"/>
+    </workflow-item>
+</ns2:workflow>

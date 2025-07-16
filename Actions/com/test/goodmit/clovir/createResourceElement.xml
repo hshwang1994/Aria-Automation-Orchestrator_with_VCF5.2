@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="createResourceElement" result-type="string" api-version="6.0.0" id="cf63c8b4-948a-46f7-b63a-d572e7686ee7" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <param n="dirPath" t="string"><![CDATA[]]></param>
+  <param n="fileName" t="string"><![CDATA[]]></param>
+  <param n="content" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var resourceElementCategory = Server.getResourceElementCategoryWithPath(dirPath);
+var att = new MimeAttachment(fileName);
+att.content = content;
+Server.createResourceElement(category=resourceElementCategory,name=fileName,fileNameOrMime=att);
+]]></script>
+</dunes-script-module>

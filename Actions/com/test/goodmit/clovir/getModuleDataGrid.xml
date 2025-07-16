@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getModuleDataGrid" result-type="Array/Properties" api-version="6.0.0" id="e7b519a1-2707-4c6e-b654-a022f4de7f33" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <param n="input" t="Array/string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var result = [];
+//var modules = System.getModule("com.goodmit.library.app.linux").actions;
+for each (module in input) {
+    var properties = {
+        "package_field": module,
+        "parameter_field": ""
+    };
+    result.push(properties);
+}
+return result;]]></script>
+</dunes-script-module>

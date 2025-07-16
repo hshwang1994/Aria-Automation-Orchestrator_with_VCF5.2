@@ -1,0 +1,77 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="checkCustomizationStatus" result-type="boolean" api-version="6.0.0" id="7f06b156-30d6-49a8-b4a0-ce6b3cf77deb" version="1.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir.Actions">
+  <description><![CDATA[vCenter의 이벤트 로그에서 특정 VM의 사용자 지정 작업 완료 여부(CustomizationSucceeded 이벤트)를 확인합니다.]]></description>
+  <param n="computeName" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[// Action Input Parameters
+var vmName = computeName;
+
+// Action Output
+// type: boolean - 사용자 지정 작업 성공 여부
+
+try {
+    // VM 이름으로 VM 객체 검색
+    System.log("VM 검색 시작: " + vmName);
+    var allVms = VcPlugin.getAllVirtualMachines();
+    System.log("전체 VM 수: " + allVms.length);
+
+    var vm = null;
+    for (var i = 0; i < allVms.length; i++) {
+        if (allVms[i].name === vmName) {
+            vm = allVms[i];
+            break;
+        }
+    }
+
+    if (!vm) {
+        System.error("지정된 이름의 VM을 찾을 수 없습니다: " + vmName);
+        return false;
+    }
+
+    System.log("VM 발견: " + vmName);
+
+    // 이벤트 검색
+    var filterSpec = new VcEventFilterSpec();
+    filterSpec.entity = new VcEventFilterSpecByEntity();
+    filterSpec.entity.entity = vm;
+    filterSpec.entity.recursion = VcEventFilterSpecRecursionOption.self;
+
+    // 최근 5분 동안의 이벤트 필터
+    var now = new Date();
+    filterSpec.time = new VcEventFilterSpecByTime();
+    //filterSpec.time.beginTime = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000); // 3일(밀리초 단위)
+    filterSpec.time.beginTime = new Date(now.getTime() - 5 * 60 * 1000); // 5분 (둘중 선택)
+
+    System.log("이벤트 검색 시작, 시간 필터: " + filterSpec.time.beginTime);
+    var events = vm.sdkConnection.eventManager.queryEvents(filterSpec);
+
+    if (!events || events.length === 0) {
+        System.log("이벤트가 없거나 검색 조건에 맞는 이벤트를 찾을 수 없습니다.");
+        return false;
+    }
+
+    System.log("검색된 이벤트 수: " + events.length);
+
+    // 성공 이벤트 메시지
+    var successKeyword = "Customization of VM " + vmName + " succeeded";
+
+    // 이벤트에서 성공 메시지 확인
+    for (var j = 0; j < events.length; j++) {
+        var currentEvent = events[j];
+        if (
+            currentEvent &&
+            currentEvent.fullFormattedMessage &&
+            currentEvent.fullFormattedMessage.indexOf(successKeyword) !== -1
+        ) {
+            System.log("사용자 지정 작업 성공 이벤트 발견: " + currentEvent.fullFormattedMessage);
+            return true; // 성공 메시지가 발견되면 성공
+        }
+    }
+
+    System.log("최근 5분 내 사용자 지정 작업 성공 이벤트를 찾을 수 없음.");
+    return false;
+} catch (e) {
+    System.error("오류 발생: " + e.message);
+    throw e;
+}
+]]></script>
+</dunes-script-module>

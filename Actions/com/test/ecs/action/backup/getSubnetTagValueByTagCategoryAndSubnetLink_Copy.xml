@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getSubnetTagValueByTagCategoryAndSubnetLink_Copy" result-type="string" api-version="6.0.0" id="b1bd52ac-7d04-4671-b4b3-3c61d0c59438" version="0.1.0" allowed-operations="vfe" category-name="com.test.ecs.action.backup">
+  <description><![CDATA[BP:Virtual Machine]]></description>
+  <param n="subnetLink" t="string"><![CDATA[]]></param>
+  <param n="category" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var checker = category + "\n";
+var aa = System.getModule("com.ecs").AaManager();
+for each(var tagObj in aa.getUerp(subnetLink).expandedTags) {
+    if (tagObj.tag.indexOf(checker) > -1) { return tagObj.tag.split("\n")[1]; }
+}
+throw 'could not find "' + category + '" tag';]]></script>
+</dunes-script-module>

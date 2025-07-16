@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="peeringRemoval" result-type="string" api-version="6.0.0" id="6e31d006-25b6-4551-8b49-6d4d8d9c24b0" version="0.0.1" allowed-operations="vfe" category-name="com.bvp.bp.peer">
+  <param n="peeringId" t="string"><![CDATA[]]></param>
+  <param n="subnetLink1" t="string"><![CDATA[]]></param>
+  <param n="subnetLink2" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if(!peeringId) { throw "peeringId cannot be null"; }
+if(!subnetLink1) { throw "subnetLink1 cannot be null"; }
+if(!subnetLink2) { throw "subnetLink2 cannot be null"; }
+
+var nsxManager = System.getModule("com.bvp").NsxManager;
+var aa = System.getModule("com.bvp").AaManager(true);
+var subnet1 = aa.getUerp(subnetLink1);
+var endpointLink1 = subnet1.endpointLink;
+var tier1Path1 = subnet1.customProperties.vpcManagedTier1Path;
+var subnet2 = aa.getUerp(subnetLink2);
+var endpointLink2 = subnet2.endpointLink;
+var tier1Path2 = subnet2.customProperties.vpcManagedTier1Path;
+var nsx = nsxManager(aa.getUerp(endpointLink1).endpointProperties.hostName.split(".")[0]);
+try { nsx.delete("/policy/api/v1" + tier1Path1 + "/static-routes/" + peeringId); } catch (e) {}
+try { nsx.delete("/policy/api/v1" + tier1Path1 + "/nat/USER/nat-rules/" + peeringId); } catch (e) {}
+if (endpointLink1 != endpointLink2) { nsx = nsxManager(aa.getUerp(endpointLink2).endpointProperties.hostName.split(".")[0]); }
+try { nsx.delete("/policy/api/v1" + tier1Path2 + "/static-routes/" + peeringId); } catch (e) {}
+try { nsx.delete("/policy/api/v1" + tier1Path2 + "/nat/USER/nat-rules/" + peeringId); } catch (e) {}
+return "";]]></script>
+</dunes-script-module>

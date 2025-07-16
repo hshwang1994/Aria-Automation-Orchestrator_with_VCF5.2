@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getIpAddressesBySubnetLink" result-type="Array/string" api-version="6.0.0" id="44f5e425-091e-48aa-9e3b-f622a0aa1c19" version="0.1.1" allowed-operations="vfe" category-name="com.bvp.bp.vm">
+  <description><![CDATA[BP:Virtual Machine]]></description>
+  <param n="subnetLink" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!subnetLink) { throw "subnetLink cannot be null"; }
+
+var conv = System.getModule("com.bvp").Converter();
+var aa = System.getModule("com.bvp").AaManager(true);
+var subnetRanges = aa.getUerp("/provisioning/mgmt/subnet-range?$filter=subnetLink eq '" + subnetLink + "'")
+var result = ['*'];
+for each(var subnetRangeLink in subnetRanges.documentLinks) {
+    var subnetRange = subnetRanges.documents[subnetRangeLink];
+    var startIpNumeric = conv.ip.getNumeric(subnetRange.startIPAddress);
+    var endIpNumeric = conv.ip.getNumeric(subnetRange.endIPAddress);
+    var usedIpAddresses = aa.getUerp("/resources/ip-addresses?expand&$filter=(subnetRangeLink eq '" + subnetRangeLink + "') and (ipAddressStatus ne 'AVAILABLE')");
+    var used = [];
+    for each(var usedIpAddressLink in usedIpAddresses.documentLinks) {
+        used.push(conv.ip.getNumeric(usedIpAddresses.documents[usedIpAddressLink].ipAddress));
+    }
+    for (var ip = startIpNumeric; ip <= endIpNumeric; ip++) {
+        if (used.indexOf(ip) < 0) { result.push(conv.ip.getString(ip)); }
+    }
+}
+return result;]]></script>
+</dunes-script-module>

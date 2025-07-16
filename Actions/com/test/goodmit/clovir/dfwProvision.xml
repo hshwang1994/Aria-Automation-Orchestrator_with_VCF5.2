@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="dfwProvision" result-type="Properties" api-version="6.0.0" id="98bcda88-019e-4d4d-acf9-f9e463c39787" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <param n="dfwRules" t="Array/CompositeType(name:string,source:string,destination:string,Protocol:string,Port:string,Service:string,Action:string):dfwRules"><![CDATA[]]></param>
+  <param n="projectName" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.ecs").AaManager(true);
+
+var getResult = aa.get("/deployment/api/deployments");
+var contents = getResult.content;
+var deployment = null;
+for (var i = 0; i < contents.length; i++) {
+    if(contents[i].inputs._metadata_resource_type === "Custom.Project" && contents[i].inputs.displayName === projectName){
+        deployment = contents[i];
+    }
+}
+if (deployment == null){
+    throw System.log("Cannot Found Deployment");
+};
+
+var resources = aa.get("/deployment/api/deployments/" + deployment.id + "/resources");
+var resource = null;
+for each(var r in resources.content){
+    if(r.type ==="Cloud.SecurityGroup"){
+        resource = r;
+    };
+};
+
+
+var endpoint = aa.getUerp("/resources/endpoints/" + resource.properties.endpointId);
+
+var nsx = System.getModule("com.ecs").NsxManager(endpoint.endpointProperties.hostName.split(".")[0]);
+var securityPolicies =nsx.get("/policy/api/v1/infra/domains/default/security-policies");
+var spid = null;
+var securityPolicy = null;
+for each(var sp in securityPolicies.results ){
+    if(sp.display_name === projectName){
+        spid = sp.id;
+        securityPolicy = sp;
+    }
+}
+var rules = nsx.get("/policy/api/v1/infra/domains/default/security-policies/" + spid + "/rules").results
+rules[0].direction = "IN_OUT"
+
+var patch = nsx.patch("/policy/api/v1/infra/domains/default/security-policies/" + spid,{
+    "rules" : rules
+});
+//var put = nsx.put("/policy/api/v1/infra/domains/default/security-policies/" + spid + "/rules/" + "input-rule-name",
+//var patch = nsx.get("/policy/api/v1/infra/domains/default/security-policies/" + spid);
+
+
+return patch;
+//"/resources/endpoints/3da82c92-adb6-44e3-b944-1f08c3fc815f"]]></script>
+</dunes-script-module>

@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="nfsRead" result-type="string" api-version="6.0.0" id="fae85e5a-3335-4937-b64d-2a2a11027251" version="0.0.0" category-name="com.gvp.bp.nfs">
+  <param n="subvolumeName" t="string"><![CDATA[]]></param>
+  <param n="volumeName" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var ceph = System.getModule("com.gvp").CephManager("ceph.gooddi.lab","1.0");
+var result = ceph.get("/api/cephfs/subvolume/" + volumeName + "/info?subvol_name=" + subvolumeName);
+
+return result.bytes_pcent]]></script>
+</dunes-script-module>

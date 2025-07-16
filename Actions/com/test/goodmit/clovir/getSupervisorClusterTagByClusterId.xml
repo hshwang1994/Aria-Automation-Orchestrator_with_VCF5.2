@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getSupervisorClusterTagByClusterId" result-type="string" api-version="6.0.0" id="a7d3ad68-6a08-42f9-a51b-6ddd8cf3864a" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <param n="clusterId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if(clusterId == null || clusterId == undefined){
+    return null;
+};
+var aa = System.getModule("com.ecs").AaManager(true);
+
+var zones = aa.get("/cmx/api/resources/k8s-zones").content;
+var selfLink = aa.get("/cmx/api/resources/supervisor-clusters?$filter=id eq '"+ clusterId + "'").content[0].documentSelfLink.split("/");
+var result = [];
+var str ='';
+System.log(selfLink[selfLink.length - 1])
+for each(var zone in zones){
+    for each(var sv in zone.supervisorClusters){
+        if(sv.clusterSelfLinkId == selfLink[selfLink.length - 1]){
+            var tag = aa.getUerp(sv.tagLinks[0]);
+            str = tag.key + ":" + tag.value;
+
+        }
+    }
+}
+
+return str;
+]]></script>
+</dunes-script-module>

@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="bootstrap" result-type="string" api-version="6.0.0" id="8c7cd7c2-6e3c-4bf3-8c0c-55c5f2bb4402" version="0.0.5" allowed-operations="vfe" category-name="com.test.goodmit.library.app.kubernetes">
+  <param n="namespaceName" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[// Deployment의 이름은 bootstrap이여아먄 합니다
+// namespace는 Poropertise에서 불러옵니다
+
+function generateyaml(namespaceName) {
+   var yamlContent =
+    "apiVersion: apps/v1\n" +
+    "kind: Deployment\n" +
+    "metadata:\n" +
+    "  name: bootstrap\n" +
+    "  namespace: "+ namespaceName + "\n" +
+    "  labels:\n" +
+    "    app: bootstrap\n" +
+    "spec:\n" +
+    "  replicas: 1\n" +
+    "  strategy:\n" +
+    "    type: RollingUpdate\n" +
+    "    rollingUpdate:\n" +
+    "      maxUnavailable: 1\n" +
+    "      maxSurge: 1\n" +
+    "  selector:\n" +
+    "    matchLabels:\n" +
+    "      app: bootstrap\n" +
+    "  template:\n" +
+    "    metadata:\n" +
+    "      labels:\n" +
+    "        app: bootstrap\n" +
+    "    spec:\n" +
+    "      containers:\n" +
+    "      - image: harbor.oper.cloud.vcf.lab/tanzu-package/bootstrap-cli:v1.0.1\n" +
+    "        name: bootstrap-cli\n" +
+    "        imagePullPolicy: IfNotPresent\n" +
+    "        resources:\n" +
+    "          requests:\n" +
+    "            cpu: \"100m\"\n" +
+    "            memory: \"128Mi\"\n" +
+    "          limits:\n" +
+    "            cpu: \"500m\"\n" +
+    "            memory: \"512Mi\"\n";
+
+    return yamlContent;
+}
+
+return generateyaml(namespaceName)]]></script>
+</dunes-script-module>

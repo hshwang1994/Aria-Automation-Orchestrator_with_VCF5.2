@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<config-element id="66b2e79c-8ed0-4d8a-97f5-c239494c9ea1" version="0.0.0" allowed-operations="vfe">
+  <display-name><![CDATA[Opera Copy]]></display-name>
+  <atts>
+    <att name="hostname" type="string" read-only="false">
+      <value encoded="n"><![CDATA[cloudready.vcf.lab]]></value>
+    </att>
+    <att name="accessKey" type="SecureString" read-only="false">
+      <value encoded="n"><![CDATA[__NULL__]]></value>
+    </att>
+    <att name="secretKey" type="SecureString" read-only="false">
+      <value encoded="n"><![CDATA[__NULL__]]></value>
+    </att>
+    <att name="selfEndpoint" type="string" read-only="false">
+      <value encoded="n"><![CDATA[aria-auto.vcf.lab]]></value>
+    </att>
+  </atts>
+</config-element>

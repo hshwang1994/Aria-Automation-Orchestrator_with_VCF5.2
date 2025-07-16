@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getK8sZones" result-type="Array/Any" api-version="6.0.0" id="c6e06764-c581-4418-be09-e294b5615f93" version="0.0.0" category-name="com.gvp.bp.prj">
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.bvp").AaManager(true);
+
+return aa.get("/cmx/api/resources/k8s-zones?expandTags=true").content;]]></script>
+</dunes-script-module>

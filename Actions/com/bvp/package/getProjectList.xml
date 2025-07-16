@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getProjectList" result-type="Array/Properties" api-version="6.0.0" id="afbcd6bd-e8b8-4091-b2d9-90f3795b1c0f" version="0.0.1" allowed-operations="vfe" category-name="com.bvp.package">
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.bvp").AaManager(true);
+
+var result = [];
+for each(var project in aa.get("/iaas/api/projects").content) {
+    if(project.zones.length !== 0 ){
+        result.push({
+            label: project.description,
+            value: project.id
+        });
+    }
+}
+
+return result.sort(function (a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});
+]]></script>
+</dunes-script-module>

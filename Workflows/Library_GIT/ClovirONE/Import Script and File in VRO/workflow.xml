@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item2" object-name="workflow:name=generic" id="6d9206ff-a4a7-4f83-b70f-e6a19d67c1a6" version="0.0.0" api-version="6.0.0" allowed-operations="vfe" editor-version="2.0" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[Import Script and File in VRO]]></display-name>
+  <position y="50.0" x="100.0"/>
+  <input>
+    <param name="uploadedFile" type="Array/MimeAttachment"/>
+    <param name="osType" type="string"/>
+    <param name="appName" type="string"/>
+    <param name="version" type="string"/>
+    <param name="appInfo" type="Array/CompositeType(fileName:string,fileContent:string):resourceElementFile"/>
+  </input>
+  <workflow-item name="item0" type="end" end-mode="0">
+    <in-binding/>
+    <position y="50.0" x="500.0"/>
+  </workflow-item>
+  <workflow-item name="item2" out-name="item0" type="task">
+    <display-name><![CDATA[Scriptable task]]></display-name>
+    <script encoded="false"><![CDATA[//var resourceElementCategory = Server.getResourceElementCategoryWithPath(dirPath);
+if(osType == "LINUX"){
+    var dirPath = "goodmit/app/linux/";    
+} else {
+    var dirPath = "goodmit/app/window/";
+};
+for each(var file in uploadedFile){
+    var re = Server.createResourceElement(category=dirPath+appName,name=file.name);
+    re.setContentFromMimeAttachment(file);
+};
+
+]]></script>
+    <in-binding>
+      <bind name="uploadedFile" type="Array/MimeAttachment" export-name="uploadedFile"/>
+      <bind name="osType" type="string" export-name="osType"/>
+      <bind name="appName" type="string" export-name="appName"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.0" x="240.0"/>
+  </workflow-item>
+  <presentation/>
+</workflow>

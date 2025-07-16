@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getprofileByProjectId" result-type="string" api-version="6.0.0" id="3ed8354a-a75f-45d1-b9e0-5e771cffc6e2" version="0.0.0" category-name="com.gvp.bp.vm">
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!projectId) { return []; }
+var aa = System.getModule("com.bvp").AaManager(true);
+var project = aa.get("/iaas/api/projects/" + projectId);
+var profile = project.customProperties ? project.customProperties.profile : null;
+return profile;]]></script>
+</dunes-script-module>

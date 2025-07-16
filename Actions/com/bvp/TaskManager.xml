@@ -1,0 +1,63 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="TaskManager" result-type="Properties" api-version="6.0.0" id="a86d8dc3-13a0-4bf3-b116-068bf9a2e87b" version="0.0.1" allowed-operations="vfe" category-name="com.bvp">
+  <param n="workflowId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[return {
+    _config: function () {
+        var workflow = Server.getWorkflowWithId(workflowId);
+        if (workflow == null) { throw "Error [TaskManager] : could not find workflow"; }
+        return {
+            workflow: workflow,
+            tasks: [],
+            timeout: 3600
+        }
+    } (),
+    exec: function (parameters) {
+        var task = this._config.workflow.execute(new Properties(parameters));
+        this._config.tasks.push(task);
+        return task;
+    },
+    sched: function (parameters, delayedSec) {
+        var date = new Date();
+        date.setTime(date.getTime() + (delayedSec * 1000));
+        this._config.workflow.schedule(new Properties(parameters), date);
+        return this;
+    },
+    join: function () {
+        var try_cnt = 0;
+        var results = [];
+        for each(var task in this._config.tasks) {
+            for (; try_cnt <= this._config.timeout; try_cnt++) {
+                var state = Server.getWorkflowTokenState(task.id);
+                if (state == "completed") {
+                    results.push(task.getOutputParameters());
+                    break;
+                } else if (state == "failed") {
+                    results.push(task.exception);
+                    break;
+                }
+                System.sleep(1000);
+            }
+            if (try_cnt == this._config.timeout) { throw "Error [TaskManager.join()] : workflow execution timeout"; }
+        }
+        this._config.tasks = [];
+        return results;
+    },
+    result: function() {
+        var try_cnt = 0;
+        if (this._config.tasks.length > 0) {
+            var task = this._config.tasks.shift();
+            for (; try_cnt <= this._config.timeout; try_cnt++) {
+                if (Server.getWorkflowTokenState(task.id) == "completed") { return task.getOutputParameters(); }
+                System.sleep(1000);
+            }
+            if (try_cnt == this._config.timeout) { throw "Error [TaskManager.result()] : workflow execution timeout"; }
+        }
+        return null;
+    },
+    tasks: function() {
+        var results = [];
+        for each(var task in this._config.tasks) { results.push(task.id); }
+        return results;
+    }
+}]]></script>
+</dunes-script-module>

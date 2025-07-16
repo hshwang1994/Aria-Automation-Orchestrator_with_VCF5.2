@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getNotAttachedMachineIdbyProjectIdAndNfsId" result-type="Array/Properties" api-version="6.0.0" id="1947b9a0-eaf3-4bc1-812b-a74973a25f9c" version="0.0.0" category-name="com.gvp.bp.nfs">
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <param n="nfsId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (projectId == null || nfsId == null) {
+    return null;
+}
+var aa = System.getModule("com.bvp").AaManager(true);
+var result = [];
+var nfs = aa.get("/deployment/api/resources/" + nfsId);
+var attachedVm = nfs.properties.attachedVm;
+for each(var machine in aa.get("/iaas/api/machines?$filter=projectId eq '" + projectId + "'").content) {
+    if(attachedVm.indexOf(machine.id) == -1){
+        result.push({
+            label: machine.customProperties.displayName ? machine.customProperties.displayName : machine.name,
+            value: machine.id,
+        });
+    }
+}
+return result.sort(function (a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});]]></script>
+</dunes-script-module>

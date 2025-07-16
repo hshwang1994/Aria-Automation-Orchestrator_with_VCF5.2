@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getFlavorsByPlacementZoneLink" result-type="Array/Properties" api-version="6.0.0" id="b9a1f241-781d-46cd-b5d6-3386db73b215" version="0.1.1" allowed-operations="vfe" category-name="com.bvp.bp.vm">
+  <description><![CDATA[BP:Virtual Machine]]></description>
+  <param n="placementZoneLink" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!placementZoneLink) { throw "placementZoneLink cannot be null"; }
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var zone = aa.getUerp(placementZoneLink);
+var regionId = zone.regionId;
+var flavorsContent = aa.get("/iaas/api/flavors?includeCores=true&$filter=externalRegionId eq '" + regionId + "'").content;
+var result = [];
+for each(var flavors in flavorsContent) {
+    for (var flavorName in flavors.mapping) {
+        var flavor = flavors.mapping[flavorName];
+        var memInGb = flavor.memoryInMB % 1024 == 0 ? flavor.memoryInMB / 1024 : (flavor.memoryInMB / 1024).toFixed(1);
+        result.push({
+            label: "CPU [" + flavor.cpuCount + (flavor.coreCount ? "/" + flavor.cpuCount/flavor.coreCount : flavor.cpuCount) + "] MEM [" + memInGb + " GByte]",
+            value: flavorName
+        });
+    }
+}
+return result.sort(function (a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});]]></script>
+</dunes-script-module>

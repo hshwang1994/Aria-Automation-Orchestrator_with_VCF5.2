@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getVpcCatalogsByAdminProjectName_Copy" result-type="Array/Properties" api-version="6.0.0" id="794b74e2-8612-44fe-80fb-4591f748672f" version="0.1.0" allowed-operations="vfe" category-name="com.test.ecs.action.backup">
+  <description><![CDATA[BP:Project]]></description>
+  <param n="adminProjectName" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.ecs").AaManager(true);
+var project = aa.get("/iaas/api/projects?$filter=name eq '" + adminProjectName + "'").content[0];
+var catalogs = aa.get("/catalog/api/admin/items?projects=" + project.id).content;
+var result = [];
+for each(var catalog in catalogs) {
+    var detail = aa.get("/catalog/api/admin/items/" + catalog.id);
+    try {
+        if (detail.schema.properties._metadata_available.default.indexOf("vpc") > -1) {
+            result.push({
+                label: detail.schema.properties._metadata_catalog.default,
+                value: catalog.id,
+            });
+        }
+    } catch (e) {}
+}
+return result.sort(function (a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});
+]]></script>
+</dunes-script-module>

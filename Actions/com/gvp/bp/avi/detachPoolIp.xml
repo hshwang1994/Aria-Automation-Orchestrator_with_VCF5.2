@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="detachPoolIp" result-type="string" api-version="6.0.0" id="bbe5429f-f37f-4dbf-922f-8ddcf5cddc7e" version="0.0.0" category-name="com.gvp.bp.avi">
+  <param n="endpointLink" t="string"><![CDATA[]]></param>
+  <param n="vpcManagedTier1Path" t="string"><![CDATA[]]></param>
+  <param n="pools" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.bvp").AaManager(true);
+var nsx = System.getModule("com.bvp").NsxManager(aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0]);
+var poolInfos = JSON.parse(pools);
+for each(var poolInfo in poolInfos){
+    nsx.delete("/policy/api/v1" + vpcManagedTier1Path + "/nat/USER/nat-rules/" + poolInfo.vmId);
+}
+
+
+return "";]]></script>
+</dunes-script-module>

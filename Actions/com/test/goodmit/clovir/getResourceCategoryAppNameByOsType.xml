@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getResourceCategoryAppNameByOsType" result-type="Array/Properties" api-version="6.0.0" id="537169d6-2bd0-464f-871f-1e2117d8318b" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <param n="osType" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[function removeDuplicates(arr) {
+    return arr.filter(function(value, index, self) {
+        return self.indexOf(value) === index;
+    });
+}
+if (osType == null) { return null};
+var result = [];
+if (osType == "LINUX"){
+    var categories = Server.getResourceElementCategoryWithPath("goodmit/app/linux").subCategories;
+    var array = [];
+    for each(var category in categories){
+        var appName = category.name.split("_")[0];
+        array.push({
+            label: appName,
+            value: appName,
+        });
+    }
+    var result = removeDuplicates(array);
+} else {
+    var categories = Server.getResourceElementCategoryWithPath("goodmit/app/window").subCategories;
+    var array = [];
+    for each(var category in categories){
+        var appName = category.name.split("_")[0];
+        var array = [];
+        result.push({
+            label: appName,
+            value: appName,
+        });
+    }
+    var result = removeDuplicates(array);
+}
+return result;
+
+
+]]></script>
+</dunes-script-module>

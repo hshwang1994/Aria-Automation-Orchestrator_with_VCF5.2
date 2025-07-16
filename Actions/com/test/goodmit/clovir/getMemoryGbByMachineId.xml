@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getMemoryGbByMachineId" result-type="number" api-version="6.0.0" id="ba380df8-239e-436a-8fe5-a757986ee8f1" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <param n="machineId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if(machineId ==null){
+    return null;
+}
+var aa = System.getModule("com.ecs").AaManager(true);
+return aa.get("/iaas/api/machines/" + machineId).customProperties.memoryGB]]></script>
+</dunes-script-module>

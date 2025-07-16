@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getProfileNameByProfileLink" result-type="string" api-version="6.0.0" id="65eaca74-a0cf-4748-9fd5-1b0e84deebe1" version="0.1.1" allowed-operations="vfe" category-name="com.bvp.bp.aip">
+  <description><![CDATA[BP:Segment]]></description>
+  <param n="profileLink" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!profileLink) { throw "profileLink cannot be null"; }
+
+return System.getModule("com.bvp").AaManager(true).getUerp(profileLink).name;
+]]></script>
+</dunes-script-module>

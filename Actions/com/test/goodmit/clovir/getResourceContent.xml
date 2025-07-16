@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getResourceContent" result-type="string" api-version="6.0.0" id="565bdec7-cdf3-43d9-a036-ff4258b72471" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <param n="dirName" t="string"><![CDATA[]]></param>
+  <param n="fileName" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[// Resource Element Category 정보를 가져옴
+var var_0 = Server.getResourceElementCategoryWithPath(dirName);
+// dirName 디렉토리에 위치한 resource 목록 가져옴
+var var_1 = var_0.resourceElements;
+// fileName 에 해당하는 resource 가져옴 
+var var_2 = var_1.filter(function(str) { return str.name === fileName;});
+// 가져온 resourceElement에 mimeAttachment 가져옴
+var var_3 = var_2[0].getContentAsMimeAttachment();
+
+return var_3.content;
+]]></script>
+</dunes-script-module>

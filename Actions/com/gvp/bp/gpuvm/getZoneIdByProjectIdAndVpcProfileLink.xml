@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getZoneIdByProjectIdAndVpcProfileLink" result-type="string" api-version="6.0.0" id="a399687c-8dda-4ec5-8554-6963bde592db" version="0.1.1" category-name="com.gvp.bp.gpuvm">
+  <description><![CDATA[BP:Virtual Private Cloud
+BP:Virtual Machine]]></description>
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <param n="vpc" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!projectId) {return null; }
+if (!vpc) { return null; }
+
+var aa = System.getModule("com.bvp").AaManager(true);
+
+// vpc가 위치한 region 링크 정보 가져오기 (UERP)
+var regionLink = aa.getUerp(vpc).provisioningRegionLink;
+
+// region 이름 정보 가져오기 (UERP)
+var regionName = aa.getUerp(regionLink).regionName;
+
+// region ID 가져오기 (IAAS)
+var regionId = aa.get("/iaas/api/regions?$filter=name eq '" + regionName + "'").content[0].id;
+
+var project = aa.get("/iaas/api/projects/" + projectId);
+
+// 프로젝트에 할당된 zone 들 중 vpc가 위치한 region 정보를 가지고 있는 Zone을 필터링
+for each (var zone in project.zones) {
+    var zone = aa.get("/iaas/api/zones/" + zone.zoneId);
+    if(zone._links.region.href == "/iaas/api/regions/" + regionId){
+        return zone.id;
+    } else {
+        throw "Zone not Found"
+    }
+}
+]]></script>
+</dunes-script-module>

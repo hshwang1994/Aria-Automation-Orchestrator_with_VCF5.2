@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getAppParameters" result-type="Array/Properties" api-version="6.0.0" id="513bd7d7-5d48-443a-828d-e2bab2e30179" version="0.0.0" category-name="com.gvp.test">
+  <param n="package" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if(package == "nginx_1.8"){
+    var result = [
+        {"key": "was_ip", "value": ""},
+        {"key": "db_ip", "value": ""},
+    ];
+}
+
+if(package == "mysql_8.0.27"){
+    var result = [
+        {"key": "sql_user", "value": ""},
+        {"key": "sql_db", "value": ""},
+    ];
+}
+
+return result;]]></script>
+</dunes-script-module>

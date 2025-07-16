@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item1" object-name="workflow:name=generic" id="0dabc752-4ec6-49c3-89f0-614d3e7ec155" version="0.0.1" api-version="6.0.0" allowed-operations="vfe" editor-version="2.0" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[Clear Action Runs]]></display-name>
+  <position y="50.0" x="100.0"/>
+  <input>
+    <param name="failed" type="boolean"/>
+  </input>
+  <workflow-item name="item0" type="end" end-mode="0">
+    <in-binding/>
+    <position y="50.0" x="340.0"/>
+  </workflow-item>
+  <workflow-item name="item1" out-name="item0" type="task">
+    <display-name><![CDATA[Scriptable task]]></display-name>
+    <script encoded="false"><![CDATA[var aa = System.getModule("com.bvp").AaManager(true);
+
+while (true) {
+    var actionRuns = [];
+    if (failed) {
+        actionRuns = aa.get("/abx/api/resources/action-runs?size=1000&$filter=(system eq 'false') and ((runState eq 'COMPLETED') or (runState eq 'FAILED'))").content;
+    } else {
+        actionRuns = aa.get("/abx/api/resources/action-runs?size=1000&$filter=(system eq 'false') and (runState eq 'COMPLETED')").content;
+    }
+    if (actionRuns.length > 0) {
+        for each(var actionRun in actionRuns) {
+            aa.delete("/abx/api/resources/action-runs/" + actionRun.id);
+        }
+    } else {
+        break;
+    }
+}]]></script>
+    <in-binding>
+      <bind name="failed" type="boolean" export-name="failed"/>
+    </in-binding>
+    <out-binding/>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.0" x="180.0"/>
+  </workflow-item>
+  <presentation/>
+</workflow>

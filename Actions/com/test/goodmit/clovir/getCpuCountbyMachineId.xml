@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getCpuCountbyMachineId" result-type="number" api-version="6.0.0" id="fd886cf4-194d-4fdd-94e5-b2925407b156" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <param n="machineId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if(machineId ==null){
+    return null;
+}
+var aa = System.getModule("com.ecs").AaManager(true);
+return aa.get("/iaas/api/machines/" + machineId).customProperties.cpuCount]]></script>
+</dunes-script-module>

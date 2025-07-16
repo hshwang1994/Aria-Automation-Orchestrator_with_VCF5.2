@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="attachPoolIp" result-type="string" api-version="6.0.0" id="97f22f1d-bb00-4d79-9573-d9b5fba13370" version="0.0.0" category-name="com.gvp.bp.avi">
+  <param n="endpointLink" t="string"><![CDATA[]]></param>
+  <param n="pools" t="string"><![CDATA[]]></param>
+  <param n="vpcManagedTier1Path" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.bvp").AaManager(true);
+var nsx = System.getModule("com.bvp").NsxManager(aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0]);
+var poolInfos = JSON.parse(pools);
+for each(var poolInfo in poolInfos){
+    nsx.put("/policy/api/v1" + vpcManagedTier1Path + "/nat/USER/nat-rules/" + poolInfo.vmId, {
+        display_name: poolInfo.vmId,
+        action: "DNAT",
+        destination_network: poolInfo.poolIp,
+        translated_network: poolInfo.vmIp,
+        enabled: true,
+        logging: false,
+        firewall_match: "MATCH_EXTERNAL_ADDRESS"
+    })
+}
+
+return "";]]></script>
+</dunes-script-module>

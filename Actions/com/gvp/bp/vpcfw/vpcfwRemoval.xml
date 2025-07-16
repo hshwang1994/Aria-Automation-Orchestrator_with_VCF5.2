@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="vpcfwRemoval" result-type="string" api-version="6.0.0" id="881f2aba-3963-4e91-b25e-1b27729b3590" version="0.0.0" category-name="com.gvp.bp.vpcfw">
+  <param n="endpointLink" t="string"><![CDATA[]]></param>
+  <param n="path" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var conv = System.getModule("com.bvp").Converter();
+var aa = System.getModule("com.bvp").AaManager(true);
+var nsx = System.getModule("com.bvp").NsxManager(aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0]);
+
+nsx.delete("/policy/api/v1" + path);
+
+
+return "";]]></script>
+</dunes-script-module>

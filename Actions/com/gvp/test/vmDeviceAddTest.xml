@@ -1,0 +1,73 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="vmDeviceAddTest" result-type="Any" api-version="6.0.0" id="ba7a2e04-4279-4a5d-a02e-01ad56bc369c" version="0.0.0" category-name="com.gvp.test">
+  <script encoded="false"><![CDATA[var vm = VcPlugin.getAllVirtualMachines(null, "xpath:name='ldh-vgpu-win2025'")[0];
+var hostSystemId = vm.runtime.host.moref.value;
+var host = VcPlugin.getAllHostSystems(null,"xpath:name='vcf-m-740-esxi04.hynix.com'")[0];
+//var cluster = host.parent;
+
+System.log(host.configManager.graphicsManager.IsSharedGraphicsActive());
+//return null;
+//System.log(host.hardware)
+
+/*
+System.log(cluster.configuration.rule[0])
+return cluster.configuration.rule;
+
+var rulesSpec = new Array();
+rulesSpec[0] = new VcClusterRuleSpec();
+rulesSpec[0].operation = VcArrayUpdateOperation.add;
+rulesSpec[0].info = new VcClusterVmHostRuleInfo();
+rulesSpec[0].info.name = ruleName;
+rulesSpec[0].info.vmGroupName = vmGPName;
+rulesSpec[0].info.affineHostGroupName = hostGPName;
+rulesSpec[0].info.mandatory = false;   //must 일 경우true /  should일 경우 false 변경필요
+rulesSpec[0].info.userCreated = true;
+rulesSpec[0].info.enabled = true;
+spec.rulesSpec = rulesSpec;
+var modify = true;
+task = cluster.reconfigureComputeResource_Task(spec, modify);   // ClusterComputeResource-domain-c1027
+
+var clusterSpec = new VcClusterConfigSpec();
+clusterSpec.rulesSpec = rulesSpec;
+var clusterTask = cluster.reconfigureComputeResource_Task(clusterSpec);
+*/
+
+var devices = vm.config.hardware.device;
+//System.log(devices);
+
+/*
+for (var key in devices) {
+    var device = devices[key];
+    if (device instanceof VcVirtualPCIController){
+        var controllerKey = device.key;
+    }
+}
+
+
+
+var deviceChange = new Array();
+deviceChange[0] = new VcVirtualDeviceConfigSpec();
+deviceChange[0].device = new VcVirtualPCIPassthrough();
+deviceChange[0].device.controllerKey = controllerKey; 
+deviceChange[0].device.backing = new VcVirtualPCIPassthroughVmiopBackingInfo();
+deviceChange[0].device.backing.vgpu = "grid_t4-1q";
+deviceChange[0].device.backing.vgpuMigrateDataSizeMB = Number(1024);
+deviceChange[0].device.backing.migrateSupported = Boolean(true);
+deviceChange[0].device.backing.enhancedMigrateCapability = Boolean(true);
+deviceChange[0].device.numaNode = 0;
+deviceChange[0].device.slotInfo = new VcVirtualDevicePciBusSlotInfo();
+deviceChange[0].device.unitNumber = null;
+deviceChange[0].device.key = null;
+deviceChange[0].device.deviceInfo = new VcDescription();
+deviceChange[0].device.deviceInfo.summary = "NVIDIA GRID vGPU";
+deviceChange[0].device.deviceInfo.label = "PCI device 0";
+deviceChange[0].operation = VcVirtualDeviceConfigSpecOperation.add;
+
+var spec = new VcVirtualMachineConfigSpec();
+spec.deviceChange = deviceChange;
+spec.virtualNuma = new VcVirtualMachineVirtualNuma();
+var task = vm.reconfigVM_Task(spec);
+
+return task;
+*/]]></script>
+</dunes-script-module>

@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:workflow xmlns:ns2="http://vmware.com/vco/workflow" root-name="item1" object-name="workflow:name=generic" id="00032e07-06ae-4dd0-a3c5-144b42829305" editor-version="2.0" version="0.0.0" api-version="6.0.0" restartMode="1" resumeFromFailedMode="0">
+    <display-name>ClovirONE_VM 방화벽</display-name>
+    <description>인스턴스 단위의 가상 방화벽 역할을 하며, 인바운드 및 아웃바운드 트래픽을 제어합니다. 리소스 간 통신을 안전하게 구성할 수 있습니다.</description>
+    <position y="50.0" x="100.0"/>
+    <input>
+        <param name="resourceId" type="string"/>
+        <param name="source" type="Array/string"/>
+        <param name="tcpServices" type="Array/string"/>
+        <param name="udpServices" type="Array/string"/>
+        <param name="action" type="string"/>
+        <param name="_metadata_main_catalog" type="string"/>
+        <param name="_metadata_catalog" type="string"/>
+        <param name="requestMessage" type="string"/>
+    </input>
+    <output>
+        <param name="output" type="Array/Properties"/>
+    </output>
+    <workflow-item name="item0" type="end" end-mode="0" comparator="0">
+        <in-binding/>
+        <out-binding/>
+        <position y="50.0" x="440.0"/>
+    </workflow-item>
+    <workflow-item name="item1" out-name="item0" type="task" comparator="0">
+        <display-name>Scriptable task</display-name>
+        <script encoded="false">function appendRule(vm, sourceIps, services, action, portType, securityPolicy) {
+    var results = [];    
+    for (var i in services){
+        // 기존 룰이 존재하는지 확인 있다면 룰 업데이트
+        var check = nsx.get("/policy/api/v1/search/query?query=resource_type:Rule AND id:" + vm.properties.name +"-" + portType + services[i] + "-" + action);
+        if (check.result_count &gt; 0) {
+            System.log("Rule Already Exist : " + vm.properties.name +"-" + portType + services[i] + "-" + action);
+            var rule = check.results[0];
+            var sourceGroups = rule.source_groups;
+            for (var i in sourceIps){
+                if(sourceGroups.indexOf(sourceIps[i]) == -1){
+                    sourceGroups.push(sourceIps[i]);
+                }
+            }
+            if (sourceGroups.length &gt; 0){
+                rule.source_groups = sourceGroups;
+                results.push(nsx.patch("/policy/api/v1" + rule.path, rule));
+            } else {
+                var result = {
+                    label: "Source IP Already Exist",
+                    value: vm.properties.name +"-" + portType + services[i] + "-" + action
+                }
+                results.push(result)
+            }
+
+        } else { // 기존 룰이 없다면 룰 생성
+            var vmNetworks = vm.properties.networks;
+            var destination = []
+            for each(var net in vmNetworks){
+                destination.push(net.address);
+            };
+            var serviceEntries=[{
+                l4_protocol: portType,
+                destination_ports: [services[i]],
+                resource_type: "L4PortSetServiceEntry",
+                display_name: portType
+            }];
+            var rule = {
+                action: action,
+                id: vm.properties.name +"-" + portType + services[i] + "-" + action,
+                source_groups: sourceIps,
+                destination_groups: destination,
+                services: ["ANY"],
+                service_entries: serviceEntries,
+                direction: "IN"
+            };
+            nsx.put("/policy/api/v1" + securityPolicy.path + "/rules/" + rule.id, rule);
+            results.push(nsx.post("/policy/api/v1" + securityPolicy.path + "/rules/" + rule.id + "?action=revise", {}));
+        }
+    }
+    return results;
+}
+/*
+########################함수##################
+*/
+tcpServices = tcpServices == null?[]:tcpServices;
+udpServices = udpServices == null?[]:udpServices;
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var vm = aa.get("/deployment/api/resources/" + resourceId);
+var vmNetworks = vm.properties.networks;
+var vpcProfilelink = vm.properties.vpc;
+for each(var t in vm.properties.tags){
+    if(t.key == "vpcSegId"){
+        var tag = t;
+    }
+}
+var networkProfile = aa.getUerp(vpcProfilelink);
+var vpcManagedGatewayLink = networkProfile.customProperties.vpcManagedGatewayLink;
+var vpcManagedGateway = aa.getUerp(vpcManagedGatewayLink);
+var vpcManagedTier1Path = networkProfile.customProperties.vpcManagedTier1Path;
+var nsx = System.getModule("com.bvp").NsxManager(aa.getUerp(vpcManagedGateway.endpointLinks[0]).endpointProperties.hostName.split(".")[0]);
+
+
+
+// Group 존재 여부 확인, 없을 시 생성
+var group = nsx.get("/policy/api/v1/search/query?query=resource_type:Group AND display_name:" + tag.value);
+if(group.result_count == 0){
+    var expression = [];
+    expression.push({
+        value: tag.key + "|" + tag.value,
+        member_type: "VirtualMachine",
+        key: "Tag",
+        operator: "EQUALS",
+        resource_type: "Condition"
+    });
+    group = nsx.put("/policy/api/v1/infra/domains/default/groups/" + tag.value, {
+        display_name: tag.value,
+        expression: expression
+    });
+} else {
+    group = group.results[0];
+}
+
+// SecurityPolicy 존재 여부 확인, 없을 시 생성
+var secuirtyPolicy = nsx.get("/policy/api/v1/search/query?query=resource_type:SecurityPolicy AND display_name:" + tag.value);
+if(secuirtyPolicy.result_count == 0){
+    var sp = nsx.put("/policy/api/v1/infra/domains/default/security-policies/" + tag.value,{
+        "description": "VM Firewall - " + tag.value,
+        "display_name": tag.value,
+        "category": "Application",
+        "scope": [group.path],
+    });
+} else {
+    var sp = secuirtyPolicy.results[0];
+}
+
+
+
+// TCP만 있는 경우
+if (tcpServices.length &gt; 0 &amp;&amp; udpServices.length === 0) {
+    var results = appendRule(vm=vm,sourceIps=source, services=tcpServices, action=action, portType="TCP",securityPolicy=sp);
+}
+// UDP만 있는 경우
+else if (udpServices.length &gt; 0 &amp;&amp; tcpServices.length === 0) {
+    var results = appendRule(vm=vm,sourceIps=source, services=udpServices, action=action, portType="UDP",securityPolicy=sp);
+}
+// 둘 다 있는 경우
+else if (tcpServices.length &gt; 0 &amp;&amp; udpServices.length &gt; 0) {
+    var tcpResults = appendRule(vm=vm,sourceIps=source, services=tcpServices, action=action, portType="TCP",securityPolicy=sp);
+    var udpResults = appendRule(vm=vm,sourceIps=source, services=udpServices, action=action, portType="UDP",securityPolicy=sp);
+    var results = tcpResults.concat(udpResults);
+}
+// 아무것도 없는 경우
+else {
+    rule.id = vm.properties.name + "-" + "ANY" + "-" + action;
+    nsx.put("/policy/api/v1" + sp.path + "/rules/" + rule.id, rule);
+    var results = [ nsx.post("/policy/api/v1" + sp.path + "/rules/" + rule.id + "?action=revise", {}) ];
+}
+
+output = results;
+</script>
+        <in-binding>
+            <bind name="resourceId" type="string" export-name="resourceId"/>
+            <bind name="tcpServices" type="Array/string" export-name="tcpServices"/>
+            <bind name="udpServices" type="Array/string" export-name="udpServices"/>
+            <bind name="source" type="Array/string" export-name="source"/>
+            <bind name="action" type="string" export-name="action"/>
+        </in-binding>
+        <out-binding>
+            <bind name="output" type="Array/Properties" export-name="output"/>
+        </out-binding>
+        <description>Simple task with custom script capability.</description>
+        <position y="50.5" x="218.0"/>
+    </workflow-item>
+</ns2:workflow>

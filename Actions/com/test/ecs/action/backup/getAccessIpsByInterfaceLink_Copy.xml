@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getAccessIpsByInterfaceLink_Copy" result-type="Array/Properties" api-version="6.0.0" id="59b5eb9e-fcbd-427d-8d41-332282a8405d" version="0.1.0" allowed-operations="vfe" category-name="com.test.ecs.action.backup">
+  <param n="interfaceLink" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.ecs").AaManager(true);
+var subnetLink = aa.getUerp(interfaceLink).subnetLink;
+var profileLink = aa.getUerp(subnetLink).customProperties.vpc;
+var profile = aa.getUerp(profileLink);
+var projectId = profile.customProperties.vpcProjectId;
+var accessIps = aa.get("/deployment/api/resources?resourceTypes=Custom.AIP&projects=" + projectId).content;
+var result = [];
+for each(var accessIp in accessIps) {
+    if (accessIp.properties.vpc == profileLink && accessIp.properties.compute == "NONE") {
+        result.push({
+            label: "[" + accessIp.properties.address + "] " + accessIp.properties.displayName,
+            value: accessIp.properties.id
+        })
+    }
+}
+return result.sort(function (a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});]]></script>
+</dunes-script-module>

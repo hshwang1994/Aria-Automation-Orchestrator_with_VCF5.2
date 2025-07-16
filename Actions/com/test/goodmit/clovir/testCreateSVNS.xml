@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="testCreateSVNS" result-type="string" api-version="6.0.0" id="4c63fb19-653d-47a1-89db-b7a9e9a895fc" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <param n="clusterId" t="string"><![CDATA[]]></param>
+  <param n="storagePolicies" t="Array/string"><![CDATA[]]></param>
+  <param n="vmClasses" t="Array/string"><![CDATA[]]></param>
+  <param n="contentLibrary" t="Array/string"><![CDATA[]]></param>
+  <param n="name" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.ecs").AaManager(true);
+var cluster = aa.get("/cmx/api/resources/supervisor-clusters?$filter=id eq '" + clusterId +"'").content[0];
+var endpointLink = cluster.endpointLink.split('/');
+var endpointId = endpointLink[endpointLink.length - 1];
+var stgPolicy = []
+if (storagePolicies){
+    for each(stg in storagePolicies){
+        var policy = new Object;
+        var get_data = aa.get("/iaas/api/fabric-vsphere-storage-policies/" + stg);
+        policy.documentSelfLink = "/resources/groups/" + get_data.id;
+        policy.id = get_data.externalId;
+        stgPolicy.push(policy);
+    }
+}
+
+aa.post("/cmx/api/resources/supervisor-namespaces",{
+        "cluster": cluster.moref,
+        "endpointId": endpointId,
+        "name": name,
+        "projectId": projectId,
+        "storagePolicies": stgPolicy,
+        "customProperties": {
+            "vmClasses": vmClasses,
+            "contentLibraries": contentLibrary,
+        }
+    });
+
+var svnsLink = aa.get("/cmx/api/resources/supervisor-namespaces?$filter=name eq '"+name+"'").content[0].externalLink;
+
+var apiServer = cluster.address;
+var basicAuth = System.getModule("com.test.goodmit.clovir").base64Encode("ujmoon@vcf.lab:VMware1!");
+var token = System.getModule("com.ecs").RestManager("https://" + apiServer,{"Authorization": "Basic "+ basicAuth}).post("/wcp/login").session_id;
+var rest = System.getModule("com.ecs").RestManager("https://" + apiServer + ":6443",{"Authorization": "Bearer " + token});
+System.sleep(20000);
+var createPod = rest.post("/api/v1/namespaces/"+ name +"/pods",{
+    "apiVersion": "v1",
+    "kind": "Pod",
+    "metadata": {
+        "name": name +"-console-pod"
+    },
+    "spec": {
+        "containers": [{
+            "name": "nginx",
+            "image": "nginx"
+            }]
+        }
+});
+
+return svnsLink]]></script>
+</dunes-script-module>

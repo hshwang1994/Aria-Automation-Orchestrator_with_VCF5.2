@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getBackupList" result-type="Array/string" api-version="6.0.0" id="74eaebcb-88ee-4189-aefc-4da07e16ba84" version="0.0.1" allowed-operations="vfe" category-name="com.bvp.package">
+  <script encoded="false"><![CDATA[var rm = System.getModule("com.bvp").ResourceManager();
+var result = [];
+for each(var cat in Server.getResourceElementCategoryWithPath("/BVP/Backup").subCategories) {
+    result.push(cat.name);
+}
+return result.sort(function (a, b) {
+    return a > b ? -1 : 1;
+});]]></script>
+</dunes-script-module>

@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getResourceElementByAppNameAndVersion" result-type="Array/CompositeType(fileName:string,fileContent:string):resourceElementFile" api-version="6.0.0" id="e9c5c7c8-15b5-4fca-b51f-04454cd9965d" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <param n="appName" t="string"><![CDATA[]]></param>
+  <param n="appVersion" t="string"><![CDATA[]]></param>
+  <param n="osType" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (osType == null || appName == null || appVersion == null) { return null};
+var result = [];
+if (osType == "LINUX"){
+    var resourceElements = Server.getResourceElementCategoryWithPath("goodmit/app/linux/" + appName + "_" + appVersion).resourceElements;
+    for each(var resourceElement in resourceElements){
+        var mime = resourceElement.getContentAsMimeAttachment();
+        result.push({
+            fileName: resourceElement.name,
+            fileContent: mime.content,
+        })
+    }
+} else {
+    var resourceElements = Server.getResourceElementCategoryWithPath("goodmit/app/window/" + appName + "_" + appVersion).resourceElements;
+    for each(var resourceElement in resourceElements){
+        var mime = resourceElement.getContentAsMimeAttachment();
+        result.push({
+            fileName: resourceElement.name,
+            fileContent: mime.content,
+        })
+    }
+}
+return result;]]></script>
+</dunes-script-module>

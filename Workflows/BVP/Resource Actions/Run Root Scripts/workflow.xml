@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns="http://vmware.com/vco/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vmware.com/vco/workflow http://vmware.com/vco/workflow/Workflow-v4.xsd" root-name="item1" object-name="workflow:name=generic" id="218f3694-f6df-4d8d-96df-5be69c4f3a39" version="0.0.13" api-version="6.0.0" allowed-operations="vfe" editor-version="2.0" restartMode="1" resumeFromFailedMode="0">
+  <display-name><![CDATA[Run Root Scripts]]></display-name>
+  <position y="50.0" x="100.0"/>
+  <input>
+    <param name="scripts" type="string"/>
+  </input>
+  <output>
+    <param name="stdout" type="string"/>
+    <param name="stderr" type="string"/>
+  </output>
+  <workflow-item name="item0" type="end" end-mode="0">
+    <in-binding/>
+    <position y="50.0" x="340.0"/>
+  </workflow-item>
+  <workflow-item name="item1" out-name="item0" type="task">
+    <display-name><![CDATA[Scriptable task]]></display-name>
+    <script encoded="false"><![CDATA[var conv = System.getModule("com.bvp").Converter();
+var aa = System.getModule("com.bvp").AaManager(true);
+var time = System.getCurrentTime();
+var wrapperScripts = "";
+wrapperScripts += "echo '" + conv.base64.encode(scripts) + "' | base64 -d | sudo tee /tmp/root_scripts." + time + ".sh >/dev/null\n";
+wrapperScripts += "sudo chmod 755 /tmp/root_scripts." + time + ".sh\n";
+wrapperScripts += "sudo bash -c '/tmp/root_scripts." + time + ".sh 2>/tmp/root_scripts." + time + ".err.log 1>/tmp/root_scripts." + time + ".log'\n";
+wrapperScripts += "sudo cat /tmp/root_scripts." + time + ".log\n";
+wrapperScripts += "echo '<!--OUTPUT_DELIMITER-->'\n";
+wrapperScripts += "sudo cat /tmp/root_scripts." + time + ".err.log";
+var resourceMeta = System.getContext().getParameter("__metadata_resourceProperties");
+var resourceId = resourceMeta.resourceId;
+var resourceName = resourceMeta.resourceName;
+var adminUsername = resourceMeta.adminUsername;
+var adminPassword = resourceMeta.adminPassword;
+var vcConf = System.getModule("com.bvp").ConfManager().load("/Endpoint/" + aa.getUerp(resourceMeta.__endpointLink).endpointProperties.hostName.split(".")[0]);
+var outputs = System.getModule("com.bvp").execScripts(vcConf.hostname, vcConf.username, vcConf.password, resourceName, adminUsername, adminPassword, wrapperScripts);
+var outAndErr = outputs.split("<!--OUTPUT_DELIMITER-->");
+stdout = outAndErr[0];
+stderr = outAndErr[1];
+]]></script>
+    <in-binding>
+      <bind name="scripts" type="string" export-name="scripts"/>
+    </in-binding>
+    <out-binding>
+      <bind name="stdout" type="string" export-name="stdout"/>
+      <bind name="stderr" type="string" export-name="stderr"/>
+    </out-binding>
+    <description><![CDATA[Simple task with custom script capability.]]></description>
+    <position y="60.0" x="180.0"/>
+  </workflow-item>
+  <presentation/>
+</workflow>

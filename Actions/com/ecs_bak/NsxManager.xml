@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="NsxManager" result-type="Properties" api-version="6.0.0" id="0b50b4a8-4839-41a0-a0cd-ecfc3e979032" version="0.0.1" allowed-operations="vfe" category-name="com.ecs_bak">
+  <param n="endpoint" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[return {
+    _config: function () {
+        var conf = System.getModule("com.ecs_bak").ConfManager().load("/Endpoint/" + endpoint);
+        return {
+            baseUrl: "https://" + conf.hostname,
+            headers: {
+                "Authorization": "Basic " + System.getModule("com.ecs.common").Converter().base64.encode(conf.username + ":" + conf.password),
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }
+    } (),
+    _restapi: System.getModule("com.ecs.common").RestApi(),
+    get: function (url) {
+        var result = this._restapi.get(this._config.baseUrl + url, this._config.headers);
+        try { return JSON.parse(result); } catch(e) { return null; }
+    },
+    post: function (url, data) {
+        var result = this._restapi.post(this._config.baseUrl + url, JSON.stringify(data), this._config.headers);
+        try { return JSON.parse(result); } catch(e) { return null; }
+    },
+    put: function (url, data) {
+        var result = this._restapi.put(this._config.baseUrl + url, JSON.stringify(data), this._config.headers);
+        try { return JSON.parse(result); } catch(e) { return null; }
+    },
+    patch: function (url, data) {
+        var result = this._restapi.patch(this._config.baseUrl + url, JSON.stringify(data), this._config.headers);
+        try { return JSON.parse(result); } catch(e) { return null; }
+    },
+    delete: function (url) {
+        var result = this._restapi.delete(this._config.baseUrl + url, this._config.headers);
+        try { return JSON.parse(result); } catch(e) { return null; }
+    }
+}]]></script>
+</dunes-script-module>

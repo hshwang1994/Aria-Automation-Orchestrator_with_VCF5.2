@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="validationDiskProperties" result-type="string" api-version="6.0.0" id="fa939c72-8f6d-4c71-b7a5-696e186b6300" version="0.0.0" allowed-operations="vfe" category-name="com.test.goodmit.clovir">
+  <param n="diskProperty" t="Array/CompositeType(mount:string,size:number):diskProperties"><![CDATA[]]></param>
+  <param n="machineId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.ecs").AaManager(true);
+var machine = aa.get("/iaas/api/machines/"+machineId);
+if (machine.customProperties.mountDisk){
+    var machineDisk = JSON.parse(machine.customProperties.mountDisk);
+
+    var filteredDiskProperty = diskProperty.slice(0,machineDisk.length);
+
+    for(i=0;i < filteredDiskProperty.length; i++){
+        if(filteredDiskProperty[i].size < machineDisk[i].size){
+            return "사용중인 볼륨 크기의 축소는 불가능 합니다.";
+        }
+    }
+}
+]]></script>
+</dunes-script-module>

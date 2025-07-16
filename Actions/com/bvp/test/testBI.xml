@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="testBI" result-type="string" api-version="6.0.0" id="e0632d89-b1a2-4d69-80b0-8cc6dc41aa52" version="0.0.1" allowed-operations="vfe" category-name="com.bvp.test">
+  <script encoded="false"><![CDATA[// var conv = System.getModule("com.bvp").Converter();
+
+// var date = Date();
+// System.log(date);
+
+// date = new Date();
+// var tstamp = "" + date.getFullYear();
+// tstamp += conv.fill.zero(date.getMonth() + 1, 2);
+// tstamp += conv.fill.zero(date.getDate(), 2);
+// tstamp += "-" + conv.fill.zero(date.getHours() + 9, 2);
+// tstamp += conv.fill.zero(date.getMinutes(), 2);
+// tstamp += conv.fill.zero(date.getSeconds(), 2);
+
+// System.log(tstamp);
+
+var com = System.getModule("com.bvp").Common();
+
+System.log(com.getDateTimeString());]]></script>
+</dunes-script-module>

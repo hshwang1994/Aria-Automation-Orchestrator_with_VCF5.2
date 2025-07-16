@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="changeArrayToCommaString" result-type="string" api-version="6.0.0" id="e77181fc-4882-4aff-b889-a46242874dfe" version="0.0.1" allowed-operations="vfe" category-name="com.bvp.bp.nlb">
+  <param n="arrayString" t="Array/string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[return arrayString.join(",");]]></script>
+</dunes-script-module>

@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getVpcInfraProfilesByPlacementZoneLink" result-type="Array/Properties" api-version="6.0.0" id="da915ec0-1b71-4091-8b31-79b860eb9d34" version="0.1.1" allowed-operations="vfe" category-name="com.bvp.bp.vpc">
+  <description><![CDATA[BP:Virtual Private Cloud]]></description>
+  <param n="placementZoneLink" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!placementZoneLink) { throw "placementZoneLink cannot be null"; }
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var placementZone = aa.getUerp(placementZoneLink);
+var profiles = aa.getUerp("/provisioning/mgmt/network-profile?$filter=(provisioningRegionLink eq '" + placementZone.provisioningRegionLink + "') and (expandedTags.item.tag eq 'vpcInfraId*')");
+var result = [];
+for each(var profileLink in profiles.documentLinks) {
+    var profile = profiles.documents[profileLink];
+    result.push({
+        label: profile.desc ? profile.desc : profile.name,
+        value: profileLink,
+    });
+}
+return result.sort(function (a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});
+]]></script>
+</dunes-script-module>

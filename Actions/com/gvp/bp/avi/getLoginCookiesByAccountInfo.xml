@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getLoginCookiesByAccountInfo" result-type="string" api-version="6.0.0" id="219a75de-10aa-4154-8f47-8f6617288d7f" version="0.0.0" category-name="com.gvp.bp.avi">
+  <runtime><![CDATA[python:3.10]]></runtime>
+  <param n="username" t="string"><![CDATA[]]></param>
+  <param n="password" t="SecureString"><![CDATA[]]></param>
+  <param n="hostname" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[import json
+import http.client
+import ssl
+
+def handler(context, inputs):
+    # 서버 주소와 포트
+    host = inputs['hostname']
+    port = 443
+    login_endpoint = "/login"
+
+    # 로그인 요청 정보
+    payload = json.dumps({
+        "username": inputs['username'],
+        "password": inputs['password']
+    })
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    # HTTPS 연결 설정
+    conn = http.client.HTTPSConnection(host, context=ssl._create_unverified_context())
+
+    # POST 요청
+    conn.request("POST", login_endpoint, body=payload, headers=headers)
+    response = conn.getresponse()
+
+    # 응답 본문 (선택 출력)
+    print("Response status:", response.status)
+    print("Response body:", response.read().decode())
+
+    # Set-Cookie 헤더 수집
+    set_cookie_headers = [value for key, value in response.getheaders() if key.lower() == "set-cookie"]
+
+    # key=value 형태로만 추출
+    cookies = [cookie.split(";")[0] for cookie in set_cookie_headers]
+    
+    # 세미콜론으로 연결된 쿠키 문자열 생성
+    cookie_string = "; ".join(cookies)
+
+    outputs = cookie_string
+
+    # 연결 종료
+    conn.close()
+    
+    return outputs
+]]></script>
+</dunes-script-module>

@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="detachAccessIp" result-type="string" api-version="6.0.0" id="f45be726-1cb6-48b1-906b-ed2be0311ca8" version="0.0.1" allowed-operations="vfe" category-name="com.bvp.bp.aip">
+  <param n="interfaceLink" t="string"><![CDATA[]]></param>
+  <param n="accessIpId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!interfaceLink) { throw "interfaceLink cannot be null"; }
+if (!accessIpId) { throw "accessIpId cannot be null"; }
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var interface = aa.getUerp(interfaceLink);
+var subnetLink = interface.subnetLink;
+var subnet = aa.getUerp(subnetLink);
+var vpcManagedTier1Path = subnet.customProperties.vpcManagedTier1Path
+var nsx = System.getModule("com.bvp").NsxManager(aa.getUerp(subnet.endpointLink).endpointProperties.hostName.split(".")[0]);
+nsx.delete("/policy/api/v1" + vpcManagedTier1Path + "/nat/USER/nat-rules/" + accessIpId);
+return "";]]></script>
+</dunes-script-module>

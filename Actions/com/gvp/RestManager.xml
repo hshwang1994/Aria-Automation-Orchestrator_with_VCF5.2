@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="RestManager" result-type="Properties" api-version="6.0.0" id="9cd1b0f4-4a8b-409c-8248-74ec64b152b9" version="0.0.0" category-name="com.gvp">
+  <param n="baseUrl" t="string"><![CDATA[]]></param>
+  <param n="headers" t="Properties"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[return {
+    _config: function () {
+        if (!baseUrl) { throw "Error [RestManager] : must be set host parameter"; }
+        if (!headers) { headers = new Properties(); }
+        headers["Content-Type"] = "application/json";
+        headers["Accept"] = "application/json";
+        return {
+            baseUrl: baseUrl,
+            headers: headers
+        }
+    } (),
+    _restapi: System.getModule("com.gvp").RestApi(),
+    get: function (url) { return JSON.parse(this._restapi.get(this._config.baseUrl + url, this._config.headers)); },
+    post: function (url, data) { return JSON.parse(this._restapi.post(this._config.baseUrl + url, JSON.stringify(data), this._config.headers)); },
+    put: function (url, data) { return JSON.parse(this._restapi.put(this._config.baseUrl + url, JSON.stringify(data), this._config.headers)); },
+    patch: function (url, data) { return JSON.parse(this._restapi.patch(this._config.baseUrl + url, JSON.stringify(data), this._config.headers)); },
+    delete: function (url) { return JSON.parse(this._restapi.delete(this._config.baseUrl + url, this._config.headers)); },
+    getKube: function (url, cert, key, cacert) { return JSON.parse(this._restapi.getKube(this._config.baseUrl + url, this._config.headers, cert, key, cacert)); },
+    postKube: function (url, data, cert, key, cacert) { return JSON.parse(this._restapi.postKube(this._config.baseUrl + url, JSON.stringify(data), this._config.headers, cert, key, cacert)); },
+    putKube: function (url, data, cert, key, cacert) { return JSON.parse(this._restapi.putKube(this._config.baseUrl + url, JSON.stringify(data), this._config.headers, cert, key, cacert)); },
+    patchKube: function (url, data, cert, key, cacert) { return JSON.parse(this._restapi.patchKube(this._config.baseUrl + url, JSON.stringify(data), this._config.headers, cert, key, cacert)); },
+    deleteKube: function (url, cert, key, cacert) { return JSON.parse(this._restapi.deleteKube(this._config.baseUrl + url, this._config.headers, cert, key, cacert)); }
+}]]></script>
+</dunes-script-module>

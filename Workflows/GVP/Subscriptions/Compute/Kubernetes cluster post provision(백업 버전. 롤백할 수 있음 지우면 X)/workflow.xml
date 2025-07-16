@@ -1,0 +1,488 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:workflow xmlns:ns2="http://vmware.com/vco/workflow" root-name="item2" object-name="workflow:name=generic" id="afd70d04-46da-4d8d-9b66-46394b5a1c6b" editor-version="2.0" version="0.0.0" api-version="6.0.0" allowed-operations="vef" restartMode="1" resumeFromFailedMode="0">
+    <display-name>Kubernetes cluster post provision(백업 버전. 롤백할 수 있음 지우면 X)</display-name>
+    <position y="50.0" x="100.0"/>
+    <input>
+        <param name="inputProperties" type="Properties"/>
+    </input>
+    <output/>
+    <workflow-item name="item0" type="end" end-mode="0" comparator="0">
+        <in-binding/>
+        <out-binding/>
+        <position y="50.0" x="880.0"/>
+    </workflow-item>
+    <workflow-item name="item1" out-name="item0" type="task" comparator="0">
+        <display-name>k8s-cluster-token-input</display-name>
+        <script encoded="false">var clusterId = inputProperties.clusterId;
+var customProperties = inputProperties.customProperties;
+var serviceaccount = customProperties.Clovir_ServiceAccount;
+
+var kubeAuth = System.getModule("com.gvp").getKubeAuth(clusterId);
+var serverUrl = kubeAuth.serverUrl;
+var caCert = kubeAuth.caCertificate;
+var clientCert = kubeAuth.clientCertificate;
+var clientKey = kubeAuth.clientKey;
+
+var rest = System.getModule("com.gvp").RestManager(serverUrl);
+
+// 공통 재시도 함수
+function retryGetKube(path, maxRetries, delayMs, description) {
+    for (var attempt = 1; attempt &lt;= maxRetries; attempt++) {
+        try {
+            var result = rest.getKube(path, clientCert, clientKey, caCert);
+            if (result) return result;
+        } catch (e) {
+            System.warn("[" + description + "] Attempt " + attempt + " failed → " + e);
+        }
+        if (attempt &lt; maxRetries) {
+            System.sleep(delayMs);
+        }
+    }
+    throw "Error: [" + description + "] failed after " + maxRetries + " attempts.";
+}
+
+// Envoy External IP
+var envoyExternalIP = null;
+var envoyResp = retryGetKube(
+    "/api/v1/namespaces/tanzu-system-ingress/services/envoy",
+    6, 20000,
+    "Envoy External IP"
+);
+if (envoyResp.status &amp;&amp;
+    envoyResp.status.loadBalancer &amp;&amp;
+    envoyResp.status.loadBalancer.ingress &amp;&amp;
+    envoyResp.status.loadBalancer.ingress.length &gt; 0) {
+    envoyExternalIP = envoyResp.status.loadBalancer.ingress[0].ip || null;
+}
+
+// Prometheus HTTPProxy FQDN
+var prometheusFQDN = null;
+var prometheusResp = retryGetKube(
+    "/apis/projectcontour.io/v1/namespaces/tanzu-system-monitoring/httpproxies/prometheus-httpproxy",
+    6, 20000,
+    "Prometheus HTTPProxy FQDN"
+);
+if (prometheusResp.spec &amp;&amp;
+    prometheusResp.spec.virtualhost &amp;&amp;
+    prometheusResp.spec.virtualhost.fqdn) {
+    prometheusFQDN = prometheusResp.spec.virtualhost.fqdn || null;
+}
+
+// Prometheus External IP 조회 추가
+var prometheusIP = null;
+var svcResp = retryGetKube(
+    "/api/v1/namespaces/tanzu-system-monitoring/services/prometheus-server",
+    6, 20000,
+    "Prometheus External IP"
+);
+if (svcResp.status &amp;&amp;
+    svcResp.status.loadBalancer &amp;&amp;
+    svcResp.status.loadBalancer.ingress &amp;&amp;
+    svcResp.status.loadBalancer.ingress.length &gt; 0) {
+    prometheusIP = svcResp.status.loadBalancer.ingress[0].ip || null;
+}
+
+// Clovir-admin Token
+var clovirAdminToken = null;
+var secretPath = "/api/v1/namespaces/kube-system/secrets/" + serviceaccount + "-token";
+var secretResp = retryGetKube(secretPath, 6, 20000, "Clovir-admin Token");
+if (secretResp.data &amp;&amp; secretResp.data.token) {
+    clovirAdminToken = System.getModule("com.gvp").base64Decode(secretResp.data.token);
+} else {
+    throw "Error: Token field missing in secret.";
+}
+
+// bootstrap-service External IP
+var clusterConsoleIP = null;
+var bootstrapResp = retryGetKube(
+    "/api/v1/namespaces/tanzu-bootstrap/services/bootstrap-service",
+    6, 20000,
+    "Bootstrap External IP"
+);
+if (bootstrapResp.status &amp;&amp;
+    bootstrapResp.status.loadBalancer &amp;&amp;
+    bootstrapResp.status.loadBalancer.ingress &amp;&amp;
+    bootstrapResp.status.loadBalancer.ingress.length &gt; 0) {
+    clusterConsoleIP = bootstrapResp.status.loadBalancer.ingress[0].ip || null;
+}
+
+// 결과 로그
+System.log("Envoy External IP: " + envoyExternalIP);
+System.log("Prometheus HTTPProxy FQDN: " + prometheusFQDN);
+System.log("Prometheus External IP: " + prometheusIP);
+System.log("Clovir-admin Token: " + clovirAdminToken);
+System.log("Tanzu Bootstrap External IP (ClusterConsoleIP): " + clusterConsoleIP);
+
+// Aria Automation에 업데이트
+var aa = System.getModule("com.gvp").AaManager(true);
+var clusterInfo = aa.get("/cmx/api/resources/k8s/clusters/" + clusterId);
+if (!clusterInfo) throw "Error: clusterInfo is null or undefined";
+
+if (!clusterInfo.customProperties || typeof clusterInfo.customProperties !== "object") {
+    clusterInfo.customProperties = {};
+}
+
+clusterInfo.customProperties["Clovir_envoyExternalIP"]    = envoyExternalIP;
+clusterInfo.customProperties["Clovir_prometheusFQDN"]    = prometheusFQDN;
+clusterInfo.customProperties["Clovir_prometheusIP"]      = prometheusIP;
+clusterInfo.customProperties["Clovir_clovirAdminToken"]  = clovirAdminToken;
+clusterInfo.customProperties["Clovir_ClusterConsoleIP"]  = clusterConsoleIP;
+
+try {
+    aa.put("/cmx/api/resources/k8s/clusters/" + clusterId, clusterInfo);
+} catch (e) {
+    throw "Error while updating cluster custom properties: " + e;
+}
+</script>
+        <in-binding>
+            <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+        </in-binding>
+        <out-binding/>
+        <description>Simple task with custom script capability.</description>
+        <position y="60.0" x="620.0"/>
+    </workflow-item>
+    <workflow-item name="item2" out-name="item3" type="task" comparator="0">
+        <display-name>tanzu package install</display-name>
+        <script encoded="false">var aa = System.getModule("com.bvp").AaManager(true);
+
+// 입력 및 버전 변수
+var clusterName       = inputProperties.clusterName;
+var namespace         = inputProperties.namespace;
+var clusterSelfLink   = inputProperties.clusterSelfLinkId;
+
+var certManagerVersion = inputProperties.customProperties.Clovir_CertManagerVersion;
+var contourVersion     = inputProperties.customProperties.Clovir_ContourVersion;
+var prometheusVersion  = inputProperties.customProperties.Clovir_PrometheusVersion;
+var serviceAccountName = inputProperties.customProperties.Clovir_ServiceAccount;
+
+// 코드 내 설정 변수
+var tanzuRepoUrl       = "projects.packages.broadcom.com/tkg/packages/standard/repo:v2025.4.29";
+var certPackage        = "cert-manager.tanzu.vmware.com";
+var contourPackage     = "contour.tanzu.vmware.com";
+var prometheusPackage  = "prometheus.tanzu.vmware.com";
+
+// Supervisor 정보 조회
+var supervisorInfo = aa.get("/cmx/api/resources/supervisor-clusters/" + clusterSelfLink);
+var endpointLink   = supervisorInfo.endpointLink;
+var address        = supervisorInfo.address;
+
+// vCenter 자격증명 조회
+var endpointName = aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0];
+var vcConf       = System.getModule("com.bvp").ConfManager().load("BVP/Endpoint/" + endpointName);
+var vcUser       = vcConf.username;
+var vcPass       = vcConf.password;
+
+// Bootstrap 서버 정보 조회
+var cliConf = System.getModule("com.bvp").ConfManager().load("GVP/Endpoint/clovir-tanzu.gooddi.lab");
+var cliHost = cliConf.hostname;
+var cliUser = cliConf.username;
+var cliPass = cliConf.password;
+var cliPort = cliConf.port;
+
+var ssh = new SSHSession(cliHost, cliUser, cliPort);
+try {
+    ssh.connectWithPassword(cliPass);
+    System.log("SSH 연결 성공 → " + cliHost);
+
+    ssh.executeCommand(
+        "export KUBECTL_VSPHERE_PASSWORD=" + vcPass +
+        " &amp;&amp; kubectl vsphere login " +
+        "--server=" + address + " " +
+        "--tanzu-kubernetes-cluster-name=" + clusterName + " " +
+        "--tanzu-kubernetes-cluster-namespace=" + namespace + " " +
+        "-u " + vcUser + " --insecure-skip-tls-verify",
+        true
+    );
+
+    function runRemote(cmd) {
+        System.log("실행: " + cmd);
+        var res = ssh.executeCommand(cmd, true);
+        System.log("결과: " + res);
+        return res;
+    }
+
+    // 리소스 생성 YAML
+    var yamlApplyCmd = [
+        "cat &lt;&lt; 'EOF' | kubectl apply -f -",
+        "---",
+        "apiVersion: v1",
+        "kind: ServiceAccount",
+        "metadata:",
+        "  name: " + serviceAccountName,
+        "  namespace: kube-system",
+        "---",
+        "apiVersion: rbac.authorization.k8s.io/v1",
+        "kind: ClusterRoleBinding",
+        "metadata:",
+        "  name: " + serviceAccountName + "-clusterrolebinding",
+        "subjects:",
+        "- kind: ServiceAccount",
+        "  name: " + serviceAccountName,
+        "  namespace: kube-system",
+        "roleRef:",
+        "  kind: ClusterRole",
+        "  name: cluster-admin",
+        "  apiGroup: rbac.authorization.k8s.io",
+        "---",
+        "apiVersion: v1",
+        "kind: Secret",
+        "metadata:",
+        "  name: " + serviceAccountName + "-token",
+        "  namespace: kube-system",
+        "  annotations:",
+        "    kubernetes.io/service-account.name: " + serviceAccountName,
+        "type: kubernetes.io/service-account-token",
+        "---",
+        "apiVersion: v1",
+        "kind: Namespace",
+        "metadata:",
+        "  name: cert-manager",
+        "  labels:",
+        "    pod-security.kubernetes.io/enforce: privileged",
+        "---",
+        "apiVersion: v1",
+        "kind: Namespace",
+        "metadata:",
+        "  name: tanzu-system-ingress",
+        "  labels:",
+        "    pod-security.kubernetes.io/enforce: privileged",
+        "---",
+        "apiVersion: v1",
+        "kind: Namespace",
+        "metadata:",
+        "  name: tanzu-system-monitoring",
+        "  labels:",
+        "    pod-security.kubernetes.io/enforce: privileged",
+        "EOF"
+    ].join("\n");
+    runRemote(yamlApplyCmd);
+
+    // 리소스 생성 검증 함수
+    function verifyResources() {
+        var checks = [
+            { type: "serviceaccount", name: serviceAccountName, ns: "kube-system" },
+            { type: "clusterrolebinding", name: serviceAccountName + "-clusterrolebinding" },
+            { type: "secret", name: serviceAccountName + "-token", ns: "kube-system" },
+            { type: "namespace", name: "cert-manager" },
+            { type: "namespace", name: "tanzu-system-ingress" },
+            { type: "namespace", name: "tanzu-system-monitoring" }
+        ];
+
+        for (var i = 0; i &lt; checks.length; i++) {
+            var check = checks[i];
+            var cmd = "kubectl get " + check.type + " " + check.name + (check.ns ? " -n " + check.ns : "") + " --no-headers";
+            try {
+                var out = runRemote(cmd);
+                if (!out || out.indexOf(check.name) === -1) {
+                    System.log("리소스 미확인됨: " + check.type + " " + check.name);
+                    return false;
+                }
+            } catch (e) {
+                System.log("리소스 조회 실패: " + check.type + " " + check.name + " → " + e);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // 최대 3회까지 검증 및 재시도
+    var success = false;
+    for (var attempt = 1; attempt &lt;= 3; attempt++) {
+        System.log("리소스 검증 시도 #" + attempt);
+        if (verifyResources()) {
+            System.log("모든 리소스 생성 확인 완료");
+            success = true;
+            break;
+        } else {
+            System.log("리소스가 아직 준비되지 않았습니다. 5초 후 재시도합니다...");
+            System.sleep(5000); // 5초 대기
+            if (attempt &lt; 3) {
+                System.log("리소스를 다시 apply 합니다.");
+                runRemote(yamlApplyCmd); // 재적용
+            }
+        }
+    }
+
+    if (!success) {
+        throw "리소스가 정상적으로 생성되지 않았습니다. 수동 확인이 필요합니다.";
+    }
+
+    // Tanzu Repository 등록
+    runRemote("tanzu package repository add tanzu-standard --url " + tanzuRepoUrl + " --namespace tkg-system");
+    System.log("tanzu-standard 레포지토리 등록 완료");
+
+    // Cert-Manager 설치
+    runRemote("tanzu package install cert-manager --package " + certPackage + " --namespace cert-manager --version " + certManagerVersion + " --wait");
+    System.log("Cert-Manager 설치 완료");
+
+    // Contour 설치
+    runRemote("tanzu package install contour --package " + contourPackage + " --namespace tanzu-system-ingress --version " + contourVersion + " --values-file /tanzu_package/contour/contour-data-values.yaml --wait");
+    System.log("Contour 설치 완료");
+
+    // Prometheus 설치
+    runRemote("tanzu package install prometheus --package " + prometheusPackage + " --namespace tanzu-system-monitoring --version " + prometheusVersion + " --values-file /tanzu_package/prometheus/prometheus-data-values.yaml --wait");
+    System.log("Prometheus 설치 완료");
+
+    // 전체 Pod 상태 확인
+    runRemote("kubectl get pods --all-namespaces");
+    System.log("모든 패키지 설치 완료");
+
+} catch (e) {
+    throw e;
+} finally {
+    ssh.disconnect();
+}</script>
+        <in-binding>
+            <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+        </in-binding>
+        <out-binding/>
+        <description>Simple task with custom script capability.</description>
+        <position y="60.0" x="240.0"/>
+    </workflow-item>
+    <workflow-item name="item3" out-name="item1" type="task" comparator="0">
+        <display-name>console pod deployment</display-name>
+        <script encoded="false">var aa = System.getModule("com.bvp").AaManager(true);
+
+// 입력 및 버전 변수
+var clusterName       = inputProperties.clusterName;
+var namespace         = inputProperties.namespace;
+var clusterSelfLink   = inputProperties.clusterSelfLinkId;
+var bootstrapImage    = inputProperties.customProperties.Clovir_BootstrapImage
+var consoleid         = inputProperties.customProperties.Clovir_ClusterConsoleID
+var consolepasswd     = inputProperties.customProperties.Clovir_ClusterConsolePasswd
+
+// Supervisor 정보 조회
+var supervisorInfo = aa.get("/cmx/api/resources/supervisor-clusters/" + clusterSelfLink);
+var endpointLink   = supervisorInfo.endpointLink;
+var address        = supervisorInfo.address;
+
+// vCenter 자격증명 조회
+var endpointName = aa.getUerp(endpointLink).endpointProperties.hostName.split(".")[0];
+var vcConf       = System.getModule("com.bvp").ConfManager().load("BVP/Endpoint/" + endpointName);
+var vcUser       = vcConf.username;
+var vcPass       = vcConf.password;
+
+// Bootstrap 서버 정보 조회
+var cliConf = System.getModule("com.bvp").ConfManager().load("GVP/Endpoint/clovir-tanzu.gooddi.lab");
+var cliHost = cliConf.hostname;
+var cliUser = cliConf.username;
+var cliPass = cliConf.password;
+var cliPort = cliConf.port;
+
+var ssh = new SSHSession(cliHost, cliUser, cliPort);
+try {
+    ssh.connectWithPassword(cliPass);
+    System.log("INFO: SSH 연결 성공 → " + cliHost);
+
+    ssh.executeCommand(
+        "export KUBECTL_VSPHERE_PASSWORD=" + vcPass +
+        " &amp;&amp; kubectl vsphere login " +
+        "--server=" + address + " " +
+        "--tanzu-kubernetes-cluster-name=" + clusterName + " " +
+        "--tanzu-kubernetes-cluster-namespace=" + namespace + " " +
+        "-u " + vcUser + " --insecure-skip-tls-verify",
+        true
+    );
+
+    function runRemote(cmd) {
+        System.log("실행: " + cmd);
+        var res = ssh.executeCommand(cmd, true);
+        System.log("결과: " + res);
+        return res;
+    }
+
+    // YAML 리소스 생성
+    var yamlApplyCmd = [
+        "cat &lt;&lt; 'EOF' | kubectl apply -f -",
+        "---",
+        "apiVersion: v1",
+        "kind: Namespace",
+        "metadata:",
+        "  name: tanzu-bootstrap",
+        "  labels:",
+        "    pod-security.kubernetes.io/enforce: privileged",
+        "---",
+        "apiVersion: apps/v1",
+        "kind: Deployment",
+        "metadata:",
+        "  name: bootstrap",
+        "  namespace: tanzu-bootstrap",
+        "spec:",
+        "  replicas: 1",
+        "  selector:",
+        "    matchLabels:",
+        "      app: bootstrap",
+        "  template:",
+        "    metadata:",
+        "      labels:",
+        "        app: bootstrap",
+        "    spec:",
+        "      containers:",
+        "      - name: bootstrap",
+        "        image: " + bootstrapImage,
+        "        imagePullPolicy: Always",
+        "        ports:",
+        "        - containerPort: 22",
+        "        env:",
+        "        - name: USERNAME",
+        "          value: \"" + consoleid + "\"",
+        "        - name: PASSWORD",
+        "          value: \"" + consolepasswd + "\"",
+        "---",
+        "apiVersion: v1",
+        "kind: Service",
+        "metadata:",
+        "  name: bootstrap-service",
+        "  namespace: tanzu-bootstrap",
+        "spec:",
+        "  selector:",
+        "    app: bootstrap",
+        "  type: LoadBalancer",
+        "  ports:",
+        "  - name: ssh",
+        "    port: 22",
+        "    targetPort: 22",
+        "EOF"
+    ].join("\n");
+    runRemote(yamlApplyCmd);
+    System.log("bootstrap YAML 리소스 적용 완료");
+
+    // Pod Ready 상태 대기
+    runRemote("kubectl -n tanzu-bootstrap wait --for=condition=Ready pod -l app=bootstrap --timeout=180s");
+    System.log("bootstrap Pod Ready 상태 확인 완료");
+
+    // External IP 할당 대기
+    var externalIp = null;
+    for (var i = 0; i &lt; 10; i++) {
+        var svcOutput = runRemote("kubectl get svc bootstrap-service -n tanzu-bootstrap -o json");
+        try {
+            var svcJson = JSON.parse(svcOutput);
+            externalIp = svcJson.status.loadBalancer.ingress[0].ip;
+            if (externalIp) {
+                System.log("External IP 할당 완료: " + externalIp);
+                break;
+            }
+        } catch (ignore) {
+            System.log("External IP가 아직 할당되지 않았습니다. 재시도 중...");
+        }
+        System.sleep(5000); // 5초 대기
+    }
+
+    if (!externalIp) {
+        throw "bootstrap-service에 External IP가 할당되지 않았습니다. 수동 확인 필요";
+    }
+
+} catch (e) {
+    throw e;
+} finally {
+    ssh.disconnect();
+}
+</script>
+        <in-binding>
+            <bind name="inputProperties" type="Properties" export-name="inputProperties"/>
+        </in-binding>
+        <out-binding/>
+        <description>Simple task with custom script capability.</description>
+        <position y="60.0" x="420.0"/>
+    </workflow-item>
+</ns2:workflow>

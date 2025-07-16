@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getRandomString" result-type="string" api-version="6.0.0" id="3be699aa-be7a-4183-922a-027689b011de" version="0.1.1" allowed-operations="vfe" category-name="com.bvp.bp.tkgs">
+  <description><![CDATA[BP:Virtual Private Cloud
+BP:Segment]]></description>
+  <param n="type" t="string"><![CDATA[]]></param>
+  <param n="length" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!length) { length = 7; }
+else { length = length - 1; }
+if (!type) { type = "all" }
+var startChars = null;
+var chars = null;
+switch (type) {
+    case "all":
+        startChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        break;
+    case "upperDigit":
+        startChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        break;
+    case "upper":
+        startChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        break;
+    case "lowerDigit":
+        startChars = "abcdefghijklmnopqrstuvwxyz";
+        chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+        break;
+    case "lower":
+        startChars = "abcdefghijklmnopqrstuvwxyz";
+        chars = "abcdefghijklmnopqrstuvwxyz";
+        break;
+    case "digit":
+        startChars = "123456789";
+        chars = "0123456789";
+        break;
+    default: throw "unkown generate type";
+}
+var lenChars = chars.length;
+var result = startChars.charAt(Math.floor(Math.random() * startChars.length));
+for (var i = 0; i < length; i++) { result += chars.charAt(Math.floor(Math.random() * lenChars)); }
+return result;
+]]></script>
+</dunes-script-module>

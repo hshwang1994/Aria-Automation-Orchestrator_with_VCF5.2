@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="RestApi" result-type="Properties" api-version="6.0.0" id="81941a08-af8e-4f1f-9913-b60ad9517a64" version="0.0.0" category-name="com.gvp">
+  <script encoded="false"><![CDATA[return {
+    _pyUrl: System.getModule("com.gvp").execPyUrl,
+    _pyUrlKube: System.getModule("com.gvp").execPyUrl_Kube,
+    get: function(url, headers) {
+        if (!headers) { headers = {}; }
+        return this._pyUrl("GET", url, null, headers);
+    },
+    post: function(url, data, headers) {
+        if (!headers) { headers = {}; }
+        if (!data) { data = {}; }
+        if (data === undefined || data == null) { data = {}; }
+        return this._pyUrl("POST", url, data, headers);
+    },
+    put: function(url, data, headers) {
+        if (!headers) { headers = {}; }
+        if (!data) { data = {}; }
+        return this._pyUrl("PUT", url, data, headers);
+    },
+    patch: function(url, data, headers) {
+        if (!headers) { headers = {}; }
+        if (!data) { data = {}; }
+        return this._pyUrl("PATCH", url, data, headers);
+    },
+    delete: function(url, headers) {
+        if (!headers) { headers = {}; }
+        return this._pyUrl("DELETE", url, null, headers);
+    },
+    getKube: function(url, headers, cert, key, cacert) {
+        if (!headers) { headers = {}; }
+        return this._pyUrlKube("GET", url, null, headers, cert, key, cacert);
+    },
+    postKube: function(url, data, headers, cert, key, cacert) {
+        if (!headers) { headers = {}; }
+        if (!data) { data = {}; }
+        if (data === undefined || data == null) { data = {}; }
+        return this._pyUrl("POST", url, data, headers, cert, key, cacert);
+    },
+    putKube: function(url, data, headers, cert, key, cacert) {
+        if (!headers) { headers = {}; }
+        if (!data) { data = {}; }
+        return this._pyUrlKube("PUT", url, data, headers, cert, key, cacert);
+    },
+    patchKube: function(url, data, headers, cert, key, cacert) {
+        if (!headers) { headers = {}; }
+        if (!data) { data = {}; }
+        return this._pyUrlKube("PATCH", url, data, headers, cert, key, cacert);
+    },
+    deleteKube: function(url, headers, cert, key, cacert) {
+        if (!headers) { headers = {}; }
+        return this._pyUrlKube("DELETE", url, null, headers, cert, key, cacert);
+    }
+}]]></script>
+</dunes-script-module>

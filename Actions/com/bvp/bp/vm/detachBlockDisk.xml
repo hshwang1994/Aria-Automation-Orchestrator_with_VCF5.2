@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="detachBlockDisk" result-type="string" api-version="6.0.0" id="97547a60-8a10-41c5-a27e-a33373b414c4" version="0.0.0" category-name="com.bvp.bp.vm">
+  <param n="vmName" t="string"><![CDATA[]]></param>
+  <param n="diskName" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[for each(var vm in VcPlugin.getAllVirtualMachines(null, vmName)) {
+    if (vm.name == vmName) {
+        var devices = vm.config.hardware.device;
+        if (devices != null)  {
+            for (var key in devices)  {
+                var device = devices[key];
+                if (device instanceof VcVirtualDisk
+                && device.backing.fileName.indexOf(diskName) > -1)  {
+                    var deviceChange = new Array();
+                    deviceChange[0] = new VcVirtualDeviceConfigSpec();
+                    deviceChange[0].device = new VcVirtualDisk();
+                    deviceChange[0].device.storageIOAllocation = device.storageIOAllocation;
+                    deviceChange[0].device.controllerKey = device.controllerKey;
+                    deviceChange[0].device.unitNumber = device.unitNumber;
+                    deviceChange[0].device.deviceInfo = device.deviceInfo;
+                    deviceChange[0].device.shares = device.shares;
+                    deviceChange[0].device.capacityInBytes = device.capacityInBytes;
+                    deviceChange[0].device.backing = device.backing;
+                    deviceChange[0].device.nativeUnmanagedLinkedClone = device.nativeUnmanagedLinkedClone;
+                    deviceChange[0].device.capacityInKB = device.capacityInKB;
+                    deviceChange[0].device.diskObjectId = device.diskObjectId;
+                    deviceChange[0].device.key = device.key;
+                    // deviceChange[0].device.guestReadOnly = device.guestReadOnly;
+                    deviceChange[0].operation = VcVirtualDeviceConfigSpecOperation.remove;
+                    var spec = new VcVirtualMachineConfigSpec();
+                    spec.deviceChange = deviceChange;
+                    var task = vm.reconfigVM_Task(spec);
+                    System.getModule("com.vmware.library.vc.basic").vim3WaitTaskEnd(task, false, 1);
+                    return "";
+                }
+            }
+        }
+        break;
+    }
+}
+throw "could not detach block disk";]]></script>
+</dunes-script-module>

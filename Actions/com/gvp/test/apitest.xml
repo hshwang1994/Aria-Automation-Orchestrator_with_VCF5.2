@@ -1,0 +1,76 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="apitest" result-type="Any" api-version="6.0.0" id="e6819191-836f-469c-a9e1-d32ab91f37b7" version="0.0.0" category-name="com.gvp.test">
+  <script encoded="false"><![CDATA[var aa = System.getModule("com.bvp").AaManager(true);
+var vpc = "/provisioning/resources/network-profiles/2a9ed2d2-aa31-4c96-aeab-e899df26b008";
+var regionLink  = "/provisioning/resources/provisioning-regions/40af36f6-2e13-4bb7-863c-c1642f9db35b"
+var region = aa.get("/iaas/api/regions?$filter=name eq '"+ aa.getUerp(regionLink).regionName +"'").content[0]._links.self.href;
+var zoneId = "4cca3037-9403-4471-a471-5a5d497463c3";
+var placementZoneLink = "/provisioning/resources/placement-zones/4cca3037-9403-4471-a471-5a5d497463c3";
+var vim = VcPlugin.allSdkConnections.filter(function(item){return item.id  == 'work01-vcsa01.gooddi.lab'})[0]
+var cluster  = VcPlugin.getAllHostSystems()[0].parent
+
+var host = VcPlugin.getAllHostSystems(null,"xpath:name='work01-esxi04.gooddi.lab'")[0];
+return host
+var time = System.getCurrentTime();
+
+var stTime = new Date(time - (60 * 60 * 1000));
+var enTime = new Date(time);
+var query = new Array;
+query[0] = new VcPerfQuerySpec;
+query[0].entity = cluster;
+//query[0].intervalId = 300;
+query[0].startTime = stTime;
+query[0].endTime = enTime;
+query[0].metricId = vim.PerformanceManager.queryAvailablePerfMetric(cluster).filter(function(item) {return item.counterId == 6 });
+//query[0].metricId[0].counterId = 6;
+//query[0].metricId[0].instance = "instance";
+
+return vim.PerformanceManager.queryPerf(query)[0].value[0].value
+var projectId = "8757c8dc-0945-4dab-b7eb-7537148b43a1";
+var zones = aa.get("/iaas/api/projects/" + projectId).zones;
+for each(var zone in zones){
+    var clusters = aa.get("/iaas/api/zones/" + zone.zoneId + "/computes").content.filter(function(item) {
+        return item.type === "Cluster"; 
+    });
+    for (var i in clusters){
+        VcPlugin.getAllHostSystems(null, "")
+    }
+}
+return clusters;
+
+if (!projectId) { throw "projectId cannot be null"; }
+if (!profileLink) { throw "profileLink cannot be null"; }
+
+var aa = System.getModule("com.bvp").AaManager(true);
+
+var profileDetails = aa.getUerp(profileLink);
+var targetRegionLink = profileDetails.provisioningRegionLink;
+
+var project = aa.get("/iaas/api/projects/" + projectId);
+
+for each (var zone in project.zones) {
+    var placementZoneLink = "/provisioning/resources/placement-zones/" + zone.zoneId;
+    var placementZone = aa.getUerp(placementZoneLink);
+    if (placementZone.provisioningRegionLink === targetRegionLink) {
+        return placementZoneLink;
+    }
+}
+
+return "";
+
+
+if (!category) { throw "category cannot be null"; }
+if (!placementZoneLink) { throw "placementZoneLink cannot be null"; }
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var zone = aa.getUerp(placementZoneLink);
+var checker = category + "\n";
+
+for each (var tagObj in zone.expandedTags) {
+    if (tagObj.tag.indexOf(checker) > -1) {
+        return tagObj.tag.split("\n", 2)[1];
+    }
+}
+
+return "";]]></script>
+</dunes-script-module>

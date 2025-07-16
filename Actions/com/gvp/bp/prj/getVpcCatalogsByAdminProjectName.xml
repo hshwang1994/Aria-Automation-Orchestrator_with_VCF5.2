@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getVpcCatalogsByAdminProjectName" result-type="Array/Properties" api-version="6.0.0" id="6efc450f-80c2-46ea-b0fd-d93cacf42583" version="0.1.0" category-name="com.gvp.bp.prj">
+  <description><![CDATA[BP:Project]]></description>
+  <param n="adminProjectName" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!adminProjectName) { throw "adminProjectName cannot be null"; }
+
+var aa = System.getModule("com.bvp").AaManager(true);
+var project = aa.get("/iaas/api/projects?$filter=name eq '" + adminProjectName + "'").content[0];
+var totalElements = aa.get("/catalog/api/admin/items?projects=" + project.id).totalElements;
+var catalogs = aa.get("/catalog/api/admin/items?projects=" + project.id + "&&size=" + totalElements).content;
+var result = [];
+for each(var catalog in catalogs) {
+    var detail = aa.get("/catalog/api/admin/items/" + catalog.id);
+    try {
+        if (detail.schema.properties._metadata_main_catalog && detail.schema.properties._metadata_main_catalog.default != "Policy") {
+            result.push({
+                label: catalog.name,
+                value: catalog.id,
+            });
+        }
+    } catch (e) {}
+}
+return result.sort(function (a, b) {
+    return a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1;
+});
+]]></script>
+</dunes-script-module>

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getSharedResourcesByProjectId_Copy" result-type="string" api-version="6.0.0" id="3aa1dbe3-7524-4a95-b9fc-acf6b0e311a5" version="0.0.0" allowed-operations="vfe" category-name="com.test.ecs.action.backup">
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!projectId) { return []; }
+var aa = System.getModule("com.ecs").AaManager(true);
+return aa.get("/iaas/api/projects/" + projectId).sharedResources ? "true" : "false"]]></script>
+</dunes-script-module>
