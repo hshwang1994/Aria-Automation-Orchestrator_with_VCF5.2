@@ -1,12 +1,12 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<dunes-script-module name="getImagesByPlacementZoneLinkandOStype" result-type="Array/Properties" api-version="6.0.0" id="697d1d40-d6e0-4372-8d50-bfc3f71a1a12" version="0.1.1" category-name="com.gvp.bp.gpuvm">
+<dunes-script-module name="getImagesByPlacementZoneLinkandOStype" result-type="Array/Properties" api-version="6.0.0" id="697d1d40-d6e0-4372-8d50-bfc3f71a1a12" version="0.1.2" category-name="com.gvp.bp.gpuvm">
   <description><![CDATA[BP:Virtual Machine]]></description>
   <param n="placementZoneLink" t="string"><![CDATA[]]></param>
   <param n="ostype" t="string"><![CDATA[]]></param>
-  <param n="gpuModel" t="string"/>
-  <param n="gpuSize" t="string"/>
-  <script encoded="false"><![CDATA[if (!placementZoneLink) { return null; }
-if (!ostype) { return null; }
+  <param n="gpuModel" t="string"><![CDATA[]]></param>
+  <param n="gpuSize" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[if (!placementZoneLink || !ostype || !gpuModel || !gpuSize) { return null; }
+
 
 var aa = System.getModule("com.bvp").AaManager(true);
 var zone = aa.getUerp(placementZoneLink);
@@ -20,7 +20,7 @@ var contentArray = imagesResponse.content || [];
 
 var ostypeLower = ostype.toLowerCase();
 var gpuModelLower = gpuModel.toLowerCase();
-var gpuSizeToString = gpuSize.toString();
+var gpuSizeLower = gpuSize.toLowerCase();
 
 var result = [];
 for each (var group in contentArray) {
@@ -28,12 +28,32 @@ for each (var group in contentArray) {
     var regionId = regionHref.split("/").pop();
     if (regionId === targetRegionId) {
         for (var imageName in group.mapping) {
-            var nameLower = imageName.toString().toLowerCase();
-            if (nameLower.indexOf(ostypeLower) !== -1 && nameLower.indexOf(gpuModelLower) !== -1 && nameLower.indexOf(gpuSizeToString) !== -1) {
+            var tags = imageName.constraints;
+            var hasGpuModel = tags.some(function(item) {
+            return item.expression == "gpuModel:" + gpuModelLower;
+            });
+            var hasGpuSize = tags.some(function(item) {
+            return item.expression == "gpuSize:" + gpuSizeLower;
+            });
+            if(hasGpuModel && hasGpuSize){
                 result.push({
-                    label: imageName.toString().split("-", 1)[0],
-                    value: imageName
+                    label: imageName.toString(),
+                    value: imageName.toString()
                 });
+            }
+            /*
+            var nameLower = imageName.toString().toLowerCase();
+            if(nameLower.split("-").length > 2){
+                var osName = nameLower.split("-").slice(0, 2).join("-");
+                var gpuModelName = nameLower.split("-")[2];
+                var gpuModelSize = nameLower.split("-")[3];
+                if (osName.indexOf(ostypeLower) !== -1 && gpuModelName.indexOf(gpuModelLower) !== -1 && gpuModelSize.indexOf(gpuSizeLower) !== -1) {
+                    result.push({
+                        label: osName.toUpperCase(),
+                        value: imageName.toString()
+                    });
+            }
+            */
             }
         }
     }
